@@ -1,0 +1,9 @@
+ 2069  ll -t
+ 2070  - lwobjdump kernel.o
+ 2071  - gcc6809 -fwhole-program  -fomit-frame-pointer  -Os  -c kernel.c
+ 2072  - lwobjdump kernel.o
+ 2073  - gcc6809 -fwhole-program  -fomit-frame-pointer  -Os -S kernel.c
+ 2074  m kernel.s 
+ 2075  - gcc6809 -fwhole-program  -fomit-frame-pointer  -Os -S kernel.c
+ 2076  - gcc6809 -fwhole-program  -fomit-frame-pointer  -Os -S -std=gnu99 kernel.c
+ 2077  history 9 > H.2 
