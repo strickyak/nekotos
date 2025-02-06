@@ -101,14 +101,14 @@ such as the shape of a track, or the location of fixed barriers.
 
 The OS automatically communicates partial scores with your messages.
 Each node should keep points for disjoint portions of the game in Partial Scores.
-The OS computes TotalScores for you.  Only use as many items in these arrays
+The OS computes Total Scores for you.  Only use as many items in these arrays
 as there are players in your game shard.
 
-`char *PlayerNames[8];`  // The OS sets the three-letter player names as strings here.  Unused slots are NULL pointers (value zero).
+`char *GamePlayerNames[8];`  // The OS sets the three-letter player names as strings here.  Unused slots are NULL pointers (value zero).
 
-`int PartialScores[8];`  // You write positive or negative numbers here to add or deduct points from each player's score.
+`int GamePartialScores[8];`  // You write positive or negative numbers here to add or deduct points from each player's score.
 
-`int TotalScores[8];'  // The OS sums up all the Partial Scores on all nodes, to give you Total Scores.
+`int GameTotalScores[8];'  // The OS sums up all the Partial Scores on all nodes, to give you Total Scores.
 
 ### End of Game
 
@@ -136,5 +136,5 @@ so the coco will go into that game insted of going into Chat mode.
 
 `GameChain(char* name)`  // Specify an overlay in this game, or another game to play next
 
-`Common`  // A variable named `Common`, of type `struct common`, will be shared
+`struct common Common`  // A variable named `Common`, of type `struct common`, will be shared
 across all overlays of a game.  Define this struct in a file named `common.h`.
