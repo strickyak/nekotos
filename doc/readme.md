@@ -18,9 +18,9 @@ or LAN) to work together to play the game.
 *   The Games run on the cocos, not in the Cloud.  From the Game point of
 view, the cocos are peers, not clients of some Game Server in the Cloud.
 The Cloud is used before the Game for Chat, for meeting other players,
-and for loading games.  The Cloud is used after the game for reporting
-scores.  During the Game, the Cloud can help exchange game-state messages,
-behaving as part of the network between the Cocos.
+and for loading and launching games.  The Cloud is used after the game
+for reporting scores.  During the Game, the Cloud can help exchange
+game-state messages, behaving as part of the network between the Cocos.
 
 *   The OS provides communication with the players before and after a
 game, a repository of games that are available under the OS, and the
@@ -95,12 +95,13 @@ either 0 or 1.
 
 The microkernel can transmit broadcast messages to and from
 other members of your game shard.  Plan on each machine sending
-at most one 32-byte packet per second.  There may be up to 8 players.
+at most one 64-byte payload per second.  There may be up to 8 players.
 
-Packets can contain up to 32 bytes of data.  The first byte is the
+Packets can contain up to 64 bytes of payload.  The first byte is the
 player number.  The second byte is the length of the payload, 0 to 30.
 The remaining bytes are the payload.  When you send a packet,
 the OS will put your player number in the first byte for you.
+So 66 bytes are required to hold the packet with its 2 byte header.
 
 Multiplayer games should be designed in a way that each node is
 authoritative for calculating the game play for its own disjoint
@@ -123,7 +124,7 @@ such as the shape of a track, or the location of fixed barriers.
 
 `bool GamePacketRecvReady;`  // The OS sets it true if a packet is ready to be received.
 
-`GamePacketRecv(byte* pointerTo32ByteBuffer)'
+`GamePacketRecv(byte* pointerTo66ByteBuffer)'
 
 ### Score Points
 
