@@ -120,11 +120,11 @@ such as the shape of a track, or the location of fixed barriers.
 
 `bool GamePacketSendReady;`  // The OS sets it true if a packet can be sent.
 
-`GamePacketSend(byte* pointerToPacket)'
+`GamePacketSend(byte* pointerToPacket)`
 
 `bool GamePacketRecvReady;`  // The OS sets it true if a packet is ready to be received.
 
-`GamePacketRecv(byte* pointerTo66ByteBuffer)'
+`GamePacketRecv(byte* pointerTo66ByteBuffer)`
 
 ### Score Points
 
