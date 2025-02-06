@@ -137,7 +137,7 @@ as there are players in your game shard.
 
 `int GamePartialScores[8];`  // You write positive or negative numbers here to add or deduct points from each player's score.
 
-`int GameTotalScores[8];'  // The OS sums up all the Partial Scores on all nodes, to give you Total Scores.
+`int GameTotalScores[8];`  // The OS sums up all the Partial Scores on all nodes, to give you Total Scores.
 
 ### End of Game
 
