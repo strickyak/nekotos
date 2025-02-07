@@ -4,16 +4,18 @@
 typedef unsigned char bool;
 typedef unsigned char byte;
 typedef unsigned int uint;
+typedef unsigned int word;
+typedef unsigned int size_t;
 typedef void (*func)(void);
 
 #define true ((bool)1)
 #define false ((bool)0)
 
 #define Peek1(ADDR) (*(volatile byte*)(uint)(ADDR))
-#define Poke1(ADDR,VALUE) (*(volatile byte*)(uint)(ADDR) = (VALUE))
+#define Poke1(ADDR,VALUE) (*(volatile byte*)(uint)(ADDR) = (byte)(VALUE))
 
 #define Peek2(ADDR) (*(volatile uint*)(uint)(ADDR))
-#define Poke2(ADDR,VALUE) (*(volatile uint*)(uint)(ADDR) = (VALUE))
+#define Poke2(ADDR,VALUE) (*(volatile uint*)(uint)(ADDR) = (uint)(VALUE))
 
 const uint Pia0PortA = 0xFF00;
 const uint Pia0PortB = 0xFF02;
@@ -26,5 +28,7 @@ struct prelude {
 };
 
 void memcpy(byte *dest, byte *src, uint count);
+
+void Fatal(const char* s, uint arg);
 
 #endif // _PRELUDE_H_

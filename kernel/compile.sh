@@ -1,4 +1,5 @@
 
+set -x
 
 (
     echo "#line 1 \"prelude.h\""
@@ -14,7 +15,7 @@
     for f in [a-z]*.h
     do
         b=$(basename $f .h)
-        python3 -c "print('struct $b %s;' % '$b'.title())"
+        grep -wq "struct $b" $f && python3 -c "print('struct $b %s;' % '$b'.title())"
     done
 
     for f in [a-z]*.c
@@ -22,6 +23,9 @@
         echo "#line 1 \"$f\""
         cat $f
     done
+
+    echo "#line 1 \"../games/spacewar/spacewar.c\""
+    cat ../games/spacewar/spacewar.c
 
 ) > _target_.c
 

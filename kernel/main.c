@@ -1,7 +1,13 @@
+extern void Spacewar_Main(void);
+
 void main() {
     Poke1(IRQVEC, JMP_Extended);
     Poke2(IRQVEC+1, Irq_Handler_Wrapper);
     Poke2(IRQVEC+1, Irq_Handler_RTI);
+
+    Vdg_Init();
+    Network_Init();
+    Spacewar_Main();
 }
 
 
