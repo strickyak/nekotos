@@ -1,3 +1,9 @@
+# strickyak
+*,v
+RCS/
+_*
+,*
+
 # Prerequisites
 *.d
 

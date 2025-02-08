@@ -20,7 +20,8 @@ typedef void (*func)(void);
 const uint Pia0PortA = 0xFF00;
 const uint Pia0PortB = 0xFF02;
 
-const uint IRQVEC = 0x010C;
+const uint IRQVEC_COCO12 = 0x010C;
+const uint IRQVEC_COCO3 = 0xFEF7;
 
 const byte JMP_Extended = 0x7E;
 
