@@ -3,6 +3,8 @@
 RCS/
 _*
 ,*
+.*.un~
+.*.swp
 
 # Prerequisites
 *.d

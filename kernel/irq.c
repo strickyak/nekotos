@@ -13,13 +13,13 @@ void Irq_Handler() {
     // Clear the VSYNC IRQ by reading PortB output register.
     uint const clear_irq = Pia0PortB;
     (void) Peek1(clear_irq);
-/*
+
     Real_IncrementTicks();
     irq_schedule[Real.ticks]();
-*/
+
+    // Show on console
     volatile word* p = 0x300;
     p[4]++;
-
 }
 
 void Irq_Handler_Wrapper() {

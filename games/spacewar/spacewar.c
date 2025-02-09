@@ -6,7 +6,7 @@ void Spacewar_Main() {
 
     asm volatile("  andcc #^$50"); // Allow interrupts
 
-    volatile byte* p = 0x300;
+    volatile byte* p = (byte*) 0x300;
     while (true) {
         p[0]+=1;
         if (!p[0]) {

@@ -1,6 +1,32 @@
 extern void Spacewar_Main(void);
 
+void Fatal(const char* why, word arg) {
+    Vdg_Init();
+
+    const char* s = why;
+    uint const vdg = 0x200;
+    while (1) {
+        for (uint i = 0; i < 512; i++) {
+            Poke1(vdg+i, *s++);
+            if (!*s) s = why;
+        }
+    }
+}
+
 void Main_Main() {
+    // Display letters on initial pages, so we can tell
+    // which page the VDG is showing.  Except page 0x0100
+    // is .bss so it must be zeroed.
+#if 0
+    for (uint i = 0; i < 16; i++) {
+        uint page = (i<<8);
+        byte value = (i==1) ? 0 : i+64; // Page 1 is BSS.
+        for (uint j = 0; j < 256; j++) {
+            Poke1(page+j, value);
+        }
+    }
+#endif
+
     // Set the IRQ vector code, if Coco 1 or 2.
     Poke1(IRQVEC_COCO12, JMP_Extended);
     Poke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
@@ -11,27 +37,27 @@ void Main_Main() {
     Poke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
     Poke2(IRQVEC_COCO3+1, Irq_Handler_RTI);
 
-    // Display letters on initial pages, so we can tell
-    // which page the VDG is showing.  Except page 0x0100
-    // is .bss so it must be zeroed.
-    for (uint i = 0; i < 16; i++) {
-        uint page = (i<<8);
-        byte value = (i==1) ? 0 : i+64; // Page 1 is BSS.
-        for (uint j = 0; j < 256; j++) {
-            Poke1(page+j, value);
-        }
-    }
 
     Vdg_Init();
+    Console_Init();
+
+    Poke2(0, PutStr);
+    Poke2(0, PutChar);
+
+    Printf("Hello %s!\n", "World");
+    PutChar('1');
+    PutChar('2');
+    PutChar('\n');
+    PutChar('3');
+    PutChar('\n');
+    for (uint i=400; i < 410; i++) {
+        Printf("(%x=%d.) ", i, i);
+    }
+
     Network_Init();
+
     Spacewar_Main();
-    while (1) {
-        Poke1(0x041c, Peek1(0x041c)+1);
-        Poke1(0x021f, Peek1(0x021f)+1);
-    }
-    while (1) {
-        Poke1(0x021f, Peek1(0x021f)+1);
-    }
+    Fatal("EXIT", 0);
 }
 
 

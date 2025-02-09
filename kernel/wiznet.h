@@ -7,5 +7,3 @@ void Network_Handler(void);
 
 void Wiznet_Init(void);
 void Network_Init(void);
-
-

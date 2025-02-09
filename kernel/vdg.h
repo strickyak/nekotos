@@ -7,3 +7,5 @@ void SetGreenScreen() { Pia1bOff(0x08); }
 
 struct vdg {
 };
+
+void Vdg_Init(void);

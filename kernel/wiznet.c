@@ -1,15 +1,3 @@
-void Wiznet_Handler() {
-}
-void Network_Handler() {
-    Wiznet_Handler();
-}
-
-void Wiznet_Init() {
-}
-void Network_Init() {
-    Wiznet_Init();
-}
-
 /////////////////////////////////////////
 
 // How to talk to the four hardware ports.
@@ -224,3 +212,23 @@ errnum WizRecvChunkBytes( byte* buf, size_t n) {
 
 ////////////////////////////////////////
 ////////////////////////////////////////
+
+void Wiznet_Handler() {
+}
+void Network_Handler() {
+    Wiznet_Handler();
+}
+
+void Wiznet_Init() {
+    volatile char* p = 0x300;
+    FindWizPort();
+    if ((uint)Wiznet.wiz_port == 0xFF68) {
+         p[-1] = '6';
+    }
+    if ((uint)Wiznet.wiz_port == 0xFF78) {
+         p[-1] = '7';
+    }
+}
+void Network_Init() {
+    Wiznet_Init();
+}
