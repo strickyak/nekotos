@@ -27,7 +27,7 @@ set -x
     echo "#line 1 \"../games/spacewar/spacewar.c\""
     cat ../games/spacewar/spacewar.c
 
-) > _target_.c
+) > _nekot.c
 
 set -x
-- gcc6809  -S -std=gnu99 -f'no-builtin' -f'omit-frame-pointer' -f'whole-program' -Os    _target_.c
+- gcc6809  -S -std=gnu99 -f'no-builtin' -f'omit-frame-pointer' -f'whole-program' -Os    _nekot.c

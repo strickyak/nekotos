@@ -7,6 +7,11 @@ typedef unsigned int uint;
 typedef unsigned int word;
 typedef unsigned int size_t;
 typedef void (*func)(void);
+typedef union wordorbytes {
+    word w;
+    byte b[2];
+} wob;
+
 
 #define true ((bool)1)
 #define false ((bool)0)
@@ -16,6 +21,10 @@ typedef void (*func)(void);
 
 #define Peek2(ADDR) (*(volatile uint*)(uint)(ADDR))
 #define Poke2(ADDR,VALUE) (*(volatile uint*)(uint)(ADDR) = (uint)(VALUE))
+
+#define PAND(ADDR, X) ((*(volatile byte*)(size_t)(ADDR)) &= (byte)(X))
+#define POR(ADDR, X) ((*(volatile byte*)(size_t)(ADDR)) |= (byte)(X))
+#define PXOR(ADDR, X) ((*(volatile byte*)(size_t)(ADDR)) ^= (byte)(X))
 
 const uint Pia0PortA = 0xFF00;
 const uint Pia0PortB = 0xFF02;

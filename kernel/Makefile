@@ -1,13 +1,14 @@
-all: _target_.o
+all: _nekot.o
 
 PRAGMATA = --pragma=undefextern --pragma=cescapes --pragma=importundefexport
 
-_target_.s: _FORCE_
+_nekot.s: _FORCE_
 	sh compile.sh
 
-_target_.o: _target_.s
-	time - lwasm $(PRAGMATA) --obj -o'_target_.o' _target_.s --list='_target_.list' --map='_target_.map' --symbol-dump='_target_.sym'
-	time - lwlink --decb --output='target.decb' _target_.o --entry='_main' --script='target.script' --map='target.map'
-	cp -vf  target.decb  $$HOME/coco-shelf/build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
+_nekot.o: _nekot.s
+	time - lwasm $(PRAGMATA) --obj -o'_nekot.o' _nekot.s --list='_nekot.list' --map='_nekot.o.map' --symbol-dump='_nekot.o.sym'
+	time - lwlink --decb --output='_nekot.decb' _nekot.o -L"$$HOME/coco-shelf/lib/gcc/m6809-unknown/4.6.4/" -lgcc --entry='_main' --script='script-0100-2000.txt' --map='_nekot.map'
+	cp -vf  _nekot.decb  $$HOME/coco-shelf/build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
+	: : : ---- OKAY ---- : : :
 
 _FORCE_:

@@ -65,8 +65,10 @@ void Vdg_RestoreGameMode() {
     switch (Vdg.game_mode) {
     case 0:
         SetDisplayText(Vdg.game_framebuffer, Vdg.game_colorset);
+        break;
     case 1:
         SetDisplayPMode1(Vdg.game_framebuffer, Vdg.game_colorset);
+        break;
     }
 }
 
