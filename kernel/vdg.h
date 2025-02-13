@@ -10,11 +10,10 @@ struct vdg {
 void Vdg_GameText(word fb, byte colorset);
 void Vdg_GamePMode1(word fb, byte colorset);
 // For the "fb" parameter:
-#define Graf 0x3000  // Reserved fb for PMode1 graphics.
-#define Text 0x3C00  // Reserved fb for Text.
 
 // Reserved for Chat Mode.
-#define Con 0x3E00
+#define Cons 0x0200
+#define Disp 0x0400
 
 void Vdg_RestoreGameMode();
 void Vdg_Init(void);

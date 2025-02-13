@@ -19,7 +19,7 @@ void TextAt0200() {
     Poke1(0xFF22, 0x07);
 }
 
-void Vdg_TextMode(uint addr, byte css) {
+void Vdg_ConsoleMode(uint addr, byte css) {
     TextAt0200();
 }
 

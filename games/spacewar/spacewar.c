@@ -1,6 +1,3 @@
-// DECLARE_FRAMEBUFFER(Text, 2)
-// DECLARE_FRAMEBUFFER(Graf, 12)
-
 // ColorSet 0 for PMode 1
 #define Green0  0
 #define Yellow0 1
@@ -119,9 +116,6 @@ void DrawVirt(word fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {
     }
 }
 
-#define INHIBIT_IRQ() asm volatile("  orcc #$10")
-#define ALLOW_IRQ()   asm volatile("  andcc #^$10")
-
 wob ScanArrowsAnd0To7() {
     union wordorbytes z;
     z.w = 0;
@@ -140,7 +134,7 @@ void ClearGraf(byte color) {
     color &= 3;
     wob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
-    for (word i = Graf; i < Graf + 3*1024; i+=2) {
+    for (word i = (word)Disp; i < (word)Disp + 3*1024; i+=2) {
         Poke2(i, c.w);
     }
 }
@@ -167,7 +161,7 @@ void DrawChar(char ch, byte x, byte y, byte color) {
         byte probe = 0x80u;
         for (byte j = 0; j < 8; j++) {
             if (bits & probe)
-                DrawSpotXor(Graf, x+j, y+i, Blue0);
+                DrawSpotXor(Disp, x+j, y+i, Blue0);
             probe >>= 1;
         }
     }
@@ -178,7 +172,7 @@ void Spacewar_Main() {
     Poke2(0, DrawChar);
     Poke2(0, DrawSpotXor);
 
-    Vdg_GamePMode1(Graf, 0);
+    Vdg_GamePMode1(Disp, 0);
     ALLOW_IRQ();
 
     while (true) {
