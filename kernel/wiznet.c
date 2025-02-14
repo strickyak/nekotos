@@ -220,13 +220,14 @@ void Network_Handler() {
 }
 
 void Wiznet_Init() {
-    volatile char* p = 0x300;
+    volatile byte* p = Cons;
     FindWizPort();
     if ((uint)Wiznet.wiz_port == 0xFF68) {
-         p[-1] = '6';
-    }
-    if ((uint)Wiznet.wiz_port == 0xFF78) {
-         p[-1] = '7';
+         p[2] = '6';
+    } else if ((uint)Wiznet.wiz_port == 0xFF78) {
+         p[2] = '7';
+    } else {
+         p[2] = '?';
     }
 }
 void Network_Init() {

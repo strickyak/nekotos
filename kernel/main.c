@@ -88,9 +88,11 @@ void Main_Main() {
         }
     }
 #endif
+#if 0
     for (word w = 0; w < 0xFFFF; w++) {
         Poke2(0x208, w);
     }
+#endif
 
     // Set the IRQ vector code, for Coco 1 or 2.
     Poke1(IRQVEC_COCO12, JMP_Extended);
@@ -102,9 +104,7 @@ void Main_Main() {
     Poke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
     Poke2(IRQVEC_COCO3+1, Irq_Handler_RTI);
 
-/*
     Vdg_Init();
-*/
     Console_Init();
 
     Poke2(0, PutStr);
@@ -125,13 +125,11 @@ void Main_Main() {
     Peek1(0xFF02);
     asm volatile("  andcc #^$50"); // Allow interrupts
 
-    for (word w = 0;;) {
-        Poke2(0x208, w++);
+    for (word w = 0;w<0xFF00; w++) {
+        Poke2(0x208, w);
     }
 
-/*
     Network_Init();
-*/
     CWait();
     // Spacewar_Main();
     Fatal("EXIT", 0);

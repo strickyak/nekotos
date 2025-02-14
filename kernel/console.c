@@ -23,7 +23,7 @@ void PutChar(char c) {
     byte x = (byte)c; // Unsigned!
     if (x == '\n') {  // Any control char is newline.
             while (Console.cursor < PANE_LIMIT-1) {
-                PutChar(' '); // AdvanceCursor();            
+                PutChar(' ');
             }
             PutChar(' ');
     } else if (x < 32) {
@@ -126,7 +126,6 @@ void Printf(const char* format, ...) {
 
 void Console_Init() {
     Poke2(0, AdvanceCursor);
-    Vdg_Init();
 
     for (word p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
         Poke2(p, 0x9C9C);
