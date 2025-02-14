@@ -11,13 +11,6 @@ struct wiz_port {
 uint const B = 0x500u;   // Socket Base
 uint const T = 0x4800u;  // Transmit ring
 uint const R = 0x6800u;  // Receive ring
-#define RING_SIZE 2048
-#define RING_MASK (RING_SIZE - 1)
-typedef word tx_ptr_t;
-typedef byte errnum;
-#define WIZ (Wiznet.wiz_port)
-#define OKAY ((errnum)0)
-#define NOTYET ((errnum)1)
 
 //////////////////////////////////////
 
@@ -208,6 +201,31 @@ errnum WizRecvChunk( char* buf, size_t n) {
 }
 errnum WizRecvChunkBytes( byte* buf, size_t n) {
   return WizRecvChunk((char*)buf, n);
+}
+
+////////////////////////////////////////
+////////////////////////////////////////
+
+#define CMD_LOG 200
+
+byte logbuf[30];
+
+size_t strlen(const char* s) {
+    const char* p = s;
+    while (*p) ++p;
+    return p-s;
+}
+
+void Network_Log(const char* s) {
+    size_t n = strlen(s);
+    logbuf[0] = CMD_LOG;
+    Poke2(logbuf+1, n);
+    Poke2(logbuf+3, 0);
+    MemCopy(logbuf+5, s, n);
+
+    tx_ptr_t t = WizReserveToSend(n+5);
+    t = WizBytesToSend(t, logbuf, n+5);
+    WizFinalizeSend(n+5);
 }
 
 ////////////////////////////////////////

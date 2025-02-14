@@ -176,6 +176,7 @@ void Spacewar_Main() {
     ALLOW_IRQ();
 
     while (true) {
+        Network_Log("once nekot");
 
         ClearGraf(Yellow0);
 
