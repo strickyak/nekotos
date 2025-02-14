@@ -1,4 +1,4 @@
-void memcpy(byte *dest, byte *src, uint count) {
+void MemCopy(byte *dest, byte *src, uint count) {
     // If count is odd, copy an initial byte.
     if (count & 1) {
         *dest++ = *src++;

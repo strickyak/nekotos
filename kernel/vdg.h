@@ -6,10 +6,13 @@ struct vdg {
     vptr game_framebuffer;
 };
 
-// These are for Game Mode.
+// These are for setting the Game Mode.
 void Vdg_GameText(vptr fb, byte colorset);
 void Vdg_GamePMode1(vptr fb, byte colorset);
 
+#define COLORSET_GREEN  0
+#define COLORSET_ORANGE 1
+
+// Used by the kernel:
 void Vdg_RestoreGameMode();
 void Vdg_Init(void);
-

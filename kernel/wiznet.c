@@ -223,11 +223,11 @@ void Wiznet_Init() {
     volatile byte* p = Cons;
     FindWizPort();
     if ((uint)Wiznet.wiz_port == 0xFF68) {
-         p[2] = '6';
+         p[4] = '6';
     } else if ((uint)Wiznet.wiz_port == 0xFF78) {
-         p[2] = '7';
+         p[4] = '7';
     } else {
-         p[2] = '?';
+         p[4] = '?';
     }
 }
 void Network_Init() {

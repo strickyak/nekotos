@@ -1,8 +1,10 @@
 // Wall Time 
 
+// Wall Time is meant for displaying clocks and weather and the like.
+//
 // Wall Time might be adjusted, even backwards.
-// Different cocos may use different time zones.
-// This is meant for displaying clocks and weather and the like.
+// Different cocos may use different time zones,
+// and therefore have different Wall Times.
 
 struct wall {
     byte second; // 0 to 59
