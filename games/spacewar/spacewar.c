@@ -85,9 +85,9 @@ void FONT_Wrapper() {
 
 /////////////////////////////////////////////////////
 
-typedef void (*SpotDrawer)(word fb, byte x, byte y, byte color);
+typedef void (*SpotDrawer)(vptr fb, byte x, byte y, byte color);
 
-void DrawSpot(word fb, byte x, byte y, byte color) {
+void DrawSpot(vptr fb, byte x, byte y, byte color) {
   byte xshift = x & 3;  // mod 4
   byte xdist = x >> 2;  // div 4
   word addr = fb + xdist + ((word)y << 5);
@@ -97,19 +97,19 @@ void DrawSpot(word fb, byte x, byte y, byte color) {
   b = (b & mask) | (color << bitshift);
   Poke1(addr, b);
 }
-void DrawSpotXor(word fb, byte x, byte y, byte color) {
+void DrawSpotXor(vptr fb, byte x, byte y, byte color) {
   byte xshift = x & 3;  // mod 4
   byte xdist = x >> 2;  // div 4
   word addr = fb + xdist + ((word)y << 5);
   PXOR(addr, (color << ((3 - xshift) << 1)));
 }
-void DrawHorz(word fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {
+void DrawHorz(vptr fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {
     byte last = x + len;
     for (byte i = x; i <= last; i++) {
         spot(fb, i, y, color);
     }
 }
-void DrawVirt(word fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {
+void DrawVirt(vptr fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {
     byte last = y + len;
     for (byte i = y; i <= last; i++) {
         spot(fb, x, i, color);
@@ -196,6 +196,6 @@ void Spacewar_Main() {
             }
         }
     }
-    Vdg_GameText(0x0200, 0);
+    Vdg_GameText(Disp, 0);
     while (1) {}
 }

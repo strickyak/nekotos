@@ -4,9 +4,7 @@ static void IncrementSeconds() {
     // Now go increment the Wall Time.
     Wall_IncrementSecond();
 
-    // Show on console
-    volatile word* p = 0x300;
-    p[8]++;
+    SpinRealSeconds();
 }
 
 static void IncrementDecis() {

@@ -17,9 +17,7 @@ void Irq_Handler() {
     Real_IncrementTicks();
     irq_schedule[Real.ticks]();
 
-    // Show on console
-    volatile word* p = 0x300;
-    p[4]++;
+    SpinIrq();
 }
 
 void Irq_Handler_Wrapper() {

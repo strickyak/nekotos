@@ -1,5 +1,25 @@
-extern void CWait(void);
 extern void Spacewar_Main(void);
+
+// This is a "Null Game" that does nothing.
+void CWait(void) {
+    ALLOW_IRQ();
+
+    while (1) {
+        // wait for any interrupt.
+        asm volatile ("cwai #$00");
+        SpinCWait();
+    }
+
+#if 0
+    // Go into a loop where we just wait on interrupts.
+    asm volatile ("   \n"
+        "CWait:       \n"
+        "  cwai  #$00 \n"  // wait for any interrupt.
+        "  inc  $0202 \n"  // First byte of Kernel Console.
+        "  jmp CWait  \n"
+        );
+#endif
+}
 
 void InitCoco3() {
 #if WUT
@@ -57,29 +77,9 @@ void Fatal(const char* why, word arg) {
 }
 
 void Main_Main() {
-    Poke2(0, Breakkey_Handler);
-    Poke2(0, Irq_Handler);
-    Poke2(0, Irq_Handler_RTI);
-    Poke2(0, Irq_Handler_Wrapper);
-    Poke2(0, irq_schedule);
-    Poke2(0, Main_Main);
-    Poke2(0, Network_Handler);
-    Poke2(0, Vdg_Init);
-
-    Poke2(0, Console_Init);
-    Poke2(0, Keyboard_Handler);
-    Poke2(0, Vdg_GameText);
-    Poke2(0, Vdg_GamePMode1);
-    Poke2(0, Wiznet_Handler);
-    Poke2(0, Network_Handler);
-    Poke2(0, Wiznet_Init);
-    Poke2(0, Network_Init);
-    Poke2(0, CWait);
-    Poke2(0, 0);
-
+#if 0
     // Display letters on initial Cons and Disp, so we can tell
     // which page the VDG is showing.
-#if 1
     for (word page = 2; page < 6; page++) {
         word addr = page<<8;
         word value = addr + page;
@@ -128,6 +128,9 @@ void Main_Main() {
     for (word w = 0;w<0xFF00; w++) {
         Poke2(0x208, w);
     }
+    for (byte w = 0; w < 128; w++) {
+        Poke1(0x240 + w, 128+w);
+    }
 
     Network_Init();
     CWait();
@@ -141,10 +144,33 @@ void ClearPage0() {
     }
 }
 
+word PinDown[] = {
+  (word)ClearPage0,
+  (word)InitCoco3,
+  (word)Main_Main,
+
+    (word) Breakkey_Handler,
+    (word) Irq_Handler,
+    (word) Irq_Handler_RTI,
+    (word) Irq_Handler_Wrapper,
+    (word) irq_schedule,
+    (word) Network_Handler,
+    (word) Vdg_Init,
+
+    (word) Console_Init,
+    (word) Keyboard_Handler,
+    (word) Vdg_GameText,
+    (word) Vdg_GamePMode1,
+    (word) Wiznet_Handler,
+    (word) Network_Handler,
+    (word) Wiznet_Init,
+    (word) Network_Init,
+    (word) CWait,
+};
+
 int main() {
-  Poke2(0, (word)ClearPage0);
-  Poke2(0, (word)InitCoco3);
-  Poke2(0, (word)Main_Main);
+  Poke2(0, (word)PinDown);
+
   asm volatile("\n"
       "  orcc #$50\n"   // No IRQs, FIRQs, for now.
       "  lds #$01FE\n"  // Reset the stack

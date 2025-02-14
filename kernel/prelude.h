@@ -3,6 +3,7 @@
 
 typedef unsigned char bool;
 typedef unsigned char byte;
+typedef volatile byte *vptr;
 typedef unsigned int uint;
 typedef unsigned int word;
 typedef unsigned int size_t;
@@ -15,18 +16,18 @@ typedef union wordorbytes {
 #define true ((bool)1)
 #define false ((bool)0)
 
-#define Peek1(ADDR) (*(volatile byte*)(uint)(ADDR))
-#define Poke1(ADDR,VALUE) (*(volatile byte*)(uint)(ADDR) = (byte)(VALUE))
+#define Peek1(ADDR) (*(vptr)(uint)(ADDR))
+#define Poke1(ADDR,VALUE) (*(vptr)(uint)(ADDR) = (byte)(VALUE))
 
 #define Peek2(ADDR) (*(volatile uint*)(uint)(ADDR))
 #define Poke2(ADDR,VALUE) (*(volatile uint*)(uint)(ADDR) = (uint)(VALUE))
 
-#define PAND(ADDR, X) ((*(volatile byte*)(size_t)(ADDR)) &= (byte)(X))
-#define POR(ADDR, X) ((*(volatile byte*)(size_t)(ADDR)) |= (byte)(X))
-#define PXOR(ADDR, X) ((*(volatile byte*)(size_t)(ADDR)) ^= (byte)(X))
+#define PAND(ADDR, X) ((*(vptr)(size_t)(ADDR)) &= (byte)(X))
+#define POR(ADDR, X) ((*(vptr)(size_t)(ADDR)) |= (byte)(X))
+#define PXOR(ADDR, X) ((*(vptr)(size_t)(ADDR)) ^= (byte)(X))
 
-#define Cons ((volatile byte*)0x0200)
-#define Disp ((volatile byte*)0x0400)
+#define Cons ((vptr)0x0200)
+#define Disp ((vptr)0x0400)
 #define InitialStack 0x01FE // going backwards.  2-byte canary after stack.
 #define KernelBegin 0x1002  // two byte canary before code.
 #define KernelEntry 0x1002

@@ -3,9 +3,9 @@ struct console {
 };
 void Console_Init(void);
 
-#define CONSOLE_BEGIN 0x200
-#define CONSOLE_LIMIT 0x400
-#define CONSOLE_LEN (CONSOLE_LIMIT - CONSOLE_BEGIN)
+#define CONSOLE_BEGIN (word)Cons
+#define CONSOLE_LEN   0x200
+#define CONSOLE_LIMIT (CONSOLE_BEGIN + CONSOLE_LEN)
 
 #define PANE_BEGIN  (CONSOLE_BEGIN + 32)
 #define PANE_LIMIT  (CONSOLE_LIMIT - 32)

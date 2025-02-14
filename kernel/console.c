@@ -128,13 +128,13 @@ void Console_Init() {
     Poke2(0, AdvanceCursor);
 
     for (word p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
-        Poke2(p, 0x9C9C);
+        Poke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
     for (word p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
         Poke2(p, 0x2020);
     }
     for (word p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
-        Poke2(p, 0xE3E3);
+        Poke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
     }
     Console.cursor = PANE_LIMIT - 32;
     Poke1(Console.cursor, 0xFF);

@@ -1,7 +1,4 @@
 void DoBreak(void) {
-    // Show on console
-    volatile word* p = 0x300;
-    p[6]++;
 }
 
 // Break_Handler is called on interrupt.
@@ -14,5 +11,6 @@ void Breakkey_Handler(void) {
     byte sense = Peek1(Pia0PortA);
     if ((sense & 0x40) == 0) {  // BREAK?
         DoBreak();
+        SpinBreakkey();
     }
 }
