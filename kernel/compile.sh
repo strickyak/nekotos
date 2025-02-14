@@ -30,4 +30,4 @@ set -x
 ) > _nekot.c
 
 set -x
-- gcc6809  -S -std=gnu99 -f'no-builtin' -f'omit-frame-pointer' -f'whole-program' -Os    _nekot.c
+../../bin/gcc6809 -S -Wall -std=gnu99 -f'no-builtin' -f'omit-frame-pointer' -f'whole-program' -Os _nekot.c

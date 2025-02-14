@@ -90,7 +90,7 @@ typedef void (*SpotDrawer)(vptr fb, byte x, byte y, byte color);
 void DrawSpot(vptr fb, byte x, byte y, byte color) {
   byte xshift = x & 3;  // mod 4
   byte xdist = x >> 2;  // div 4
-  word addr = fb + xdist + ((word)y << 5);
+  word addr = (word)fb + xdist + ((word)y << 5);
   byte b = Peek1(addr);
   byte bitshift = (3 - xshift) << 1;
   byte mask = ~(3 << bitshift);
@@ -100,7 +100,7 @@ void DrawSpot(vptr fb, byte x, byte y, byte color) {
 void DrawSpotXor(vptr fb, byte x, byte y, byte color) {
   byte xshift = x & 3;  // mod 4
   byte xdist = x >> 2;  // div 4
-  word addr = fb + xdist + ((word)y << 5);
+  word addr = (word)fb + xdist + ((word)y << 5);
   PXOR(addr, (color << ((3 - xshift) << 1)));
 }
 void DrawHorz(vptr fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {

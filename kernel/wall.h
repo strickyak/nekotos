@@ -12,16 +12,16 @@ struct wall {
     byte day;   // 1 to 31
     byte month; // 1 to 12
     byte year2000;  // e.g. 25 means 2025
-    char dow[3];  // e.g. Mon
-    char moy[3];  // e.g. Jan
+    byte dow[3];  // e.g. Mon
+    byte moy[3];  // e.g. Jan
 
     // If hour rolls over,
     // these values are copied to day, month, etc.
     byte next_day;
     byte next_month;
     byte next_year2000;
-    char next_dow[3];
-    char next_moy[3];
+    byte next_dow[3];
+    byte next_moy[3];
 }; // Instance is named Wall.
 
 void Wall_IncrementSecond(void);

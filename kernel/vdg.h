@@ -3,7 +3,7 @@ struct vdg {
 #define GM_PMode1 1
     byte game_mode;
     byte game_colorset;
-    uint game_framebuffer;
+    vptr game_framebuffer;
 };
 
 // These are for Game Mode.
