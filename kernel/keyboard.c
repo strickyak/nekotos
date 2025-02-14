@@ -1,6 +1,6 @@
 static void Scan(byte* p) {
-    const uint out_port = Pia0PortB;
-    const uint in_port = Pia0PortA;
+    const word out_port = Pia0PortB;
+    const word in_port = Pia0PortA;
 
     Poke1(out_port, ~(byte)0x01);
     *p++ = 0x7F & ~Peek1(in_port);
@@ -23,15 +23,15 @@ static void Scan(byte* p) {
     Poke1(out_port, ~(byte)0x40);
     *p++ = 0x7F & ~Peek1(in_port);
 
-    Poke1(out_port, 0x7F);
+    Poke1(out_port, ~(byte)0x80);
     *p++ = 0x7F & ~Peek1(in_port);
 }
 
 // Did the keyboard change from the previous to the current matrix?
 static bool Changed(byte* current, byte* prev) {
-    // Convert to uint* to use a stride of 2.
-    uint* a = (uint*)current;
-    uint* b = (uint*)prev;
+    // Convert to word* to use a stride of 2.
+    word* a = (word*)current;
+    word* b = (word*)prev;
     // Now four times with a stride of 2, for 8 bytes.
     if (*a++ != *b++) return true;
     if (*a++ != *b++) return true;

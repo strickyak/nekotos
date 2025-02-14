@@ -77,23 +77,6 @@ void Fatal(const char* why, word arg) {
 }
 
 void Main_Main() {
-#if 0
-    // Display letters on initial Cons and Disp, so we can tell
-    // which page the VDG is showing.
-    for (word page = 2; page < 6; page++) {
-        word addr = page<<8;
-        word value = addr + page;
-        for (word j = 0; j < 256; j+=2) {
-            Poke2(addr+j, value);
-        }
-    }
-#endif
-#if 0
-    for (word w = 0; w < 0xFFFF; w++) {
-        Poke2(0x208, w);
-    }
-#endif
-
     // Set the IRQ vector code, for Coco 1 or 2.
     Poke1(IRQVEC_COCO12, JMP_Extended);
     Poke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
@@ -116,14 +99,14 @@ void Main_Main() {
     PutChar('\n');
     PutChar('3');
     PutChar('\n');
-    for (uint i=400; i < 410; i++) {
+    for (uint i=400; i < 404; i++) {
         Printf("(%x=%d.) ", i, i);
     }
 
     Peek1(0xFF02);
     Poke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
     Peek1(0xFF02);
-    asm volatile("  andcc #^$50"); // Allow interrupts
+    ALLOW_IRQ();
 
     for (word w = 0;w<0xFF00; w++) {
         Poke2(0x208, w);
@@ -134,8 +117,7 @@ void Main_Main() {
 
     Network_Init();
     CWait();
-    // Spacewar_Main();
-    Fatal("EXIT", 0);
+    Spacewar_Main();
 }
 
 void ClearPage0() {
@@ -145,9 +127,9 @@ void ClearPage0() {
 }
 
 word PinDown[] = {
-  (word)ClearPage0,
-  (word)InitCoco3,
-  (word)Main_Main,
+    (word) ClearPage0,
+    (word) InitCoco3,
+    (word) Main_Main,
 
     (word) Breakkey_Handler,
     (word) Irq_Handler,
@@ -178,9 +160,11 @@ int main() {
       "  clrb\n"
       "  tfr d,u\n"     // Initial NULL frame pointer.
       "  tfr b,dp\n"    // Direct page is zero page.
-      "  jsr _ClearPage0 \n"
-      "  jsr _InitCoco3 \n"
-      "  jsr _Main_Main\n");  // GOTO Main_Main above.
+      );
+      ClearPage0();
+      InitCoco3();
+      Main_Main();
+      Fatal("EXIT", 0);
 }
 
 #if 0

@@ -125,14 +125,17 @@ void Printf(const char* format, ...) {
 }
 
 void Console_Init() {
-    Poke2(0, AdvanceCursor);
+    // Poke2(0, AdvanceCursor);
 
+    // Draw a greenish bar across the top of the Console.
     for (word p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
         Poke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
+    // Fill the body of the screen with spaces.
     for (word p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
         Poke2(p, 0x2020);
     }
+    // Draw a blueish bar across the bottom of the Console.
     for (word p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
         Poke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
     }
