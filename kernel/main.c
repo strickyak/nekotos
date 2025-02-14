@@ -116,7 +116,7 @@ void Main_Main() {
     }
 
     Network_Init();
-    CWait();
+    // CWait();
     Spacewar_Main();
 }
 
