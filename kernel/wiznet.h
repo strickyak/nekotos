@@ -16,7 +16,6 @@ tx_ptr_t WizBytesToSend( tx_ptr_t tx_ptr,
                         const byte* data, size_t n);
 void WizFinalizeSend( size_t n);
 
-void Network_Log(const char* s);
 
 #define RING_SIZE 2048
 #define RING_MASK (RING_SIZE - 1)
