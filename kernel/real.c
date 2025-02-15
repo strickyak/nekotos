@@ -14,6 +14,8 @@ static void IncrementDecis() {
         Real.decis = 0;
         IncrementSeconds();
     }
+
+    CheckRecv();
 }
 
 void Real_IncrementTicks() {

@@ -64,7 +64,7 @@ void InitCoco3() {
 }
 
 void Fatal(const char* why, word arg) {
-    Vdg_Init();
+    SetConsoleMode();
 
     const char* s = why;
     uint const vdg = 0x200;

@@ -172,7 +172,7 @@ void Spacewar_Main() {
     Poke2(0, DrawChar);
     Poke2(0, DrawSpotXor);
 
-    Vdg_GamePMode1(Disp, 0);
+    Vdg_GamePMode1(Disp, 1);
     ALLOW_IRQ();
 
     while (true) {
@@ -188,14 +188,10 @@ void Spacewar_Main() {
                 WaitFor60HzTick();
             }
         }
-        if (0) {
-            byte x = 0;
-            for (const char* s = "HELLO!"; *s; s++) {
-                DrawChar(*s, x, x, Red0);
-                x += 8;
-                WaitFor60HzTick();
-            }
-        }
+        for (byte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
+        Vdg_GameText(Cons, 0);
+        for (byte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
+        Vdg_GamePMode1(Disp, 1);
     }
     Vdg_GameText(Disp, 0);
     while (1) {}
