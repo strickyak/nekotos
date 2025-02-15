@@ -31,22 +31,34 @@ void Network_Log(const char* s) {
 
 byte recv_head[5];
 byte recv_buf[30];
+bool recv_just_head;
 
 void CheckRecv() {
+#if 1 
+    word bytes_waiting_out = 0;
+    errnum e = WizRecvGetBytesWaiting(&bytes_waiting_out);
+    Printf("Wait(%u,%u)", e, bytes_waiting_out);
+#endif
+
 #if 0
     byte* h = recv_head;
     byte* b = recv_buf;
 
-    errnum e = WizRecvChunkTry(h, 5);
-    if (e==NOTYET) return;
+    if (!recv_just_head) {
+        errnum e = WizRecvChunkTry(h, 5);
+        if (e==NOTYET) return;
+        if (e) Fatal("RECV", e);
+        recv_just_head = true;
+    }
 
-    switch (h[0]) {
-    case CMD_DATA:
+    // switch (h[0]) {
+    // case CMD_DATA:
         {
             word n = Peek2(h+1);
             errnum e2 = WizRecvChunkTry(b, n);
-            if (e==NOTYET) Fatal("PANIC NY ",0);
-            if (e) Fatal("ERR E ",0);
+            if (e2==NOTYET) Fatal("PANIC NY ",0);
+            if (e2) Fatal("ERR E ",e2);
+            recv_just_head = false;
 
             MemCopy(logbuf, h, 5);
             MemCopy(logbuf+5, b, n);
@@ -55,7 +67,7 @@ void CheckRecv() {
             t3 = WizBytesToSend(t3, logbuf, n+5);
             WizFinalizeSend(n+5);
         }
-        break;
-    }
+        // break;
+    // }
 #endif
 }

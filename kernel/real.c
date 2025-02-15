@@ -4,6 +4,7 @@ static void IncrementSeconds() {
     // Now go increment the Wall Time.
     Wall_IncrementSecond();
 
+    CheckRecv();
     SpinRealSeconds();
 }
 
@@ -14,8 +15,6 @@ static void IncrementDecis() {
         Real.decis = 0;
         IncrementSeconds();
     }
-
-    CheckRecv();
 }
 
 void Real_IncrementTicks() {

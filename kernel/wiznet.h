@@ -16,6 +16,7 @@ tx_ptr_t WizBytesToSend( tx_ptr_t tx_ptr,
                         const byte* data, size_t n);
 void WizFinalizeSend( size_t n);
 
+errnum WizRecvGetBytesWaiting(word* bytes_waiting_out);
 errnum WizRecvChunkTry( char* buf, size_t n);
 
 #define RING_SIZE 2048
