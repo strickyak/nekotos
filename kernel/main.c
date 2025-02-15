@@ -1,4 +1,4 @@
-extern void Spacewar_Main(void);
+//XXX extern void Spacewar_Main(void);
 
 // This is a "Null Game" that does nothing.
 void CWait(void) {
@@ -64,8 +64,15 @@ void InitCoco3() {
 }
 
 void Fatal(const char* why, word arg) {
-    SetConsoleMode();
-
+    INHIBIT_IRQ();
+    // Vdg_SetConsoleMode();
+    // Console_Printf("\nFATAL ");
+    // Console_Printf("\nFATAL (%s, %x, %d.)", why, arg, arg);
+    uint const console = 0x200;
+    while (1) {
+        ( *(vptr)console ) ++;
+    }
+#if 0
     const char* s = why;
     uint const vdg = 0x200;
     while (1) {
@@ -74,6 +81,7 @@ void Fatal(const char* why, word arg) {
             if (!*s) s = why;
         }
     }
+#endif
 }
 
 void Main_Main() {
@@ -93,20 +101,19 @@ void Main_Main() {
     Poke2(0, PutStr);
     Poke2(0, PutChar);
 
-    Printf("Hello %s!\n", "World");
+    Console_Printf("Hello %s!\n", "World");
     PutChar('1');
     PutChar('2');
     PutChar('\n');
     PutChar('3');
     PutChar('\n');
     for (uint i=400; i < 404; i++) {
-        Printf("(%x=%d.) ", i, i);
+        Console_Printf("(%x=%d.) ", i, i);
     }
 
     Peek1(0xFF02);
     Poke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
     Peek1(0xFF02);
-    ALLOW_IRQ();
 
     for (word w = 0;w<0xFF00; w++) {
         Poke2(0x208, w);
@@ -116,8 +123,9 @@ void Main_Main() {
     }
 
     Network_Init();
-    // CWait();
-    Spacewar_Main();
+    ALLOW_IRQ();
+    CWait();
+    //XXX Spacewar_Main();
 }
 
 void ClearPage0() {
@@ -135,7 +143,7 @@ word PinDown[] = {
     (word) Irq_Handler,
     (word) Irq_Handler_RTI,
     (word) Irq_Handler_Wrapper,
-    (word) irq_schedule,
+    (word) Irq_Schedule,
     (word) Network_Handler,
     (word) Vdg_Init,
 
@@ -145,10 +153,41 @@ word PinDown[] = {
     (word) Vdg_GamePMode1,
     (word) Wiznet_Handler,
     (word) Network_Handler,
+    (word) Network_Log,
     (word) Wiznet_Init,
     (word) Network_Init,
     (word) CWait,
+    (word) Console_Printf,
 };
+
+void DeclareGlobls(void) {
+  asm volatile("\n"
+      "  .globl ClearPage0 \n"
+      "  .globl InitCoco3   \n"
+      "  .globl Main_Main   \n"
+
+      "  .globl Breakkey_Handler   \n"
+      "  .globl Irq_Handler   \n"
+      "  .globl Irq_Handler_RTI   \n"
+      "  .globl Irq_Handler_Wrapper   \n"
+      "  .globl irq_schedule   \n"
+      "  .globl Network_Handler   \n"
+      "  .globl Vdg_Init   \n"
+
+      "  .globl Console_Init   \n"
+      "  .globl Keyboard_Handler   \n"
+      "  .globl Vdg_GameText   \n"
+      "  .globl Vdg_GamePMode1   \n"
+      "  .globl Wiznet_Handler   \n"
+      "  .globl Network_Handler   \n"
+      "  .globl Network_Log   \n"
+      "  .globl Wiznet_Init   \n"
+      "  .globl Network_Init   \n"
+      "  .globl CWait   \n"
+      "  .globl Console_Printf   \n"
+      );
+
+}
 
 int main() {
   Poke2(0, (word)PinDown);
@@ -161,6 +200,7 @@ int main() {
       "  tfr d,u\n"     // Initial NULL frame pointer.
       "  tfr b,dp\n"    // Direct page is zero page.
       );
+      DeclareGlobls();
       ClearPage0();
       InitCoco3();
       Main_Main();

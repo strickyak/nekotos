@@ -13,4 +13,4 @@ void Console_Init(void);
 
 void PutChar(char c);
 void PutStr(const char* s);
-void Printf(const char* format, ...);
+void Console_Printf(const char* format, ...);

@@ -80,7 +80,7 @@ void PutSigned(int x) {
     }
     PutDec(x);
 }
-void Printf(const char* format, ...) {
+void Console_Printf(const char* format, ...) {
     va_list ap;
     va_start(ap, format);
 

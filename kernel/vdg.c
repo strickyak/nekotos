@@ -62,10 +62,10 @@ void Vdg_GamePMode1(vptr fb, byte colorset) {
     Vdg_RestoreGameMode();
 }
 
-void SetConsoleMode() {
+void Vdg_SetConsoleMode() {
     SetDisplayText(Cons, COLORSET_ORANGE);
 }
 
 void Vdg_Init() {
-    SetConsoleMode();
+    Vdg_SetConsoleMode();
 }

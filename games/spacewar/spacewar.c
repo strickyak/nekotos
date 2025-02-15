@@ -154,10 +154,10 @@ void DrawChar(char ch, byte x, byte y, byte color) {
     word c = ch - 32;
     // word p = FONT + 12*c;
     word p = (word)FONT + (c<<3) + (c<<2);
-    Printf("( %x %x %x);\n", ch, c, p);
+    Console_Printf("( %x %x %x);\n", ch, c, p);
     for (word i = 0; i < 8; i++) {
         byte bits = Peek1(p++);
-        Printf("%x.", bits);
+        Console_Printf("%x.", bits);
         byte probe = 0x80u;
         for (byte j = 0; j < 8; j++) {
             if (bits & probe)
@@ -167,7 +167,8 @@ void DrawChar(char ch, byte x, byte y, byte color) {
     }
 }
 
-void Spacewar_Main() {
+#define Spacewar_Main main
+int Spacewar_Main() {
     Poke2(0, FONT_Wrapper);
     Poke2(0, DrawChar);
     Poke2(0, DrawSpotXor);

@@ -14,5 +14,6 @@ void Vdg_GamePMode1(vptr fb, byte colorset);
 #define COLORSET_ORANGE 1
 
 // Used by the kernel:
+void Vdg_SetConsoleMode();
 void Vdg_RestoreGameMode();
 void Vdg_Init(void);

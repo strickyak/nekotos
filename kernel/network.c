@@ -37,15 +37,18 @@ void CheckRecv() {
 #if 1 
     word bytes_waiting_out = 0;
     errnum e = WizRecvGetBytesWaiting(&bytes_waiting_out);
-    Printf("Wait(%u,%u)", e, bytes_waiting_out);
+    Console_Printf("Wait(%u,%u)", e, bytes_waiting_out);
+Fatal("FAT", e);
 #endif
 
 #if 0
     byte* h = recv_head;
     byte* b = recv_buf;
+Fatal("AAA", e);
 
     if (!recv_just_head) {
         errnum e = WizRecvChunkTry(h, 5);
+Fatal("RRR", e);
         if (e==NOTYET) return;
         if (e) Fatal("RECV", e);
         recv_just_head = true;
