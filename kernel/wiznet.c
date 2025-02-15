@@ -69,7 +69,7 @@ void FindWizPort() {
         Wiznet.wiz_port = p;
         return;
     }
-    Fatal("NOWIZ", 0);
+    Wiznet.wiz_port = 0;
 }
 
 //////////////////////////////////////////
@@ -222,6 +222,8 @@ void Wiznet_Init() {
          p[4] = '6';
     } else if ((uint)Wiznet.wiz_port == 0xFF78) {
          p[4] = '7';
+    } else if ((uint)Wiznet.wiz_port == 0) {
+         p[4] = '0';
     } else {
          p[4] = '?';
     }

@@ -63,27 +63,33 @@ void InitCoco3() {
 #endif
 }
 
-void Fatal(const char* why, word arg) {
-    INHIBIT_IRQ();
-    // Vdg_SetConsoleMode();
-    // Console_Printf("\nFATAL ");
-    // Console_Printf("\nFATAL (%s, %x, %d.)", why, arg, arg);
-    uint const console = 0x200;
-    while (1) {
-        ( *(vptr)console ) ++;
-    }
-#if 0
-    const char* s = why;
-    uint const vdg = 0x200;
-    while (1) {
-        for (uint i = 0; i < 512; i++) {
-            Poke1(vdg+i, *s++);
-            if (!*s) s = why;
+void FatalSpin(const char *why) {
+    // Work around an infinite-loop bug by making it conditional
+    // on something that will never be false.
+    if (why) {
+        while (1) {
+            Cons[0]++;
         }
     }
-#endif
 }
 
+void Fatal(const char* why, word arg) {
+    INHIBIT_IRQ();
+    AdvanceCursor();
+    Vdg_SetConsoleMode();
+    Console_Printf("\nFATAL (%s, %x, %u, %d.)", why, arg, arg, arg);
+    FatalSpin(why);
+}
+#if 0
+// Fatal2 was for debugging the infinite-loop bug.
+void Fatal2(word arg, const char* why) {
+    INHIBIT_IRQ();
+    AdvanceCursor();
+    Vdg_SetConsoleMode();
+    Console_Printf("\nFATAL2 (%s, %x, %u, %d.)", why, arg, arg, arg);
+    FatalSpin(why);
+}
+#endif
 void Main_Main() {
     // Set the IRQ vector code, for Coco 1 or 2.
     Poke1(IRQVEC_COCO12, JMP_Extended);
@@ -157,6 +163,8 @@ word PinDown[] = {
     (word) Wiznet_Init,
     (word) Network_Init,
     (word) CWait,
+    (word) Fatal,
+    (word) FatalSpin,
     (word) Console_Printf,
 };
 
@@ -184,6 +192,8 @@ void DeclareGlobls(void) {
       "  .globl Wiznet_Init   \n"
       "  .globl Network_Init   \n"
       "  .globl CWait   \n"
+      "  .globl Fatal   \n"
+      "  .globl FatalSpin   \n"
       "  .globl Console_Printf   \n"
       );
 

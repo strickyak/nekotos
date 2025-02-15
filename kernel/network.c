@@ -33,24 +33,30 @@ byte recv_head[5];
 byte recv_buf[30];
 bool recv_just_head;
 
+void Fatal2(word arg, const char* why);
+
 void CheckRecv() {
 #if 1 
     word bytes_waiting_out = 0;
     errnum e = WizRecvGetBytesWaiting(&bytes_waiting_out);
     Console_Printf("Wait(%u,%u)", e, bytes_waiting_out);
-Fatal("FAT", e);
+//Fatal("FAT", e);
 #endif
 
-#if 0
+#if 1
     byte* h = recv_head;
     byte* b = recv_buf;
-Fatal("AAA", e);
+//Fatal("AAA", e);
 
     if (!recv_just_head) {
-        errnum e = WizRecvChunkTry(h, 5);
-Fatal("RRR", e);
-        if (e==NOTYET) return;
-        if (e) Fatal("RECV", e);
+        byte e9 = WizRecvChunkTry(h, 5);
+        PutDec(e9);
+Console_Printf("hmm(%u) ", e9);
+        PutDec(e9);
+// Fatal("RRR", e9);
+// Fatal2(e9, "RRR");
+        if (e9==NOTYET) return;
+        if (e9) Fatal("RECV", e);
         recv_just_head = true;
     }
 
