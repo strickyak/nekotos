@@ -108,9 +108,11 @@ func (g *Gamer) Step() {
             buf[0] = 66 // Poke
             buf[1], buf[2] = 0, 32 // Length
             buf[3], buf[4] = 2, byte(addr&255) // Length
+
             for i := 0; i<32; i++ {
                 buf[i+5] = byte(value)
             }
+
             _, err := g.conn.Write(buf[:])
             if err != nil {
                 panic(err)
