@@ -40,6 +40,7 @@ const uint IRQVEC_COCO3 = 0xFEF7;
 const byte JMP_Extended = 0x7E;
 
 void MemCopy(byte *dest, const byte *src, uint count);
+void MemSet(byte* dest, byte value, size_t n);
 
 void Fatal(const char* s, uint arg);
 

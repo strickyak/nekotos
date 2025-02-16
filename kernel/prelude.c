@@ -11,3 +11,8 @@ void MemCopy(byte *dest, const byte *src, uint count) {
         *d++ = *s++;
     }
 }
+void MemSet(byte* dest, byte value, size_t n) {
+    for (word i = 0; i < n; i++) {
+        dest[i] = value;
+    }
+}

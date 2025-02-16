@@ -129,6 +129,8 @@ void Main_Main() {
     }
 
     Network_Init();
+    HelloMCP();
+
     ALLOW_IRQ();
     CWait();
     //XXX Spacewar_Main();
