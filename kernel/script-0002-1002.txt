@@ -2,4 +2,5 @@ section .bss           load 0x0002
 section .text.startup  load 0x1002
 section .text
 section .data
+section .bilbo.frodo
 section .kernlimit

@@ -1,5 +1,17 @@
 // kern.c
 
+void StartTask(word entry, bool in_game) {
+    assert(Kern.in_irq);
+    Kern.in_game = in_game;
+    asm volatile("\n"
+        "  lds #$01FE  \n"  // Reset the stack
+        "  jmp [%0]    \n"
+        : // outputs
+        : "m" (entry) // inputs
+    );
+    // Never returns.
+}
+
 byte IrqSaveAndDisable() {
     byte cc_value;
     asm volatile("\n"

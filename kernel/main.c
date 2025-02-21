@@ -45,27 +45,9 @@ void Main_Main() {
     Poke2(0, PutChar);
 
     Console_Printf("Hello %s!\n", "World");
-    //PutChar('1');
-    //PutChar('2');
-    //PutChar('\n');
-    //PutChar('3');
-    //PutChar('\n');
-    //for (uint i=400; i < 404; i++) {
-        //Console_Printf("(%x=%d.) ", i, i);
-    //}
-
-    Peek1(0xFF02);
+    Peek1(0xFF02);        // Clear VSYNC IRQ
     Poke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
-    Peek1(0xFF02);
-
-#if 0
-    for (word w = 0; w<0xFF00; w++) {
-        Poke2(0x208, w);  // Delay a bit.
-    }
-    for (byte w = 0; w < 128; w++) {
-        Poke1(0x240 + w, 128+w);  // Draw semigraphics
-    }
-#endif
+    Peek1(0xFF02);        // Clear VSYNC IRQ
 
     Network_Init();
     HelloMCP();
@@ -82,7 +64,7 @@ void ClearPage0() {
     }
 }
 
-word PinDown[] = {
+word PinDown[] __attribute__ ((section (".bilbo.frodo"))) = {
     (word) ClearPage0,
     (word) Main_Main,
 
