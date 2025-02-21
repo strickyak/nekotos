@@ -6,6 +6,8 @@ struct quint {
 
 void Network_Log(const char* s);
 
-void CheckRecv(void);
+void CheckReceived(void);
+void WizSend(byte* addr, word size);
 
 void HelloMCP();
+void Network_Init(void);

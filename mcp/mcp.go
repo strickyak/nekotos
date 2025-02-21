@@ -1,3 +1,6 @@
+// The Master Control Program is the Server that Nekot cocos connect to.
+// At the moment, this is dispatched from the Lemma Server in frobio,
+// upon it receiving a quint with `CMD_HELLO_NEKOT = 64`.
 package mcp
 
 import (
@@ -66,7 +69,7 @@ type InputPacketizer struct {
     out     chan <-Packet
     gamer  *Gamer
 }
-func (o InputPacketizer) Go() {
+func (o *InputPacketizer) Go() {
     for {
         // Get Header
         var header [5]byte
@@ -98,8 +101,29 @@ func (o InputPacketizer) Go() {
     o.out <- Packet{0, 0, 0, nil}  // End Sentinel
     close(o.out)
 }
-type KeystrokeMunger struct {
+
+type Keystroke struct {
+    matrix  [8]byte
+    ascii   byte
 }
+
+type KeystrokeMunger struct {
+    in  chan Packet<-
+    out  chan byte  // Ascii Char
+    gamer *Gamer
+}
+func (o *KeystrokeMunger) Go() {
+    for {
+        p, err := <-o.in
+        if err != nil {
+            log.Panicf("KeystrokeMunger.Go(): chan read got error: %v", err)
+        }
+        if p.c != CMD_TODO................ TODO XXX ............
+        
+
+    }    
+}
+
 
 func (g *Gamer) Step() {
     for value := 'A'; value <= 'Z'; value++ {

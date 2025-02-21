@@ -4,6 +4,7 @@
 
 inline void Spin(byte b) { Cons[b]++; }
 
+inline void SpinNoGameTask() { Spin(1); }
 inline void SpinCWait() { Spin(2); }
 
 inline void SpinIrq() { Spin(20); }

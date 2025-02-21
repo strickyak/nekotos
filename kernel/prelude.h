@@ -32,12 +32,13 @@ typedef union wordorbytes {
 #define KernelBegin 0x1002  // two byte canary before code.
 #define KernelEntry 0x1002
 
-const uint Pia0PortA = 0xFF00;
-const uint Pia0PortB = 0xFF02;
+#define Pia0PortA     0xFF00u
+#define Pia0PortB     0xFF02u
 
-const uint IRQVEC_COCO12 = 0x010C;
-const uint IRQVEC_COCO3 = 0xFEF7;
-const byte JMP_Extended = 0x7E;
+#define IRQVEC_COCO12 0x010Cu
+#define IRQVEC_COCO3  0xFEF7u
+
+#define JMP_Extended  (byte)0x7E
 
 void MemCopy(byte *dest, const byte *src, uint count);
 void MemSet(byte* dest, byte value, size_t n);
@@ -46,5 +47,7 @@ void Fatal(const char* s, uint arg);
 
 #define INHIBIT_IRQ() asm volatile("  orcc #$10")
 #define ALLOW_IRQ()   asm volatile("  andcc #^$10")
+
+#define assert(COND) if (!(COND)) Fatal(__FILE__, __LINE__)
 
 #endif // _PRELUDE_H_

@@ -40,10 +40,22 @@ static bool Changed(byte* current, byte* prev) {
     return false; // No change.
 }
 
+struct QuintAndKeyboardPacket {
+    struct quint q;
+    byte matrix[8];
+};
 static void SendKeyboardPacket(byte* p) {
+    struct QuintAndKeyboardPacket qak = {
+        {69, 8, 0},
+        {0},
+    };
+    MemCopy(qak.matrix, p, 8);
+    WizSend( (byte*) &qak, sizeof qak );
 }
 
-void Keyboard_Handler() {
+void KeyboardHandler() {
+    if (Kern.in_game) return; // TODO: different Irq_Schedule.
+
     byte current = Keyboard.current_matrix;
     byte other = !current;
 

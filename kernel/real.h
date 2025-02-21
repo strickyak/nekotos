@@ -8,9 +8,9 @@
 // previous value.)
 
 struct real {
-    byte ticks;  // Changes at 60Hz:  0 to 5
-    byte decis;  // Tenths of a second: 0 to 9
-    uint seconds;  // 0 to 65535
+    byte volatile ticks;  // Changes at 60Hz:  0 to 5
+    byte volatile decis;  // Tenths of a second: 0 to 9
+    uint volatile seconds;  // 0 to 65535
 };  // Instance is named Real.
 
 void Real_IncrementTicks(void);

@@ -46,41 +46,11 @@ void ExecuteReceivedCommand() {
 
     word n = Peek2(h+1);
     word p = Peek2(h+3);
-Console_Printf(" [%d.%d.%d] ", h[0], n, p);
+//Console_Printf(" [%d.%d.%d] ", h[0], n, p);
 
-#if 0
-    switch (h[0]) {
-    case CMD_DATA:
-        {
-            errnum e2 = WizRecvChunkTry(b, n);
-Console_Printf("*DATA(%d)e%d; ", n, e2);
-            if (e2==NOTYET) return;
-            if (e2) Fatal("ERR E ",e2);
-
-            MemCopy(logbuf, h, 5);
-            MemCopy(logbuf+5, b, n);
-            logbuf[0] = CMD_LOG;
-            tx_ptr_t t3 = WizReserveToSend(n+5);
-            t3 = WizBytesToSend(t3, logbuf, n+5);
-            WizFinalizeSend(n+5);
-Console_Printf(" SENT ");
-        }
-        break;
-    case 66: // Poke
-        {
-            errnum e2 = WizRecvChunkTry(p, n);
-Console_Printf("*POKE(%d)e%d; ", n, e2);
-            if (e2==NOTYET) return;
-            if (e2) Fatal("ERR E ",e2);
-        }
-        break;
-    default:
-        Fatal("xxx h[0]", h[0]);
-    }
-#else
     if (h[0] == CMD_DATA) {
             errnum e2 = WizRecvChunkTry(b, n);
-Console_Printf("*DATA(%d)e%d; ", n, e2);
+//Console_Printf("*DATA(%d)e%d; ", n, e2);
             if (e2==NOTYET) return;
             if (e2) Fatal("ERR E ",e2);
 
@@ -90,33 +60,33 @@ Console_Printf("*DATA(%d)e%d; ", n, e2);
             tx_ptr_t t3 = WizReserveToSend(n+5);
             t3 = WizBytesToSend(t3, logbuf, n+5);
             WizFinalizeSend(n+5);
-Console_Printf(" SENT ");
+//Console_Printf(" SENT ");
     } else if (h[0] == 66) {
-            errnum e2 = WizRecvChunkTry(p, n);
-Console_Printf("*POKE(%d)e%d; ", n, e2);
+            errnum e2 = WizRecvChunkTry((byte*)p, n);
+//Console_Printf("*POKE(%d)e%d; ", n, e2);
             if (e2==NOTYET) return;
             if (e2) Fatal("ERR E ",e2);
     } else {
         Fatal("xxx h[0]", h[0]);
     }
-#endif
+
     need_recv_payload = false;
 }
 
-void CheckRecv() {
+void CheckReceived() {
 #if 1 
     word bytes_waiting_out = 0;
     errnum e = WizRecvGetBytesWaiting(&bytes_waiting_out);
-    Console_Printf("Wait(e%u,%u)", e, bytes_waiting_out);
+// Console_Printf("Wait(e%u,%u)", e, bytes_waiting_out);
 #endif
 
 #if 1
     byte* h = recv_head;
-    byte* b = recv_buf;
+    //fut// byte* b = recv_buf;
 
     if (!need_recv_payload) {
         byte e9 = WizRecvChunkTry(h, 5);
-Console_Printf("hmm(e%u) ", e9);
+// Console_Printf("hmm(e%u) ", e9);
         if (e9==NOTYET) return;
         if (e9) Fatal("RECV", e);
         need_recv_payload = true;
@@ -130,4 +100,9 @@ void HelloMCP() {
 #define CMD_HELLO_NEKOT 64
     struct quint q = {CMD_HELLO_NEKOT, 0, 0};
     WizSend((byte*)&q, 5);
+}
+
+
+void Network_Init() {
+    Wiznet_Init();
 }

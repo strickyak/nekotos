@@ -165,7 +165,7 @@ errnum WizRecvGetBytesWaiting(word* bytes_waiting_out) {
   return OKAY;
 }
 
-errnum WizRecvChunkTry( char* buf, size_t n) {
+errnum WizRecvChunkTry( byte* buf, size_t n) {
   word bytes_waiting = 0;
   errnum e = WizRecvGetBytesWaiting(& bytes_waiting);
   if (e) return e;
@@ -189,7 +189,7 @@ errnum WizRecvChunkTry( char* buf, size_t n) {
   return OKAY;
 }
 
-errnum WizRecvChunk( char* buf, size_t n) {
+errnum WizRecvChunk( byte* buf, size_t n) {
   // PrintH("WizRecvChunk %x...", n);
   errnum e;
   do {
@@ -200,7 +200,7 @@ errnum WizRecvChunk( char* buf, size_t n) {
   return e;
 }
 errnum WizRecvChunkBytes( byte* buf, size_t n) {
-  return WizRecvChunk((char*)buf, n);
+  return WizRecvChunk(buf, n);
 }
 
 ////////////////////////////////////////
@@ -209,11 +209,13 @@ errnum WizRecvChunkBytes( byte* buf, size_t n) {
 ////////////////////////////////////////
 ////////////////////////////////////////
 
+#if 0
 void Wiznet_Handler() {
 }
 void Network_Handler() {
     Wiznet_Handler();
 }
+#endif
 
 void Wiznet_Init() {
     volatile byte* p = Cons;
@@ -227,7 +229,4 @@ void Wiznet_Init() {
     } else {
          p[4] = '?';
     }
-}
-void Network_Init() {
-    Wiznet_Init();
 }

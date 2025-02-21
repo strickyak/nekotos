@@ -7,15 +7,15 @@
 // and therefore have different Wall Times.
 
 struct wall {
-    byte second; // 0 to 59
-    byte minute; // 0 to 59
-    byte hour;  // 0 to 23
+    byte volatile second; // 0 to 59
+    byte volatile minute; // 0 to 59
+    byte volatile hour;  // 0 to 23
 
-    byte day;   // 1 to 31
-    byte month; // 1 to 12
-    byte year2000;  // e.g. 25 means 2025
-    byte dow[3];  // e.g. Mon
-    byte moy[3];  // e.g. Jan
+    byte volatile day;   // 1 to 31
+    byte volatile month; // 1 to 12
+    byte volatile year2000;  // e.g. 25 means 2025
+    byte volatile dow[3];  // e.g. Mon
+    byte volatile moy[3];  // e.g. Jan
 
     // If hour rolls over,
     // these values are copied to day, month, etc.

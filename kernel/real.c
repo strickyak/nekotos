@@ -4,7 +4,6 @@ static void IncrementSeconds() {
     // Now go increment the Wall Time.
     Wall_IncrementSecond();
 
-    CheckRecv();
     SpinRealSeconds();
 }
 
@@ -14,6 +13,9 @@ static void IncrementDecis() {
     } else {
         Real.decis = 0;
         IncrementSeconds();
+    }
+    if (Kern.in_game) {
+        CheckReceived();
     }
 }
 

@@ -3,4 +3,4 @@ struct keyboard {
     byte current_matrix;
 };  // Instance is named Keyboard.
 
-void Keyboard_Handler(void);
+void KeyboardHandler(void);
