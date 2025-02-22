@@ -39,14 +39,8 @@ void IrqRestore(byte cc_value) {
 // NoGameTask() should be executed repeatedly
 // in the foreground. 
 void NoGameTask() {
-    byte prev;
     while (Kern.always_true) {
-        Console_Printf("*");
-        if (Real.ticks != prev) {
-            prev = Real.ticks;
-            //?// asm volatile ("cwai #$00");
-            SpinCWait();
-        }
+        // Console_Printf("*");
         CheckReceived();
         SpinNoGameTask();
     }

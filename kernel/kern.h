@@ -10,7 +10,7 @@ void NoGameMain();
 void Network_Handler();
 void StartTask(word entry, bool in_game);
 
-#if 0
+/*
 ///////////////////////////////////////
 //
 //  New Memory Map 2024-02-21
@@ -36,4 +36,4 @@ So Game starts at the same place as Kernel's ".text.startup":
     available to end of Game.  After .text.startup is over,
     chunks are available to end of ".text".
 
-#endif
+*/

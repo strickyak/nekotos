@@ -28,30 +28,6 @@ void Fatal(const char* why, word arg) {
 }
 
 void Main_Main() {
-    // Set the IRQ vector code, for Coco 1 or 2.
-    Poke1(IRQVEC_COCO12, JMP_Extended);
-    Poke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
-    Poke2(IRQVEC_COCO12+1, Irq_Handler_RTI);
-
-    // Set the IRQ vector code, for Coco 3.
-    Poke1(IRQVEC_COCO3, JMP_Extended);
-    Poke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
-    Poke2(IRQVEC_COCO3+1, Irq_Handler_RTI);
-
-    Vdg_Init();
-    Console_Init();
-
-    Poke2(0, PutStr);
-    Poke2(0, PutChar);
-
-    Console_Printf("Hello %s!\n", "World");
-    Peek1(0xFF02);        // Clear VSYNC IRQ
-    Poke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
-    Peek1(0xFF02);        // Clear VSYNC IRQ
-
-    Network_Init();
-    HelloMCP();
-
     ALLOW_IRQ();
     NoGameMain();
     // CWait();
@@ -64,8 +40,7 @@ void ClearPage0() {
     }
 }
 
-word PinDown[] __attribute__ ((section (".bilbo.frodo"))) = {
-    (word) ClearPage0,
+STARTUP_DATA  word PinDown[] = {
     (word) Main_Main,
 
     (word) Breakkey_Handler,
@@ -73,20 +48,21 @@ word PinDown[] __attribute__ ((section (".bilbo.frodo"))) = {
     (word) Irq_Handler_RTI,
     (word) Irq_Handler_Wrapper,
     (word) Network_Handler,
-    (word) Vdg_Init,
+    // (word) Vdg_Init,
 
-    (word) Console_Init,
+    // (word) Console_Init,
     (word) Vdg_GameText,
     (word) Vdg_GamePMode1,
     (word) Network_Log,
-    (word) Wiznet_Init,
-    (word) Network_Init,
+    // (word) Wiznet_Init,
+    // (word) Network_Init,
     (word) CWait,
     (word) Fatal,
     (word) FatalSpin,
     (word) Console_Printf,
 };
 
+#if 0
 void DeclareGlobls(void) {
   asm volatile("\n"
       "  .globl ClearPage0 \n"
@@ -113,6 +89,7 @@ void DeclareGlobls(void) {
       "  .globl Console_Printf   \n"
       );
 }
+#endif
 
 int main() {
     Poke2(0, (word)PinDown);
@@ -126,9 +103,39 @@ int main() {
         "  tfr b,dp\n"    // Direct page is zero page.
         );
 
-    DeclareGlobls();
+    //? DeclareGlobls();
     ClearPage0();
     Kern_Init();
+    // ================================
+    // Set the IRQ vector code, for Coco 1 or 2.
+    Poke1(IRQVEC_COCO12, JMP_Extended);
+    Poke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
+    Poke2(IRQVEC_COCO12+1, Irq_Handler_RTI);
+
+    // Set the IRQ vector code, for Coco 3.
+    Poke1(IRQVEC_COCO3, JMP_Extended);
+    Poke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
+    Poke2(IRQVEC_COCO3+1, Irq_Handler_RTI);
+
+    Vdg_Init();
+    Console_Init();
+
+    Poke2(0, PutStr);
+    Poke2(0, PutChar);
+
+    Console_Printf("Hello %s!\n", "World");
+    Spin_Init();
+
+    Peek1(0xFF02);        // Clear VSYNC IRQ
+    Poke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
+    Peek1(0xFF02);        // Clear VSYNC IRQ
+
+    Network_Init();
+    HelloMCP();
+
+    // ================================
     Main_Main();
     Fatal("EXIT", 0);
 }
+
+FINAL_DATA word FinalCanary;

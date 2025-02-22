@@ -2,11 +2,23 @@
 // They create a "spinning" character on the Console top bar.
 // They should be of no consequence.
 
-inline void Spin(byte b) { Cons[b]++; }
+inline void Spin(char c, byte b) {
+    Cons[b]++;
+}
+inline void Spin_Mark(char c, byte b) {
+    Cons[b-1] = c;
+}
 
-inline void SpinNoGameTask() { Spin(1); }
-inline void SpinCWait() { Spin(2); }
+inline void SpinNoGameTask() { Spin('N', 14); }
+inline void SpinCWait() { Spin('C', 18); }
+inline void SpinIrq() { Spin('I', 22); }
+inline void SpinRealSeconds() { Spin('S', 26); }
+inline void SpinBreakkey() { Spin('B', 30); }
 
-inline void SpinIrq() { Spin(20); }
-inline void SpinRealSeconds() { Spin(28); }
-inline void SpinBreakkey() { Spin(30); }
+void Spin_Init() {
+     Spin_Mark('N', 14);
+     Spin_Mark('C', 18);
+     Spin_Mark('I', 22);
+     Spin_Mark('S', 26);
+     Spin_Mark('B', 30);
+}

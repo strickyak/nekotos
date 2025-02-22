@@ -50,4 +50,7 @@ void Fatal(const char* s, uint arg);
 
 #define assert(COND) if (!(COND)) Fatal(__FILE__, __LINE__)
 
+#define STARTUP_DATA  __attribute__ ((section (".data.startup")))
+#define FINAL_DATA  __attribute__ ((section (".data.final")))
+
 #endif // _PRELUDE_H_
