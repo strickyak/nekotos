@@ -162,35 +162,51 @@ func (g *Gamer) WritePacket(c byte, p uint, bb []byte) {
 }
 
 func (g *Gamer) Step() {
-	for c := 'A'; c <= 'A'; c++ {
-		for addr := 0x220; addr < 0x280 /*0x300*/; addr += 32 {
-			var buf [37]byte
-			buf[0] = 66                        // Poke
-			buf[1], buf[2] = 0, 32             // Length
-			buf[3], buf[4] = 2, byte(addr&255) // Length
+	if false {
+		for c := 'A'; c <= 'A'; c++ {
+			for addr := 0x220; addr < 0x280; /*0x300*/ addr += 32 {
+				var buf [37]byte
+				buf[0] = 66                        // Poke
+				buf[1], buf[2] = 0, 32             // Length
+				buf[3], buf[4] = 2, byte(addr&255) // Length
 
-			for i := 0; i < 32; i++ {
-				buf[i+5] = byte(c)
+				for i := 0; i < 32; i++ {
+					buf[i+5] = byte(int(c) + i)
+				}
+
+				_ = Value(g.conn.Write(buf[:]))
+				time.Sleep(time.Second)
 			}
-
-			_ = Value(g.conn.Write(buf[:]))
-			time.Sleep(time.Second)
 		}
 	}
 
+    // blue
 	blue := Value(os.ReadFile("/tmp/_blue.decb"))
 	g.SendGameAndLaunch(blue)
 
-	for {
-	}
+	time.Sleep(3 * time.Second)
+	g.WritePacket(68, 0, nil)
+	time.Sleep(1 * time.Second)
+	g.WritePacket(68, 0, nil)
+	time.Sleep(1 * time.Second)
+
+    // green
+	green := Value(os.ReadFile("/tmp/_green.decb"))
+	g.SendGameAndLaunch(green)
+
+	time.Sleep(3 * time.Second)
+	g.WritePacket(68, 0, nil)
+	time.Sleep(1 * time.Second)
+	g.WritePacket(68, 0, nil)
+	time.Sleep(1 * time.Second)
 }
 
 func (g *Gamer) SendGameAndLaunch(bb []byte) {
 	for len(bb) >= 5 {
-        c := bb[0]
+		c := bb[0]
 		n := (uint(bb[1]) << 8) | uint(bb[2])
 		p := (uint(bb[3]) << 8) | uint(bb[4])
-        log.Printf("SendGameAndLaunch: %x %x %x (len=%d)", c, n, p, len(bb))
+		log.Printf("SendGameAndLaunch: %x %x %x (len=%d)", c, n, p, len(bb))
 		bb = bb[5:]
 
 		switch c {

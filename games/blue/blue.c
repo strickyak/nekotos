@@ -162,48 +162,27 @@ int main() {
 
     Vdg_GamePMode1(G, 0);
 
-    byte i = 0;
     while (TRUE) {
-        Network_Log("once nekot");
-        ClearGraf(Yellow0);
-#if 0
-        ClearGraf(Green0);
-        for (word w = G+0*1024; w < G+1*1024; w++) {
-            Poke1(w, 0x0F+i);
-        }
-        for (word w = G+1*1024; w < G+2*1024; w++) {
-            Poke1(w, w+i);
-        }
-        for (word w = G+2*1024; w < G+3*1024; w++) {
-            Poke1(w, 0xF0+i);
-        }
-#endif
-        i++;
+        Network_Log("hello blue");
+        ClearGraf(Red0);
 
-#if 1
         for (byte i = 0; i <96; i++) {
             DrawSpot(G, i, i, Yellow0);
-            DrawSpot(G, i+1, i, Red0);
-            DrawSpot(G, i+2, i, Blue0);
+            DrawSpot(G, i+1, i, Yellow0);
+            DrawSpot(G, i+2, i, Red0);
+            DrawSpot(G, i+3, i, Red0);
+            DrawSpot(G, i+4, i, Blue0);
+            DrawSpot(G, i+5, i, Blue0);
+            DrawSpot(G, i+6, i, Green0);
+            DrawSpot(G, i+7, i, Green0);
         }
 
-        WaitForASecond();
-
-        byte x = 30;
-        for (const char* s = "HELLO!"; *s; s++) {
+        byte x = 5;
+        for (const char* s = "HELLO BLUE"; *s; s++) {
             DrawChar(*s, x, 30, Blue0);
-            x += 10;
-            WaitForASecond();
+            x += 9;
         }
 
-        WaitForASecond();
-        WaitForASecond();
-        WaitForASecond();
-        Vdg_GameText(0x200, 0);
-        WaitForASecond();
-        WaitForASecond();
-        WaitForASecond();
-        Vdg_GamePMode1(G, 0);
-#endif
+        while (TRUE) WaitForASecond();
     }
 }
