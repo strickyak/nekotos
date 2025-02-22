@@ -4,8 +4,9 @@
 package mcp
 
 import (
-    "net"
     "log"
+    "net"
+    "time"
 )
 
 type Shard struct {
@@ -108,11 +109,12 @@ type Keystroke struct {
 }
 
 type KeystrokeMunger struct {
-    in  chan Packet<-
+    in  chan Packet
     out  chan byte  // Ascii Char
     gamer *Gamer
 }
 func (o *KeystrokeMunger) Go() {
+/*
     for {
         p, err := <-o.in
         if err != nil {
@@ -122,6 +124,7 @@ func (o *KeystrokeMunger) Go() {
         
 
     }    
+*/
 }
 
 
@@ -141,6 +144,7 @@ func (g *Gamer) Step() {
             if err != nil {
                 panic(err)
             }
+            time.Sleep(time.Second)
         }
     }
 }
