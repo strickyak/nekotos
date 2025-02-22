@@ -25,7 +25,7 @@ void Irq_Handler() {
     uint const clear_irq = Pia0PortB;
     (void) Peek1(clear_irq);
     Kern.in_irq = true;
-
+/*
     Real_IncrementTicks();
     if (Kern.in_game) {
         Irq_InGameSchedule[Real.ticks]();
@@ -33,7 +33,7 @@ void Irq_Handler() {
         Irq_NoGameSchedule[Real.ticks]();
     }
     SpinIrq();
-
+*/
     Kern.in_irq = false;
 }
 
