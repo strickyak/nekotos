@@ -1,3 +1,10 @@
+// main.c
+
+word More0 MORE_DATA;
+word More1 MORE_DATA = 0x9998;
+word KernFinalCanary KERN_FINAL = 0x9990;
+word StartupFinalCanary STARTUP_FINAL = 0x9991;
+
 // This is a "Null Game" that does nothing.
 void CWait(void) {
     ALLOW_IRQ();
@@ -28,6 +35,11 @@ void Fatal(const char* why, word arg) {
 }
 
 void Main_Main() {
+    // Wipe out the startup code, to prove it is never needed again.
+    for (vptr p = (vptr)&KernFinalCanary; p < (vptr)StartupFinalCanary; p++) {
+        *p = 0;
+    }
+
     ALLOW_IRQ();
     NoGameMain();
     // CWait();
@@ -92,11 +104,6 @@ void DeclareGlobls(void) {
 #endif
 
 
-word More0 MORE_DATA;
-word More1 MORE_DATA = 0x9998;
-word KernFinalCanary KERN_FINAL = 0x9990;
-word StartupFinalCanary STARTUP_FINAL = 0x9991;
-
 int main() {
     Poke2(0, (word)PinDown);
     Poke2(0, More0);
@@ -133,7 +140,7 @@ int main() {
     Poke2(0, PutStr);
     Poke2(0, PutChar);
 
-    Console_Printf("Hello %s!\n", "World");
+    Console_Printf("NEKOT %s\n", "MICROKERNEL");
     Spin_Init();
 
     Peek1(0xFF02);        // Clear VSYNC IRQ

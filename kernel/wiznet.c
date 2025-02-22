@@ -206,27 +206,13 @@ errnum WizRecvChunkBytes( byte* buf, size_t n) {
 ////////////////////////////////////////
 ////////////////////////////////////////
 
-////////////////////////////////////////
-////////////////////////////////////////
-
-#if 0
-void Wiznet_Handler() {
-}
-void Network_Handler() {
-    Wiznet_Handler();
-}
-#endif
-
 void Wiznet_Init() {
-    volatile byte* p = Cons;
+    volatile byte* p = Cons + WIZNET_BAR_LOCATION;
+    p[-1] = 'W';
     FindWizPort();
     if ((uint)Wiznet.wiz_port == 0xFF68) {
-         p[4] = '6';
+         p[0] = '6';
     } else if ((uint)Wiznet.wiz_port == 0xFF78) {
-         p[4] = '7';
-    } else if ((uint)Wiznet.wiz_port == 0) {
-         p[4] = '0';
-    } else {
-         p[4] = '?';
+         p[0] = '7';
     }
 }

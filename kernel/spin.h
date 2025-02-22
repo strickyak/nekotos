@@ -1,6 +1,9 @@
 // Spinors are just for visualization and debugging.
 // They create a "spinning" character on the Console top bar.
 // They should be of no consequence.
+//
+// The "mark" is a letter just to the left of the spinor
+// on the bar, to mnemonically identify the spinor.
 
 inline void Spin(char c, byte b) {
     Cons[b]++;
@@ -22,3 +25,5 @@ void Spin_Init() {
      Spin_Mark('S', 26);
      Spin_Mark('B', 30);
 }
+
+#define WIZNET_BAR_LOCATION 10
