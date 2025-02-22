@@ -41,9 +41,7 @@ void Main_Main() {
     }
 
     ALLOW_IRQ();
-    NoGameMain();
-    // CWait();
-    //XXX Spacewar_Main();
+    StartTask(0); // Start the no-game task.
 }
 
 void ClearPage0() {
@@ -60,49 +58,14 @@ STARTUP_DATA  word PinDown[] = {
     (word) Irq_Handler_RTI,
     (word) Irq_Handler_Wrapper,
     (word) Network_Handler,
-    // (word) Vdg_Init,
 
-    // (word) Console_Init,
     (word) Vdg_GameText,
     (word) Vdg_GamePMode1,
     (word) Network_Log,
-    // (word) Wiznet_Init,
-    // (word) Network_Init,
     (word) CWait,
     (word) Fatal,
-    (word) FatalSpin,
     (word) Console_Printf,
 };
-
-#if 0
-void DeclareGlobls(void) {
-  asm volatile("\n"
-      "  .globl ClearPage0 \n"
-      "  .globl Main_Main   \n"
-
-      "  .globl Breakkey_Handler   \n"
-      "  .globl Irq_Handler   \n"
-      "  .globl Irq_Handler_RTI   \n"
-      "  .globl Irq_Handler_Wrapper   \n"
-      "  .globl Network_Handler   \n"
-      "  .globl Vdg_Init   \n"
-
-      "  .globl Console_Init   \n"
-      "  .globl Vdg_GameText   \n"
-      "  .globl Vdg_GamePMode1   \n"
-      "  .globl Wiznet_Handler   \n"
-      "  .globl Network_Handler   \n"
-      "  .globl Network_Log   \n"
-      "  .globl Wiznet_Init   \n"
-      "  .globl Network_Init   \n"
-      "  .globl CWait   \n"
-      "  .globl Fatal   \n"
-      "  .globl FatalSpin   \n"
-      "  .globl Console_Printf   \n"
-      );
-}
-#endif
-
 
 int main() {
     Poke2(0, (word)PinDown);
@@ -120,10 +83,9 @@ int main() {
         "  tfr b,dp\n"    // Direct page is zero page.
         );
 
-    //? DeclareGlobls();
     ClearPage0();
     Kern_Init();
-    // ================================
+
     // Set the IRQ vector code, for Coco 1 or 2.
     Poke1(IRQVEC_COCO12, JMP_Extended);
     Poke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);

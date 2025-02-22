@@ -6,9 +6,11 @@ struct kern {
     bool volatile in_irq;
 };
 
-void NoGameMain();
+void NoGameTask();
 void Network_Handler();
-void StartTask(word entry, bool in_game);
+
+// If entry is 0, it is the no-game task.
+void StartTask(word entry);
 
 /*
 ///////////////////////////////////////

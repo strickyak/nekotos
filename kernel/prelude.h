@@ -55,4 +55,6 @@ void Fatal(const char* s, uint arg);
 #define STARTUP_FINAL  __attribute__ ((section (".final.startup")))
 #define MORE_DATA      __attribute__ ((section (".data.more")))
 
+#define DEFINE_SCREEN(G,N)   extern volatile byte G[N]
+
 #endif // _PRELUDE_H_

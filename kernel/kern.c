@@ -1,11 +1,26 @@
 // kern.c
 
-void StartTask(word entry, bool in_game) {
-    assert(Kern.in_irq);
-    Kern.in_game = in_game;
+// StartTask begins the given function entry,
+// which must never return,
+// as a foreground task,
+// whether or not we were in the IRQ handler
+// when we got here.
+// If the entry is 0, it starts the no-game
+// task, in no-game mode.  Otherwise, it starts
+// the task in Game Mode.
+void StartTask(word entry) {
+    if (!entry) {
+        entry = (word)NoGameTask;
+        Kern.in_game = false;
+    } else {
+        Kern.in_game = true;
+    }
+
     asm volatile("\n"
-        "  lds #$01FE  \n"  // Reset the stack
-        "  jmp [%0]    \n"
+        "  ldx   %0      \n"  // entry point
+        "  lds   #$01FE  \n"  // Reset the stack
+        "  andcc #^$50   \n"  // Allow interrupts.
+        "  jmp   ,X      \n"  // There is no way back.
         : // outputs
         : "m" (entry) // inputs
     );
@@ -35,21 +50,14 @@ void IrqRestore(byte cc_value) {
     );
 }
 
-// If not in_game,
-// NoGameTask() should be executed repeatedly
-// in the foreground. 
+
 void NoGameTask() {
+    Vdg_SetConsoleMode();
     while (Kern.always_true) {
-        // Console_Printf("*");
+        assert(!Kern.in_game);
+
         CheckReceived();
         SpinNoGameTask();
-    }
-}
-
-void NoGameMain() {
-    while (true) {
-        assert(!Kern.in_game);
-        NoGameTask();
     }
 }
 

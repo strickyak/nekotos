@@ -32,8 +32,8 @@ void Network_Log(const char* s) {
     WizSend(logbuf, n+5);
 }
 
-byte recv_head[5];
-byte recv_buf[64];
+MORE_DATA byte recv_head[5];
+MORE_DATA byte recv_buf[64];
 
 bool need_recv_payload;
 
@@ -49,8 +49,9 @@ void ExecuteReceivedCommand() {
 //Console_Printf(" [%d.%d.%d] ", h[0], n, p);
 
     if (h[0] == CMD_DATA) {
+            // If we receive CMD_DATA,
+            // we send it back as CMD_LOG.
             errnum e2 = WizRecvChunkTry(b, n);
-//Console_Printf("*DATA(%d)e%d; ", n, e2);
             if (e2==NOTYET) return;
             if (e2) Fatal("ERR E ",e2);
 
@@ -60,12 +61,17 @@ void ExecuteReceivedCommand() {
             tx_ptr_t t3 = WizReserveToSend(n+5);
             t3 = WizBytesToSend(t3, logbuf, n+5);
             WizFinalizeSend(n+5);
-//Console_Printf(" SENT ");
-    } else if (h[0] == 66) {
+    } else if (h[0] == NEKOT_POKE) { // 66
             errnum e2 = WizRecvChunkTry((byte*)p, n);
-//Console_Printf("*POKE(%d)e%d; ", n, e2);
             if (e2==NOTYET) return;
             if (e2) Fatal("ERR E ",e2);
+    } else if (h[0] == NEKOT_CALL) { // 67
+            func fn = (func)p;
+            fn();
+    } else if (h[0] == NEKOT_LAUNCH) { // 68
+            // Remember, if p==0 then
+            // it starts the no-game task.
+            StartTask(p);
     } else {
         Fatal("xxx h[0]", h[0]);
     }
@@ -77,7 +83,6 @@ void CheckReceived() {
 #if 1 
     word bytes_waiting_out = 0;
     errnum e = WizRecvGetBytesWaiting(&bytes_waiting_out);
-// Console_Printf("Wait(e%u,%u)", e, bytes_waiting_out);
 #endif
 
 #if 1
