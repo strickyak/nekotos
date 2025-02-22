@@ -39,6 +39,8 @@ bool need_recv_payload;
 
 void Fatal2(word arg, const char* why);
 
+bool need_to_start_task;
+word task_to_start;
 
 void ExecuteReceivedCommand() {
     byte* h = recv_head;
@@ -71,7 +73,9 @@ void ExecuteReceivedCommand() {
     } else if (h[0] == NEKOT_LAUNCH) { // 68
             // Remember, if p==0 then
             // it starts the no-game task.
-            StartTask(p);
+            /////// StartTask(p);
+            task_to_start = p;
+            need_to_start_task = true;
     } else {
         Fatal("xxx h[0]", h[0]);
     }
@@ -80,25 +84,18 @@ void ExecuteReceivedCommand() {
 }
 
 void CheckReceived() {
-#if 1 
-    word bytes_waiting_out = 0;
-    errnum e = WizRecvGetBytesWaiting(&bytes_waiting_out);
-#endif
-
-#if 1
-    byte* h = recv_head;
-    //fut// byte* b = recv_buf;
-
     if (!need_recv_payload) {
-        byte e9 = WizRecvChunkTry(h, 5);
-// Console_Printf("hmm(e%u) ", e9);
-        if (e9==NOTYET) return;
-        if (e9) Fatal("RECV", e);
+        byte err = WizRecvChunkTry(recv_head, 5);
+        if (err==NOTYET) return;
+        if (err) Fatal("RECV", err);
         need_recv_payload = true;
     }
 
     ExecuteReceivedCommand();
-#endif
+    if (need_to_start_task) {
+        StartTask(task_to_start);
+        need_to_start_task = false;
+    }
 }
 
 void HelloMCP() {

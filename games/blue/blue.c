@@ -110,7 +110,7 @@ void ClearGraf(byte color) {
     color &= 3;
     wob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
-    for (word i = 0; i < 512; i+=2) {
+    for (word i = 0; i < 3*1024; i+=2) {
         Poke2(G+i, c.w);
     }
 }
@@ -118,12 +118,9 @@ void ClearGraf(byte color) {
 extern byte FONT[];
 void DrawChar(char ch, byte x, byte y, byte color) {
     word c = ch - 32;
-    // word p = FONT + 12*c;
     word p = (word)FONT + (c<<3) + (c<<2);
-    Console_Printf("( %x %x %x);\n", ch, c, p);
     for (word i = 0; i < 8; i++) {
         byte bits = Peek1(p++);
-        Console_Printf("%x.", bits);
         byte probe = 0x80u;
         for (byte j = 0; j < 8; j++) {
             if (bits & probe)
@@ -138,46 +135,39 @@ void WaitForASecond() {
     while (now == Real.seconds) {}
 }
 
-volatile byte TRUE = 1;
-int main() {
-    Vdg_GameText(G, 0);
-
-    while (TRUE) {
-        for (word k = 0; k < 512; k++) {
+void Slide() {
+        for (word k = 0; k < 128; k++) {
             for (word w = 0; w < 512; w++) {
                 Poke1(G+w, w+k);
             }
         }
-    }
-
-/*
-    word k = 0;
-    while (TRUE) {
-        for (word w = 0; w < 512; w++) {
-            Poke1(G+w, k);
-        }
-        k++;
-    }
-*/
-    while (TRUE) {}
 }
 
+volatile byte TRUE = 1;
+int Xmain() {
+    Vdg_GameText(G, 0);
 
-int XXXmain() {
+    while (TRUE) {
+        Vdg_GameText(G, 0);
+        Slide();
+        Vdg_GameText(0x200, 0);
+        Slide();
+    }
+}
+
+int main() {
     Poke2(0, FONT_Wrapper);
     Poke2(0, DrawChar);
     Poke2(0, DrawSpotXor);
 
     Vdg_GamePMode1(G, 0);
-    ALLOW_IRQ();
-
 
     byte i = 0;
     while (TRUE) {
         Network_Log("once nekot");
         ClearGraf(Yellow0);
+#if 0
         ClearGraf(Green0);
-
         for (word w = G+0*1024; w < G+1*1024; w++) {
             Poke1(w, 0x0F+i);
         }
@@ -187,9 +177,10 @@ int XXXmain() {
         for (word w = G+2*1024; w < G+3*1024; w++) {
             Poke1(w, 0xF0+i);
         }
+#endif
         i++;
 
-/*
+#if 1
         for (byte i = 0; i <96; i++) {
             DrawSpot(G, i, i, Yellow0);
             DrawSpot(G, i+1, i, Red0);
@@ -204,6 +195,15 @@ int XXXmain() {
             x += 10;
             WaitForASecond();
         }
-*/
+
+        WaitForASecond();
+        WaitForASecond();
+        WaitForASecond();
+        Vdg_GameText(0x200, 0);
+        WaitForASecond();
+        WaitForASecond();
+        WaitForASecond();
+        Vdg_GamePMode1(G, 0);
+#endif
     }
 }

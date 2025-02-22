@@ -14,9 +14,6 @@ static void IncrementDecis() {
         Real.decis = 0;
         IncrementSeconds();
     }
-    if (Kern.in_game) {
-        CheckReceived();
-    }
 }
 
 void Real_IncrementTicks() {

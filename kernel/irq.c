@@ -21,19 +21,23 @@ func Irq_NoGameSchedule[6] = {
 };
 
 void Irq_Handler() {
+    Kern.in_irq = true;
+
     // Clear the VSYNC IRQ by reading PortB output register.
     uint const clear_irq = Pia0PortB;
     (void) Peek1(clear_irq);
-    Kern.in_irq = true;
-/*
+
+    Breakkey_Handler();
     Real_IncrementTicks();
+
+    assert(Real.ticks < 6);
     if (Kern.in_game) {
         Irq_InGameSchedule[Real.ticks]();
     } else {
         Irq_NoGameSchedule[Real.ticks]();
     }
+
     SpinIrq();
-*/
     Kern.in_irq = false;
 }
 
