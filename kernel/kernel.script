@@ -1,8 +1,8 @@
-section .bss           load 0x0002
-section .data.startup  load 0x1002
-section .text.startup
+section .bss           load 0x0008
+section .data          load 0x1002
+section .data.more
 section .text
-section .data
-section .bilbo.frodo
-section .kernlimit
-section .data.final
+section .final.kern
+section .data.startup
+section .text.startup
+section .final.startup

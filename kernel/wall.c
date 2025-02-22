@@ -4,8 +4,8 @@ static void IncrementDay() {
     Wall.day = Wall.next_day;  
     Wall.month = Wall.next_month;  
     Wall.year2000 = Wall.next_year2000;  
-    MemCopy(Wall.dow, Wall.next_dow, 3);
-    MemCopy(Wall.moy, Wall.next_moy, 3);
+    MemCopy((byte*)Wall.dow, Wall.next_dow, 3);
+    MemCopy((byte*)Wall.moy, Wall.next_moy, 3);
 }
 
 static void IncrementHour() {

@@ -91,8 +91,18 @@ void DeclareGlobls(void) {
 }
 #endif
 
+
+word More0 MORE_DATA;
+word More1 MORE_DATA = 0x9998;
+word KernFinalCanary KERN_FINAL = 0x9990;
+word StartupFinalCanary STARTUP_FINAL = 0x9991;
+
 int main() {
     Poke2(0, (word)PinDown);
+    Poke2(0, More0);
+    Poke2(0, More1);
+    Poke2(0, KernFinalCanary);
+    Poke2(0, StartupFinalCanary);
 
     asm volatile("\n"
         "  orcc #$50\n"   // No IRQs, FIRQs, for now.
@@ -137,5 +147,3 @@ int main() {
     Main_Main();
     Fatal("EXIT", 0);
 }
-
-FINAL_DATA word FinalCanary;
