@@ -7,7 +7,7 @@ _nekot.s: _FORCE_
 
 _nekot.o: _nekot.s
 	../../bin/lwasm $(PRAGMATA) --obj -o'_nekot.o' _nekot.s --list='_nekot.list' --map='_nekot.o.map' --symbol-dump='_nekot.o.sym'
-	../../bin/lwlink --decb --output='_nekot.decb' _nekot.o -L"../../lib/gcc/m6809-unknown/4.6.4/" -lgcc --entry='_main' --script='kernel.script' --map='_nekot.map'
+	../../bin/lwlink --decb --output='_nekot.decb' _nekot.o -L"../../lib/gcc/m6809-unknown/4.6.4/" -lgcc --entry='entry' --script='kernel.script' --map='_nekot.map'
 	:
 	:
 	awk '/^Symbol: _[A-Z]/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot.map > _nekot_sym.s

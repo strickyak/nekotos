@@ -67,21 +67,23 @@ STARTUP_DATA  word PinDown[] = {
     (word) Console_Printf,
 };
 
+void before_main() {
+    asm volatile("\n"
+        "  .globl entry \n"
+        "entry:         \n"
+        "  orcc #$50    \n"  // No IRQs, FIRQs, for now.
+        "  lds #$01FE   \n"  // Reset the stack
+        "  jmp _main    \n"
+        );
+}
+
 int main() {
+    Poke2(0, before_main);
     Poke2(0, (word)PinDown);
     Poke2(0, More0);
     Poke2(0, More1);
     Poke2(0, KernFinalCanary);
     Poke2(0, StartupFinalCanary);
-
-    asm volatile("\n"
-        "  orcc #$50\n"   // No IRQs, FIRQs, for now.
-        "  lds #$01FE\n"  // Reset the stack
-        "  clra\n"
-        "  clrb\n"
-        "  tfr d,u\n"     // Initial NULL frame pointer.
-        "  tfr b,dp\n"    // Direct page is zero page.
-        );
 
     ClearPage0();
     Kern_Init();
