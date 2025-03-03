@@ -1,5 +1,5 @@
-SFILES = main.s prelude.s wall.s real.s irq.s breakkey.s kern.s vdg.s network.s wiznet.s console.s main.s
-OFILES = main.o prelude.o wall.o real.o irq.o breakkey.o kern.o vdg.o network.o wiznet.o console.o main.o
+SFILES = prelude.s wall.s real.s irq.s breakkey.s kern.s vdg.s network.s wiznet.s console.s main.s
+OFILES = prelude.o wall.o real.o irq.o breakkey.o kern.o vdg.o network.o wiznet.o console.o main.o
 all: $(SFILES) $(OFILES) _nekot2.decb
 
 .SUFFIXES:
