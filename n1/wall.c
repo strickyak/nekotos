@@ -1,8 +1,10 @@
 #include "n1/private.h"
 
+struct wall N1Wall;
+
 #define  W  N1Wall
 
-static void IncrementDay() {
+static void Wall_IncrementDay() {
     // Rather than do Gregorian Date calculations,
     // we let the server tell us what the next day is.
     W.day = W.next_day;  
@@ -12,21 +14,21 @@ static void IncrementDay() {
     MemCopy((byte*)W.moy, W.next_moy, 3);
 }
 
-static void IncrementHour() {
+static void Wall_IncrementHour() {
     if (W.hour < 23) {
         ++W.hour;
     } else {
         W.hour = 0;
-        IncrementDay();
+        Wall_IncrementDay();
     }
 }
 
-static void IncrementMinute() {
+static void Wall_IncrementMinute() {
     if (W.minute < 59) {
         ++W.minute;
     } else {
         W.minute = 0;
-        IncrementHour();
+        Wall_IncrementHour();
     }
 }
 
@@ -35,6 +37,8 @@ void Wall_IncrementSecond() {
         ++W.second;
     } else {
         W.second = 0;
-        IncrementMinute();
+        Wall_IncrementMinute();
     }
 }
+
+#undef  W

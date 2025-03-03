@@ -1,0 +1,8 @@
+section .bss           load 0x0008
+section .data          load 0x0502
+section .data.more
+section .text
+section .final.kern
+section .data.startup
+section .text.startup
+section .final.startup

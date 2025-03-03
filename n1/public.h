@@ -118,10 +118,10 @@ byte* N1Receive64();
 //  Video Mode
 
 // N1TextModeForGame sets the VDG screen mode for game play to a Text Mode.
-void N1TextModeForGame(byte* screen_addr);
+void N1TextModeForGame(byte* screen_addr, byte colorset);
 
 // N1PMode1ForGame sets the VDG screen mode for game play to PMode1 graphics.
-void N1PMode1ForGame(byte* screen_addr);
+void N1PMode1ForGame(byte* screen_addr, byte colorset);
 
 // N1ModeForGame sets the VDG screen mode for game play to the given mode_code.
 // TODO: document mode_code.
@@ -133,7 +133,9 @@ void N1ModeForGame(byte* screen_addr, word mode_code);
 // are the "top bar" that can might be useful for
 // realtime debugging markings.  Production games
 // shouldn't need this.
-inline byte* GetConsoleTextModeAddress() { return (byte*)0x0200; }
+inline byte* GetConsoleTextModeAddress() {
+    return (byte*)0x0200;
+}
 
 /////////////////////
 //
@@ -218,8 +220,8 @@ extern CONST struct wall {
     byte volatile day;   // 1 to 31
     byte volatile month; // 1 to 12
     byte volatile year2000;  // e.g. 25 means 2025
-    byte volatile dow[3];  // e.g. Mon
-    byte volatile moy[3];  // e.g. Jan
+    byte volatile dow[4];  // e.g. Mon\0
+    byte volatile moy[4];  // e.g. Jan\0
 
     // If hour rolls over from 23 to 0,
     // these values are copied to day, month, etc.
@@ -228,8 +230,8 @@ extern CONST struct wall {
     byte next_day;
     byte next_month;
     byte next_year2000;
-    byte next_dow[3];
-    byte next_moy[3];
+    byte next_dow[4];
+    byte next_moy[4];
 } N1Wall; // Instance is named Wall.
 
 #endif // _N1_PUBLIC_H_

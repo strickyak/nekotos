@@ -1,13 +1,11 @@
 #ifndef _N1_PRELUDE_H_
 #define _N1_PRELUDE_H_
 
-typedef volatile byte *vptr;
+#define PAND(ADDR, X) ((*(volatile byte*)(word)(ADDR)) &= (byte)(X))
+#define POR(ADDR, X) ((*(volatile byte*)(word)(ADDR)) |= (byte)(X))
+#define PXOR(ADDR, X) ((*(volatile byte*)(word)(ADDR)) ^= (byte)(X))
 
-#define PAND(ADDR, X) ((*(vptr)(word)(ADDR)) &= (byte)(X))
-#define POR(ADDR, X) ((*(vptr)(word)(ADDR)) |= (byte)(X))
-#define PXOR(ADDR, X) ((*(vptr)(word)(ADDR)) ^= (byte)(X))
-
-#define Cons ((vptr)0x0200)
+#define Cons ((byte*)0x0200)
 
 #define InitialStack 0x01FE // going backwards.  2-byte canary after stack.
 //#define KernelBegin 0x0502  // two byte canary before code.
