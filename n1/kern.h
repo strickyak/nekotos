@@ -9,6 +9,7 @@ struct kern {
     bool volatile in_irq;
 } Kern;
 
+void Kern_Init();
 void NoGameTask();
 void Network_Handler();
 

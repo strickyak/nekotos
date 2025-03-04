@@ -183,6 +183,23 @@ void N1GameAbort(char *why);
 // Common pre-allocated regions are also kept in memory.
 void N1GameChain(char* next_game_name);
 
+// N1AfterMain does not end the game -- it just ends the startup code,
+// and frees the startup code in memory, making that memory available.
+//
+// If you call this at the end of your main function,
+// it will exit the main function and enter the function f.
+// The idea is that you put all your startup initialization
+// code in main, and the memory for the startup code is
+// freed up when the startup is done.  f points to the
+// function where the non-startup code continues.
+void N1AfterMain(func f);
+
+// Global variables or data tables that are only used
+// by startup code can be marked with the attribute
+// STARTUP_DATA.  They will be freed when you call
+// N1AfterMain().
+#define STARTUP_DATA   __attribute__ ((section (".data.startup")))
+
 /////////////////////
 // Real Time
 

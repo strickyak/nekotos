@@ -24,9 +24,7 @@ void MemSet(byte* dest, byte value, word n);
 
 void Fatal(const char* s, word arg);
 
-#define STARTUP_DATA   __attribute__ ((section (".data.startup")))
 #define KERN_FINAL     __attribute__ ((section (".final.kern")))
 #define STARTUP_FINAL  __attribute__ ((section (".final.startup")))
-#define MORE_DATA      __attribute__ ((section (".data.more")))
 
 #endif // _N1_PRELUDE_H_
