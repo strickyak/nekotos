@@ -33,6 +33,11 @@ typedef union wordorbytes {
 #define Peek2(ADDR) (*(volatile word*)(word)(ADDR))
 #define Poke2(ADDR,VALUE) (*(volatile word*)(word)(ADDR) = (word)(VALUE))
 
+// These do a Peek1, some bit manipulaton, and a Poke1.
+#define PAND(ADDR, X) ((*(volatile byte*)(word)(ADDR)) &= (byte)(X))
+#define POR(ADDR, X) ((*(volatile byte*)(word)(ADDR)) |= (byte)(X))
+#define PXOR(ADDR, X) ((*(volatile byte*)(word)(ADDR)) ^= (byte)(X))
+
 // If your ".bss" allocation of 128 bytes in Page 0 (the direct page)
 // fills up, you can mark some of the global variable definitions with
 // this attribute, to move those variables into a larger section.
@@ -60,17 +65,17 @@ void Fatal(const char* s, word value);
 // to the other, for as many as are specified the same.
 
 #ifndef N1_DEFINE_SCREEN
-#define N1_DEFINE_SCREEN(Name,Size)       extern byte Name[Size]
+#define N1_DEFINE_SCREEN(Name,NumPages)       extern byte Name[NumPages*256];
 #endif
 
 #ifndef N1_DEFINE_REGION
-#define N1_DEFINE_REGION(Type,Name,Size)  extern Type Name
+#define N1_DEFINE_REGION(Type,Name)    extern Type Name;
 #endif
 
 // Example:
 //
-// N1_DEFINE_SCREEN(T, 512);   // T for Text
-// N1_DEFINE_SCREEN(G, 3072);  // G for PMode1 Graphics
+// N1_DEFINE_SCREEN(T, 2);   // T for Text, needs 2 pages (512 bytes).
+// N1_DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics, needs 12 pages (3K bytes).
 // N1_DEFINE_REGION(struct common, Common, 44);  // Common to all levels.
 // N1_DEFINE_REGION(struct maze, Maze, 106);     // Common to maze levels.
 

@@ -7,7 +7,8 @@ all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb
 
 
 GCC = ../../bin/gcc6809
-GCFLAGS = -Os -std=gnu99 -I.. -S -f'omit-frame-pointer'
+GCFLAGS = -Os -std=gnu99 -I.. -f'omit-frame-pointer'
+GCFLAGS_GRAB = -std=gnu99 -I..
 
 LWASM = ../../bin/lwasm.orig
 LWLINK = ../../bin/lwlink -L'../../lib/gcc/m6809-unknown/4.6.4/'
@@ -33,8 +34,20 @@ _nekot1.decb: _nekot1.o
 	grep [.]final[.] $@.map
 	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
 
+red:
+	awk '/^Symbol: _N1/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
+	python3 n1preprocess.py ../games/red/red.c _pre_red.c
+	$(GCC) -S $(GCFLAGS_GRAB) _pre_red.c
+	awk -f n1grab.awk < _pre_red.s > _grab_red.txt
+	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_red.c
+	cat _nekot1_sym.s >> _pre_red.s
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_red.o' _pre_red.s --list='_red.list' --map='_red.o.map' --symbol-dump='_red.o.sym'
+	$(LWLINK) --decb --output='_red.decb' _red.o -lgcc --entry='_main' --script='green.script' --map='_red.map'
+
+
 clean:
 	rm -f *.s *.o *.list *.sym *.map *.decb _* ,*
 
 ci:
-	bash /usr/local/bin/ci-l *.c *.h *.script Makefile
+	bash /usr/local/bin/ci-l *.c *.h *.script *.py *.awk Makefile
