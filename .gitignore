@@ -6,6 +6,12 @@ _*
 .*.un~
 .*.swp
 
+*.list
+*.sym
+*.s
+*.o
+*.map
+
 # Prerequisites
 *.d
 

@@ -31,6 +31,7 @@ _nekot1.o: _nekot1.s
 _nekot1.decb: _nekot1.o
 	$(LWLINK) --format=decb $< -o'$@' --map='$@.map' --script=kernel.script --entry=entry -lgcc
 	grep [.]final[.] $@.map
+	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
 
 clean:
 	rm -f *.s *.o *.list *.sym *.map *.decb _* ,*
