@@ -3,17 +3,17 @@
 
 // kern.h
 
-struct kern {
-    bool volatile always_true;
-    bool volatile in_game;
-    bool volatile in_irq;
-} Kern;
+struct kern Kern;
+
+//public//void N1GameOver(char *why);
+//public//void N1GameAbort(char *why);
+//public//void N1GameChain(char* next_game_name);
+//public//void N1AfterMain(func f);
 
 void Kern_Init();
-void NoGameTask();
+void ChatTask();
 void Network_Handler();
 
-// If entry is 0, it is the no-game task.
 void StartTask(word entry);
 
 // Shouldn't these be public?

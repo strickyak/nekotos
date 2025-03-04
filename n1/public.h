@@ -117,11 +117,11 @@ byte* N1Receive64();
 //
 //  Video Mode
 
-// N1TextModeForGame sets the VDG screen mode for game play to a Text Mode.
-void N1TextModeForGame(byte* screen_addr, byte colorset);
+// N1GameShowsTextScreen sets the VDG screen mode for game play to a Text Mode.
+void N1GameShowsTextScreen(byte* screen_addr, byte colorset);
 
-// N1PMode1ForGame sets the VDG screen mode for game play to PMode1 graphics.
-void N1PMode1ForGame(byte* screen_addr, byte colorset);
+// N1GameShowsPMode1Screen sets the VDG screen mode for game play to PMode1 graphics.
+void N1GameShowsPMode1Screen(byte* screen_addr, byte colorset);
 
 // N1ModeForGame sets the VDG screen mode for game play to the given mode_code.
 // TODO: document mode_code.
@@ -163,7 +163,7 @@ extern CONST int N1TotalScores[N1_MAX_PLAYERS];
 
 /////////////////////
 //
-//  Ending the Game.
+//  Kern Module
 
 // Normal end of game.  Scores are valid and may be published
 // by the kernel.
@@ -199,6 +199,46 @@ void N1AfterMain(func f);
 // STARTUP_DATA.  They will be freed when you call
 // N1AfterMain().
 #define STARTUP_DATA   __attribute__ ((section (".data.startup")))
+
+// The following Kern variables can be read by the game
+// to find out what state the Kernel is in.
+//
+// A game should always see `in_game` is true!
+// A game should always see `in_irq` is false!
+//
+// The important one is `focus_game`:  If `focus_game`
+// is true, the game can scan the keyboard (but it must
+// disable interrupts while doing so). 
+//
+// If the game has an infinite loop (say, as the
+// outer game loop) it is better to use
+//
+//     while (Kern.always_true) { ... }
+//
+// rather than
+//
+//     while (true) { ... }
+//
+// due to bugs in GCC.
+
+extern CONST struct kern {
+    // For GCC bug workaround.  Must always be true.
+    bool volatile always_true;
+
+    // A game is active and has the foreground task.
+    bool volatile in_game;
+
+    // We are currently handling a 60Hz Clock IRQ.
+    bool volatile in_irq;
+
+    // The active game also owns and can scan the keyboard
+    // (except for the BREAK key), and the game's screen
+    // is being shown.   If a game is active but
+    // focus_game is false, the game must ignore the
+    // keyboard (not scan it!) and the game's screen is
+    // not visible -- the Chat screen is shown, instead.
+    bool volatile focus_game;
+} Kern;
 
 /////////////////////
 // Real Time

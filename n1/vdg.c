@@ -10,7 +10,15 @@
 //
 // See page 3 in "CoCo Hardware Reference.pdf".
 // The sam_control_bits are called "FFC0-FFC5 Video Display Mode".
-static void SetDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits) {
+static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits) {
+    vdg_op_mode &= 0xF8;  // only top 5 bits matter.
+
+    byte cc_value = IrqSaveAndDisable();
+
+    vdg_op_mode |= (0x07 & Peek1(0xFF22)); // Get low 3 bits.
+    Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
+
+    // Set the framebuffer address.
     {
         word bit = 0x0200;  // Start with bit F0 (CoCo Hardware Reference.pdf)
         for (byte i=0; i<14; i+=2) {  // 7 iterations.
@@ -19,7 +27,8 @@ static void SetDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits) {
             bit <<= 1;
         }
     }
-    Poke1(0xFF22, vdg_op_mode);
+
+    // Set the V2, V1, V0 SAM bits.
     {
         byte bit = 0x01;
         for (byte i=0; i<6; i+=2) {  // 3 iterations.
@@ -28,46 +37,46 @@ static void SetDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits) {
             bit <<= 1;
         }
     }
+
+    IrqRestore(cc_value);
 }
 // Effective immediately.
-static void SetDisplayText(byte* fb, byte colorset) {
-    SetDisplayMode(fb, 0x07 + (colorset?8:0), 0);
+static void SwitchToDisplayText(byte* fb, byte colorset) {
+    SwitchDisplayMode(fb, 0x07 + (colorset?8:0), 0);
 }
 // Effective immediately.
-static void SetDisplayPMode1(byte* fb, byte colorset) {
-    SetDisplayMode(fb, 0xC7 + (colorset?8:0), 4);
+static void SwitchToDisplayPMode1(byte* fb, byte colorset) {
+    SwitchDisplayMode(fb, 0xC7 + (colorset?8:0), 4);
 }
 // Effective immediately.
-void Vdg_RestoreGameMode() {
-    switch (Vdg.game_mode) {
-    case 0:
-        SetDisplayText(Vdg.game_framebuffer, Vdg.game_colorset);
-        break;
-    case 1:
-        SetDisplayPMode1(Vdg.game_framebuffer, Vdg.game_colorset);
-        break;
-    }
+void SwitchToGameScreen() {
+    wob w = { .w = Vdg.game_mode };
+
+    SwitchDisplayMode(Vdg.game_framebuffer, w.b[0], w.b[1]);
 }
 
 // These are for Game Mode.
 // They remember what to change back to, after Chat mode.
-void N1TextModeForGame(byte* fb, byte colorset) {
-    Vdg.game_mode = GM_Text;
+void N1GameShowsTextScreen(byte* fb, byte colorset) {
+    Vdg.game_mode = (colorset? 0x0800: 0x0000);
     Vdg.game_framebuffer = fb;
-    Vdg.game_colorset = colorset;
-    Vdg_RestoreGameMode();
+    SwitchToGameScreen();
 }
-void N1PMode1ForGame(byte* fb, byte colorset) {
-    Vdg.game_mode = GM_PMode1;
+void N1GameShowsPMode1Screen(byte* fb, byte colorset) {
+    Vdg.game_mode = (colorset? 0xCF04: 0xC704);
     Vdg.game_framebuffer = fb;
-    Vdg.game_colorset = colorset;
-    Vdg_RestoreGameMode();
+    SwitchToGameScreen();
+}
+void N1GameShowsOtherScreen(byte* fb, word mode_code) {
+    Vdg.game_mode = mode_code;
+    Vdg.game_framebuffer = fb;
+    SwitchToGameScreen();
 }
 
-void Vdg_SetConsoleMode() {
-    SetDisplayText(Cons, COLORSET_ORANGE);
+void SwitchToChatScreen() {
+    SwitchToDisplayText(Cons, COLORSET_ORANGE);
 }
 
 void Vdg_Init() {
-    Vdg_SetConsoleMode();
+    SwitchToChatScreen();
 }

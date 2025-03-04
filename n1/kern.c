@@ -14,7 +14,7 @@ void FatalSpin(const char *why) {
 void Fatal(const char* why, word arg) {
     INHIBIT_IRQ();
 
-    Vdg_SetConsoleMode();
+    SwitchToChatScreen();
     Console_Printf("\nFATAL (%s, %x, %u, %d.)", why, arg, arg, arg);
     FatalSpin(why);
 }
@@ -25,12 +25,10 @@ void Fatal(const char* why, word arg) {
 // as a foreground task,
 // whether or not we were in the IRQ handler
 // when we got here.
-// If the entry is 0, it starts the no-game
-// task, in no-game mode.  Otherwise, it starts
-// the task in Game Mode.
+// Unless the entry is ChatTask, it starts 
+// with in_game mode set to true.
 void StartTask(word entry) {
-    if (!entry) {
-        entry = (word)NoGameTask;
+    if (entry == (word)ChatTask) {
         Kern.in_game = false;
     } else {
         Kern.in_game = true;
@@ -71,13 +69,13 @@ void IrqRestore(byte cc_value) {
 }
 
 
-void NoGameTask() {
-    Vdg_SetConsoleMode();
+void ChatTask() {
+    SwitchToChatScreen();
     while (Kern.always_true) {
         assert(!Kern.in_game);
 
         CheckReceived();
-        SpinNoGameTask();
+        SpinChatTask();
     }
 }
 
@@ -89,6 +87,7 @@ void Network_Handler() {
 
 void Kern_Init() {
     Kern.in_game = false;
+    Kern.focus_game = false;
     Kern.in_irq = false;
     Kern.always_true = true;
 }

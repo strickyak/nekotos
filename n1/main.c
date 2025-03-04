@@ -8,6 +8,7 @@ word More1 MORE_DATA = 0x9998; // not .data
 word KernFinalCanary KERN_FINAL = 0x9990;
 word StartupFinalCanary STARTUP_FINAL = 0x9991;
 
+#if 0
 // This is a "Null Game" that does nothing.
 void CWait(void) {
     ALLOW_IRQ();
@@ -18,15 +19,18 @@ void CWait(void) {
         SpinCWait();
     }
 }
+#endif
 
 void Main_Main() {
     // Wipe out the startup code, to prove it is never needed again.
-    for (byte* p = sizeof(word) + (byte*)&KernFinalCanary; p < (byte*)StartupFinalCanary; p++) {
+    for (byte* p = sizeof(word) + (byte*)&KernFinalCanary;
+         p < (byte*)StartupFinalCanary;
+         p++) {
         *p = 0;
     }
 
     ALLOW_IRQ();
-    StartTask(0); // Start the no-game task.
+    StartTask((word)ChatTask); // Start the no-game task.
 }
 
 void ClearPage0() {
@@ -44,10 +48,10 @@ STARTUP_DATA  word PinDown[] = {
     (word) Irq_Handler_Wrapper,
     (word) Network_Handler,
 
-    (word) N1TextModeForGame,
-    (word) N1PMode1ForGame,
+    (word) N1GameShowsTextScreen,
+    (word) N1GameShowsPMode1Screen,
+    (word) N1GameShowsOtherScreen,
     (word) Network_Log,
-    (word) CWait,
     (word) Fatal,
     (word) Console_Printf,
 };

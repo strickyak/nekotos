@@ -10,9 +10,9 @@ struct wiz_port {
 };
 
 // Axiom uses Socket 1 (of 0 thru 3).
-word const B = 0x500u;   // Socket Base
-word const T = 0x4800u;  // Transmit ring
-word const R = 0x6800u;  // Receive ring
+#define B 0x0500u   // Socket Base
+#define T 0x4800u  // Transmit ring
+#define R 0x6800u  // Receive ring
 
 //////////////////////////////////////
 

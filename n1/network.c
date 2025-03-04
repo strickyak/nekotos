@@ -1,9 +1,5 @@
 #include "n1/private.h"
 
-#define CMD_LOG 200
-#define CMD_DATA 204
-#define CMD_ECHO 217
-
 byte logbuf[30];
 
 word strlen(const char* s) {
@@ -27,11 +23,12 @@ void Network_Log(const char* s) {
     MemCopy(logbuf+5, (byte*)s, n);
 
     WizSend(logbuf, n+5);
-
+#if 0
     logbuf[0] = CMD_ECHO;
     logbuf[5]++;
 
     WizSend(logbuf, n+5);
+#endif
 }
 
 MORE_DATA byte recv_head[5];
@@ -50,14 +47,16 @@ void ExecuteReceivedCommand() {
 
     word n = Peek2(h+1);
     word p = Peek2(h+3);
-//Console_Printf(" [%d.%d.%d] ", h[0], n, p);
 
     if (h[0] == CMD_DATA) {
+#if 0
+            // This was for early debugging.
+
             // If we receive CMD_DATA,
             // we send it back as CMD_LOG.
             errnum e2 = WizRecvChunkTry(b, n);
             if (e2==NOTYET) return;
-            if (e2) Fatal("ERR E ",e2);
+            if (e2) Fatal("ERR E",e2);
 
             MemCopy(logbuf, h, 5);
             MemCopy(logbuf+5, b, n);
@@ -65,17 +64,15 @@ void ExecuteReceivedCommand() {
             tx_ptr_t t3 = WizReserveToSend(n+5);
             t3 = WizBytesToSend(t3, logbuf, n+5);
             WizFinalizeSend(n+5);
+#endif
     } else if (h[0] == NEKOT_POKE) { // 66
             errnum e2 = WizRecvChunkTry((byte*)p, n);
             if (e2==NOTYET) return;
-            if (e2) Fatal("ERR E ",e2);
+            if (e2) Fatal("ERR E",e2);
     } else if (h[0] == NEKOT_CALL) { // 67
             func fn = (func)p;
             fn();
     } else if (h[0] == NEKOT_LAUNCH) { // 68
-            // Remember, if p==0 then
-            // it starts the no-game task.
-            /////// StartTask(p);
             task_to_start = p;
             need_to_start_task = true;
     } else {
@@ -101,11 +98,9 @@ void CheckReceived() {
 }
 
 void HelloMCP() {
-#define CMD_HELLO_NEKOT 64
     struct quint q = {CMD_HELLO_NEKOT, 0, 0};
     WizSend((byte*)&q, 5);
 }
-
 
 void Network_Init() {
     Wiznet_Init();

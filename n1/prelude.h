@@ -21,6 +21,7 @@
 
 void MemCopy(byte *dest, const byte *src, word count);
 void MemSet(byte* dest, byte value, word n);
+void* memset(void* dest, int value, word count);
 
 void Fatal(const char* s, word arg);
 

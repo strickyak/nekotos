@@ -13,6 +13,7 @@ void MemCopy(byte *dest, const byte *src, word count) {
         *d++ = *s++;
     }
 }
+
 void MemSet(byte* dest, byte value, word count) {
     // If count is odd, set an initial byte.
     if (count & 1) {
@@ -27,5 +28,13 @@ void MemSet(byte* dest, byte value, word count) {
     word* d = (word*)dest;
     for (word i = 0; i < count; i++) {
         *d++ = w.w;
+    }
+}
+
+void* memset(void* dest, int value, word count) {
+    byte* p = dest;
+    byte v = (byte)value;
+    for (word i = 0; i < count; i++) {
+        *p++ = v;
     }
 }

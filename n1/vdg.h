@@ -2,24 +2,35 @@
 #define _N1_VDG_H_
 
 struct vdg {
-#define GM_Text   0
-#define GM_PMode1 1
     byte game_mode;
-    byte game_colorset;
     byte* game_framebuffer;
 } Vdg;
 
 // These are for setting the Game Mode.
-void N1TextModeForGame(byte* screen_addr, byte colorset);
-void N1PMode1ForGame(byte* screen_addr, byte colorset);
-void N1ModeForGame(byte* screen_addr, word mode_code);
+// public
+void N1GameShowsTextScreen(byte* screen_addr, byte colorset);
+// public
+void N1GameShowsPMode1Screen(byte* screen_addr, byte colorset);
+
+// N1GameShowsOtherScreen requests game modes other
+// Text and PMode1.  You must know the high bits
+// written to the VDG via the top five bits 
+// of $FF22, and the three V2, V1, V0
+// "FFC0 - FFC5 Video display mode" bits for the SAM chip.
+// Mode_code contains both of those.
+// The top five bits of $FF22 are the top five bits
+// (in the high byte) of mode_code.
+// The V2, V1, V0 bits are the low three bits
+// (in the low byte) of mode_code.
+// public
+void N1GameShowsOtherScreen(byte* screen_addr, word mode_code);
 
 #define COLORSET_GREEN  0
 #define COLORSET_ORANGE 1
 
 // Used by the kernel:
-void Vdg_SetConsoleMode();
-void Vdg_RestoreGameMode();
+void SwitchToChatScreen();
+void SwitchToGameScreen();
 void Vdg_Init(void);
 
 #endif // _N1_VDG_H_

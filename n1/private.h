@@ -15,6 +15,7 @@
 #include "n1/network.h"
 #include "n1/kern.h"
 #include "n1/console.h"
+#include "n1/keyboard.h"
 #include "n1/irq.h"
 
 
