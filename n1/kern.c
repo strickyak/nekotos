@@ -45,7 +45,7 @@ void StartTask(word entry) {
     // Never returns.
 }
 
-byte IrqSaveAndDisable() {
+byte N1IrqSaveAndDisable() {
     byte cc_value;
     asm volatile("\n"
         "  tfr cc,b  \n"
@@ -58,7 +58,7 @@ byte IrqSaveAndDisable() {
     return cc_value;
 }
 
-void IrqRestore(byte cc_value) {
+void N1IrqRestore(byte cc_value) {
     asm volatile("\n"
         "  ldb %0  \n"
         "  tfr b,cc  \n"
@@ -68,6 +68,23 @@ void IrqRestore(byte cc_value) {
     );
 }
 
+void N1AfterMain3(func after_main, word* final, word* final_startup) {
+    // Prove that startup is no longer used.
+    for (word w = (word)final; w < (word)final_startup; w++) {
+        Poke1(w, 0x3F);
+    }
+
+    asm volatile("\n"
+        "  ldx   %0      \n"  // entry point
+        "  lds   #$01FE  \n"  // Reset the stack
+        "  jsr   ,X      \n"  // There is no way back.
+        "FOREVER:        \n"
+        "  bra  FOREVER  \n"  // If after_main returns, get stuck.
+        : // outputs
+        : "m" (after_main) // inputs
+    );
+    // Never returns.
+}
 
 void ChatTask() {
     SwitchToChatScreen();

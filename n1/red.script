@@ -1,5 +1,6 @@
-section .bss           load 0x0008
-section .data          load 0x0502
+section .absolute      load 0x0000
+section .bss           load 0x0080
+section .data          load 0x1002
 section .data.more
 section .text
 section .final

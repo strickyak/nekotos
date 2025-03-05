@@ -3,10 +3,10 @@
 // main.c
 
 // Use our alternate data sections.
-word More0 MORE_DATA; // not .bss
-word More1 MORE_DATA = 0x9998; // not .data
-word KernFinalCanary KERN_FINAL = 0x9990;
-word StartupFinalCanary STARTUP_FINAL = 0x9991;
+word _More0 MORE_DATA; // not .bss
+word _More1 MORE_DATA = 0x9998; // not .data
+word _Final __attribute__ ((section (".final"))) = 0x9990;
+word _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
 
 #if 0
 // This is a "Null Game" that does nothing.
@@ -21,10 +21,10 @@ void CWait(void) {
 }
 #endif
 
-void Main_Main() {
+void after_main() {
     // Wipe out the startup code, to prove it is never needed again.
-    for (byte* p = sizeof(word) + (byte*)&KernFinalCanary;
-         p < (byte*)StartupFinalCanary;
+    for (byte* p = sizeof(word) + (byte*)&_Final;
+         p < (byte*)_Final_Startup;
          p++) {
         *p = 0;
     }
@@ -40,7 +40,7 @@ void ClearPage0() {
 }
 
 STARTUP_DATA  word PinDown[] = {
-    (word) Main_Main,
+    (word) after_main,
 
     (word) Breakkey_Handler,
     (word) Irq_Handler,
@@ -69,10 +69,10 @@ void before_main() {
 int main() {
     Poke2(0, before_main);
     Poke2(0, (word)PinDown);
-    Poke2(0, More0);
-    Poke2(0, More1);
-    Poke2(0, KernFinalCanary);
-    Poke2(0, StartupFinalCanary);
+    Poke2(0, _More0);
+    Poke2(0, _More1);
+    Poke2(0, _Final);
+    Poke2(0, _Final_Startup);
 
     ClearPage0();
     Kern_Init();
@@ -104,6 +104,6 @@ int main() {
     HelloMCP();
 
     // ================================
-    Main_Main();
+    after_main();
     Fatal("EXIT", 0);
 }

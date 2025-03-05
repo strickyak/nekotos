@@ -46,19 +46,29 @@ out(f'')
 
 for scr in screens:
     out(f'#define  {scr["name"]}  ((byte*)0x{scr["addr"]:04x})  // {scr["pages"]} pages')
-out(f'#define  N1PRE_SCREENS   0x{ceiling:04x}')
+out(f'#define  _N1PRE_SCREENS   0x{ceiling:04x}')
 
-addr = 'N1PRE_SCREENS'
+addr = '_N1PRE_SCREENS'
 for rgn in regions:
     addr += f' - sizeof ({rgn[1]})'
     out(f'#define  {rgn[0]}  (*({rgn[1]} *)({addr}))')
-out(f'#define  N1PRE_REGIONS   ({addr})')
+out(f'#define  _N1PRE_REGIONS   ({addr})')
 
+out('')
+out('int const _n1pre_final           __attribute__ ((section (".final"))) = 0xAEEE;')
+out('int const _n1pre_final_startup   __attribute__ ((section (".final.startup"))) = 0xAEEF;')
+out('')
+out('')
+out('')
 out(f'#line 1 "{sys.argv[1]}"')
 for line in lines:
     out(line)
-out(f'//////////////////////////')
+out('')
+out('')
+out('')
+
 out(f'#line 1000000 "{sys.argv[2]}"')
-out(f'//////////////////////////')
-out('int const n1pre_screens MORE_DATA = N1PRE_SCREENS;')
-out('int const n1pre_regions MORE_DATA = N1PRE_REGIONS;')
+out('')
+out('int const _n1pre_screens MORE_DATA = _N1PRE_SCREENS;')
+out('int const _n1pre_regions MORE_DATA = _N1PRE_REGIONS;')
+out('//END.')

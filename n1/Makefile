@@ -35,7 +35,7 @@ _nekot1.decb: _nekot1.o
 	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
 
 red:
-	awk '/^Symbol: _N1/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
+	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _N1/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/red/red.c _pre_red.c
 	$(GCC) -S $(GCFLAGS_GRAB) _pre_red.c
@@ -43,7 +43,11 @@ red:
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_red.c
 	cat _nekot1_sym.s >> _pre_red.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_red.o' _pre_red.s --list='_red.list' --map='_red.o.map' --symbol-dump='_red.o.sym'
-	$(LWLINK) --decb --output='_red.decb' _red.o -lgcc --entry='_main' --script='green.script' --map='_red.map'
+	$(LWLINK) --decb --output='_red.decb' _red.o -lgcc --entry='_main' --script='red.script' --map='_red.map'
+	cp -vf _red.decb /tmp/_red.decb
+	cp -vf _red.decb /tmp/_green.decb
+	cp -vf _red.decb /tmp/_blue.decb
+
 
 
 clean:

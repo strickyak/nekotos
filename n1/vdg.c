@@ -13,7 +13,7 @@
 static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits) {
     vdg_op_mode &= 0xF8;  // only top 5 bits matter.
 
-    byte cc_value = IrqSaveAndDisable();
+    byte cc_value = N1IrqSaveAndDisable();
 
     vdg_op_mode |= (0x07 & Peek1(0xFF22)); // Get low 3 bits.
     Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
@@ -38,7 +38,7 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
         }
     }
 
-    IrqRestore(cc_value);
+    N1IrqRestore(cc_value);
 }
 // Effective immediately.
 static void SwitchToDisplayText(byte* fb, byte colorset) {

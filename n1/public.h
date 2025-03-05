@@ -49,6 +49,8 @@ void Fatal(const char* s, word value);
 
 #define INHIBIT_IRQ() asm volatile("  orcc #$10")
 #define ALLOW_IRQ()   asm volatile("  andcc #^$10")
+byte N1IrqSaveAndDisable();
+void N1IrqRestore(byte cc_value);
 
 ////////////////////////
 //  Pre-allocation
@@ -197,7 +199,8 @@ void N1GameChain(char* next_game_name);
 // code in main, and the memory for the startup code is
 // freed up when the startup is done.  f points to the
 // function where the non-startup code continues.
-void N1AfterMain(func f);
+#define N1AfterMain(after_main) N1AfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
+void N1AfterMain3(func after_main, word* final, word* final_startup);
 
 // Global variables or data tables that are only used
 // by startup code can be marked with the attribute
