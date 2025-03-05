@@ -58,6 +58,16 @@ void ClearPage0() {
     }
 }
 
+void before_main() {
+    asm volatile("\n"
+        "  .globl entry \n"
+        "entry:         \n"
+        "  orcc #$50    \n"  // No IRQs, FIRQs, for now.
+        "  lds #$01FE   \n"  // Reset the stack
+        "  jmp _main    \n"
+        );
+}
+
 word PinDown[] STARTUP_DATA = {
     (word) after_main,
 
@@ -73,30 +83,21 @@ word PinDown[] STARTUP_DATA = {
     (word) Network_Log,
     (word) Fatal,
     (word) Console_Printf,
+
+    (word) before_main,
+    (word) &_More0,
+    (word) &_More1,
+    (word) &_Final,
+    (word) &_Final_Startup,
 };
 
-void before_main() {
-    asm volatile("\n"
-        "  .globl entry \n"
-        "entry:         \n"
-        "  orcc #$50    \n"  // No IRQs, FIRQs, for now.
-        "  lds #$01FE   \n"  // Reset the stack
-        "  jmp _main    \n"
-        );
-}
-
 int main() {
-    Poke2(0, before_main);
     Poke2(0, (word)PinDown);
-    Poke2(0, _More0);
-    Poke2(0, _More1);
-    Poke2(0, _Final);
-    Poke2(0, _Final_Startup);
 
+    Poke1(0xFF90, 0x80);  // Coco3 in Compatibility Mode.
+    Poke1(0xFF91, 0x00);
     ClearPage0();
     Kern_Init();
-    Poke1(0xFF90, 0x80);
-    Poke1(0xFF91, 0x00);
 
     // Set the IRQ vector code, for Coco 1 or 2.
     Poke1(IRQVEC_COCO12, JMP_Extended);
