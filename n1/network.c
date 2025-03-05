@@ -47,6 +47,7 @@ void ExecuteReceivedCommand() {
 
     word n = Peek2(h+1);
     word p = Peek2(h+3);
+Console_Printf("%d(%x,%x)", h[0], n, p);
 
     if (h[0] == CMD_DATA) {
 #if 0
@@ -92,6 +93,7 @@ void CheckReceived() {
 
     ExecuteReceivedCommand();
     if (need_to_start_task) {
+Console_Printf("NTS(%x).", task_to_start);
         StartTask(task_to_start);
         need_to_start_task = false;
     }

@@ -28,10 +28,19 @@ void Fatal(const char* why, word arg) {
 // Unless the entry is ChatTask, it starts 
 // with in_game mode set to true.
 void StartTask(word entry) {
+    if (!entry) {
+        entry = (word)ChatTask;
+    }
+
     if (entry == (word)ChatTask) {
         Kern.in_game = false;
+        Kern.focus_game = false;
     } else {
         Kern.in_game = true;
+        Kern.focus_game = true;
+        // Until the game changes the display,
+        // you get an Orange Console.
+        N1GameShowsTextScreen(Cons, COLORSET_ORANGE);
     }
 
     asm volatile("\n"

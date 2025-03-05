@@ -21,6 +21,25 @@ void CWait(void) {
 }
 #endif
 
+// pia_reset table traced from coco3 startup.
+struct pia_reset { word addr; byte value; } pia_reset[] STARTUP_DATA = {
+     { 0xff21, 0x00 },
+     { 0xff23, 0x00 },
+     { 0xff20, 0xfe },
+     { 0xff22, 0xf8 },
+     { 0xff21, 0x34 },
+     { 0xff23, 0x34 },
+     { 0xff22, 0x00 },
+     { 0xff20, 0x02 },
+     { 0xff01, 0x00 },
+     { 0xff03, 0x00 },
+     { 0xff00, 0x00 },
+     { 0xff02, 0xff },
+     { 0xff01, 0x34 },
+     { 0xff03, 0x34 },
+     { 0 }
+};
+
 void after_main() {
     // Wipe out the startup code, to prove it is never needed again.
     for (byte* p = sizeof(word) + (byte*)&_Final;
@@ -39,7 +58,7 @@ void ClearPage0() {
     }
 }
 
-STARTUP_DATA  word PinDown[] = {
+word PinDown[] STARTUP_DATA = {
     (word) after_main,
 
     (word) Breakkey_Handler,
@@ -76,6 +95,8 @@ int main() {
 
     ClearPage0();
     Kern_Init();
+    Poke1(0xFF90, 0x80);
+    Poke1(0xFF91, 0x00);
 
     // Set the IRQ vector code, for Coco 1 or 2.
     Poke1(IRQVEC_COCO12, JMP_Extended);
@@ -87,8 +108,11 @@ int main() {
     //-- Poke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
     Poke2(IRQVEC_COCO3+1, Irq_Handler_entry);
 
-    Vdg_Init();
     Console_Init();
+    for (struct pia_reset *p = pia_reset; p->addr; p++) {
+        Poke1(p->addr, p->value);
+    }
+    Vdg_Init();
 
     Poke2(0, PutStr);
     Poke2(0, PutChar);

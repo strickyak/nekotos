@@ -157,9 +157,19 @@ void WaitForASecond() {
 volatile byte TRUE = 1;
 
 int main() {
+    asm volatile(".globl __n1pre_entry");
     Poke2(0, FONT_Wrapper);
     Poke2(0, DrawChar);
     Poke2(0, DrawSpotXor);
+    Poke2(0, &_n1pre_entry);
+
+    // for (word x = 3; x; x--) {
+// Console_Printf("(%d) ", x);
+        for (word w = 0; w < 65000; w++) {
+            ++ *(volatile byte*)0x0202;
+            ++ *(volatile byte*)0x0203;
+        }
+    // }
 
     N1GameShowsPMode1Screen(G, 0);
 
@@ -192,7 +202,7 @@ int main() {
         while (TRUE) {
             for (word w = 0; w < end; w+=2) {
                 Poke2(G+w, ~Peek2(G+w));
-                WaitForATick();
+                if ((w&3)==2) WaitForATick();
             }
         }
         // NOT REACHED.

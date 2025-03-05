@@ -2,7 +2,7 @@
 #define _N1_VDG_H_
 
 struct vdg {
-    byte game_mode;
+    word  game_mode;
     byte* game_framebuffer;
 } Vdg;
 

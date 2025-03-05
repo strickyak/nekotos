@@ -183,12 +183,14 @@ func (g *Gamer) Step() {
     // blue
 	blue := Value(os.ReadFile("/tmp/_blue.decb"))
 	g.SendGameAndLaunch(blue)
+	time.Sleep(1000000 * time.Second)
+	log.Printf("WWWWWWWWW TTTTTTTTTTTTTT FFFFFFFFFFFFFF");
 
 	time.Sleep(3 * time.Second)
 	g.WritePacket(68, 0, nil)
 	time.Sleep(1 * time.Second)
 	g.WritePacket(68, 0, nil)
-	time.Sleep(1 * time.Second)
+	time.Sleep(1000000 * time.Second)
 
     // green
 	green := Value(os.ReadFile("/tmp/_green.decb"))

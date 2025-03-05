@@ -43,7 +43,7 @@ red:
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_red.c
 	cat _nekot1_sym.s >> _pre_red.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_red.o' _pre_red.s --list='_red.list' --map='_red.o.map' --symbol-dump='_red.o.sym'
-	$(LWLINK) --decb --output='_red.decb' _red.o -lgcc --entry='_main' --script='red.script' --map='_red.map'
+	$(LWLINK) --decb --output='_red.decb' _red.o -lgcc --entry='__n1pre_entry' --script='red.script' --map='_red.map'
 	cp -vf _red.decb /tmp/_red.decb
 	cp -vf _red.decb /tmp/_green.decb
 	cp -vf _red.decb /tmp/_blue.decb
