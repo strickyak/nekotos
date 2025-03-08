@@ -257,6 +257,10 @@ func (g *Gamer) ExecuteLine() {
 		decb := Value(os.ReadFile("/tmp/_blue.decb"))
 		log.Printf("=> BLUE <=\n")
 		g.SendGameAndLaunch(decb)
+	} else if s == "L" {
+		decb := Value(os.ReadFile("/tmp/_life.decb"))
+		log.Printf("=> LIFE <=\n")
+		g.SendGameAndLaunch(decb)
 	}
 }
 

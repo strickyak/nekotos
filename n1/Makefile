@@ -1,7 +1,7 @@
 CFILES = prelude.c wall.c real.c irq.c breakkey.c kern.c vdg.c network.c wiznet.c console.c keyboard.c main.c
 SFILES = prelude.s wall.s real.s irq.s breakkey.s kern.s vdg.s network.s wiznet.s console.s keyboard.s main.s
 OFILES = prelude.o wall.o real.o irq.o breakkey.o kern.o vdg.o network.o wiznet.o console.o keyboard.o main.o
-all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb
+all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb red green blue life
 
 .SUFFIXES:
 
@@ -72,6 +72,19 @@ blue:
 	$(LWLINK) --decb --output='_blue.decb' _blue.o -lgcc --entry='__n1pre_entry' --script='blue.script' --map='_blue.map'
 	grep '^Section:' _blue.map
 	cp -vf _blue.decb /tmp/_blue.decb
+
+life:
+	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _N1/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
+	python3 n1preprocess.py ../games/life/life.c _pre_life.c
+	$(GCC) -S $(GCFLAGS_GRAB) _pre_life.c
+	awk -f n1grab.awk < _pre_life.s > _grab_life.txt
+	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_life.c
+	cat _nekot1_sym.s >> _pre_life.s
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_life.o' _pre_life.s --list='_life.list' --map='_life.o.map' --symbol-dump='_life.o.sym'
+	$(LWLINK) --decb --output='_life.decb' _life.o -lgcc --entry='__n1pre_entry' --script='life.script' --map='_life.map'
+	grep '^Section:' _life.map
+	cp -vf _life.decb /tmp/_life.decb
 
 
 
