@@ -47,20 +47,21 @@ void DisplayLife(byte in[W][H]) {
     }
 }
 
+volatile word generation;
 void after_main() {
         while (TRUE) {
             DisplayLife(board[0]);
             ComputeLife(board[0], board[1]);
+            ++generation;
 
             DisplayLife(board[1]);
             ComputeLife(board[1], board[0]);
+            ++generation;
         }
 }
 
 int main() {
-    asm volatile(".globl __n1pre_entry");
-    Poke2(0, &_n1pre_entry);
-
+    N1BeginMain();
     N1GameShowsTextScreen(D, 1);
     N1NetworkLog("hello life");
 

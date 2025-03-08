@@ -1,5 +1,10 @@
 section .absolute      load 0x0000
-section .text.startup  load 0x2002
-section .text
+section .bss           load 0x0080
+section .text.entry    load 0x1002
 section .data
-section *
+section .data.more
+section .text
+section .final
+section .data.startup
+section .text.startup
+section .final.startup

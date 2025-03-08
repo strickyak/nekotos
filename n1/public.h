@@ -3,7 +3,7 @@
 
 // Proposed "N1" API for Nekot Gaming OS.
 
-// In the following, remember that "Game" is what we call the 
+// In the following, remember that "Game" is what we call the
 // user programs or processes or applications or apps that this OS can run.
 
 /////////////////////
@@ -107,9 +107,9 @@ void N1Free64(byte* ptr);
 // N1Send64 attempts to send a "multicast" message of 1 to 64 bytes
 // to every active player in your game shard.
 // It succeeds or it calls Fatal().
-void N1Send64(byte* ptr, byte size); 
+void N1Send64(byte* ptr, byte size);
 
-// N1Receive64 attempts to receive a "multicast" message sent by 
+// N1Receive64 attempts to receive a "multicast" message sent by
 // anyone in your game shard, including your own,
 // that were set with N1Send().  If no message has
 // been received, the NULL pointer is returned.
@@ -194,6 +194,18 @@ void N1GameAbort(char *why);
 // Common pre-allocated regions are also kept in memory.
 void N1GameChain(char* next_game_name);
 
+// N1BeginMain must be called at the beginning of your main()
+// function.
+#define N1BeginMain()                           \
+        { asm volatile(".globl __n1pre_entry");   \
+        Poke2(0, &_n1pre_entry); }
+
+// Sometimes if you are using inline assembly language
+// inside a function, you need to tell GCC that the function
+// is needed even if it isn't explicitly called.
+// N1Pin(f) will pin down function f, so GCC doesn't ignore it.
+#define N1Pin(THING)  Poke2(0, &(THING))
+
 // N1AfterMain does not end the game -- it just ends the startup code,
 // and frees the startup code in memory, making that memory available.
 //
@@ -205,10 +217,6 @@ void N1GameChain(char* next_game_name);
 // function where the non-startup code continues.
 #define N1AfterMain(after_main) N1AfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
 void N1AfterMain3(func after_main, word* final, word* final_startup);
-
-//X #define N1_STARTER()                                                        \
-//X     word _n1pre_final __attribute__ ((section (".final")));                 \
-//X     word _n1pre_final_startup __attribute__ ((section (".final.startup")));
 
 // Global variables or data tables that are only used
 // by startup code can be marked with the attribute
@@ -224,7 +232,7 @@ void N1AfterMain3(func after_main, word* final, word* final_startup);
 //
 // The important one is `focus_game`:  If `focus_game`
 // is true, the game can scan the keyboard (but it must
-// disable interrupts while doing so). 
+// disable interrupts while doing so).
 //
 // If the game has an infinite loop (say, as the
 // outer game loop) it is better to use

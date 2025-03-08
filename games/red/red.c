@@ -169,18 +169,9 @@ void after_main() {
 }
 
 int main() {
-    asm volatile(".globl __n1pre_entry");
-    Poke2(0, FONT_Wrapper);
-    Poke2(0, DrawChar);
-    Poke2(0, DrawSpotXor);
-    Poke2(0, &_n1pre_entry);
-
-    // for (word w = 0; w < 50000; w++) {
-        // Poke2(0x0202, w);
-    // }
-
+    N1BeginMain();
+    N1Pin(FONT_Wrapper);
     N1GameShowsPMode1Screen(G, 0);
-
     N1NetworkLog("hello red");
 
     word c0 = 0x0000;
