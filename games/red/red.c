@@ -163,13 +163,9 @@ int main() {
     Poke2(0, DrawSpotXor);
     Poke2(0, &_n1pre_entry);
 
-    // for (word x = 3; x; x--) {
-// Console_Printf("(%d) ", x);
-        for (word w = 0; w < 65000; w++) {
-            ++ *(volatile byte*)0x0202;
-            ++ *(volatile byte*)0x0203;
-        }
-    // }
+    for (word w = 0; w < 30000; w++) {
+        Poke2(0x0202, w);
+    }
 
     N1GameShowsPMode1Screen(G, 0);
 
@@ -182,25 +178,31 @@ int main() {
 #define  end   (3*1024)
         for (byte* w = G+0*end/4; w < G+1*end/4; w+=2) {
             Poke2(w, c1);
+            Poke2(0x0202, w);
         }
         for (byte* w = G+1*end/4; w < G+2*end/4; w+=2) {
             Poke2(w, c2);
+            Poke2(0x0202, w);
         }
         for (byte* w = G+2*end/4; w < G+3*end/4; w+=2) {
             Poke2(w, c3);
+            Poke2(0x0202, w);
         }
         for (byte* w = G+3*end/4; w < G+4*end/4; w+=2) {
             Poke2(w, c0);
+            Poke2(0x0202, w);
         }
 #endif
         byte x = 2;
         for (const char* s = "THIS IS RED"; *s; s++) {
             DrawChar(*s, x, 30, Blue0);
             x += 9;
+            Poke2(0x0202, x);
         }
 
         while (TRUE) {
             for (word w = 0; w < end; w+=2) {
+                Poke2(0x0202, w);
                 Poke2(G+w, ~Peek2(G+w));
                 if ((w&3)==2) WaitForATick();
             }

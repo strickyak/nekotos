@@ -5,16 +5,17 @@ struct real N1Real;
 #define  R  N1Real
 
 static void IncrementSeconds() {
+    SpinRealSeconds();
+
     ++R.seconds;
 
     // Now go increment the Wall Time.
     Wall_IncrementSecond();
-
-    // Show progress on console.
-    SpinRealSeconds();
 }
 
 static void IncrementDecis() {
+    SpinRealDecis();
+
     if (R.decis < 9) {
         ++R.decis;
     } else {

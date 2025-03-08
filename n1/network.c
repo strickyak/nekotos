@@ -9,9 +9,13 @@ word strlen(const char* s) {
 }
 
 void WizSend(byte* addr, word size) {
+    byte cc_value = N1IrqSaveAndDisable();
+
     tx_ptr_t t = WizReserveToSend(size);
     t = WizBytesToSend(t, addr, size);
     WizFinalizeSend(size);
+
+    N1IrqRestore(cc_value);
 }
 
 // HACK
@@ -23,21 +27,12 @@ void Network_Log(const char* s) {
     MemCopy(logbuf+5, (byte*)s, n);
 
     WizSend(logbuf, n+5);
-#if 0
-    logbuf[0] = CMD_ECHO;
-    logbuf[5]++;
-
-    WizSend(logbuf, n+5);
-#endif
 }
 
 MORE_DATA byte recv_head[5];
 MORE_DATA byte recv_buf[64];
 
 bool need_recv_payload;
-
-void Fatal2(word arg, const char* why);
-
 bool need_to_start_task;
 word task_to_start;
 
@@ -50,22 +45,7 @@ void ExecuteReceivedCommand() {
 Console_Printf("%d(%x,%x)", h[0], n, p);
 
     if (h[0] == CMD_DATA) {
-#if 0
-            // This was for early debugging.
-
-            // If we receive CMD_DATA,
-            // we send it back as CMD_LOG.
-            errnum e2 = WizRecvChunkTry(b, n);
-            if (e2==NOTYET) return;
-            if (e2) Fatal("ERR E",e2);
-
-            MemCopy(logbuf, h, 5);
-            MemCopy(logbuf+5, b, n);
-            logbuf[0] = CMD_LOG;
-            tx_ptr_t t3 = WizReserveToSend(n+5);
-            t3 = WizBytesToSend(t3, logbuf, n+5);
-            WizFinalizeSend(n+5);
-#endif
+        // If we ever send CMD_ECHO, expect CMD_DATA.
     } else if (h[0] == NEKOT_POKE) { // 66
             errnum e2 = WizRecvChunkTry((byte*)p, n);
             if (e2==NOTYET) return;
@@ -77,13 +57,15 @@ Console_Printf("%d(%x,%x)", h[0], n, p);
             task_to_start = p;
             need_to_start_task = true;
     } else {
-        Fatal("xxx h[0]", h[0]);
+        Fatal("XRC", h[0]);
     }
 
     need_recv_payload = false;
 }
 
 void CheckReceived() {
+    byte cc_value = N1IrqSaveAndDisable();
+
     if (!need_recv_payload) {
         byte err = WizRecvChunkTry(recv_head, 5);
         if (err==NOTYET) return;
@@ -92,11 +74,16 @@ void CheckReceived() {
     }
 
     ExecuteReceivedCommand();
+
     if (need_to_start_task) {
 Console_Printf("NTS(%x).", task_to_start);
-        StartTask(task_to_start);
         need_to_start_task = false;
+        StartTask(task_to_start);
+        // Note StartTask never returns.
+        // It will launch the task and allow IRQs.
     }
+
+    N1IrqRestore(cc_value);
 }
 
 void HelloMCP() {

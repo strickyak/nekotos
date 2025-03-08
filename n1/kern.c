@@ -43,6 +43,7 @@ void StartTask(word entry) {
         N1GameShowsTextScreen(Cons, COLORSET_ORANGE);
     }
 
+    Kern.in_irq = false;
     asm volatile("\n"
         "  ldx   %0      \n"  // entry point
         "  lds   #$01FE  \n"  // Reset the stack
@@ -99,6 +100,8 @@ void ChatTask() {
     SwitchToChatScreen();
     while (Kern.always_true) {
         assert(!Kern.in_game);
+        assert(!Kern.in_irq);
+        ALLOW_IRQ();
 
         CheckReceived();
         SpinChatTask();

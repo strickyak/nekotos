@@ -15,17 +15,17 @@ inline void Spin_Mark(char c, byte b) {
     Cons[b-1] = c;
 }
 
-inline void SpinChatTask() { Spin('T', 14); }
-// inline void SpinCWait() { Spin('C', 18); }
-inline void SpinIrq() { Spin('I', 22); }
-inline void SpinRealSeconds() { Spin('S', 26); }
+inline void SpinChatTask() { Spin('C', 14); }
+
+inline void SpinIrq() { Spin('Q', 22); }
+inline void SpinRealDecis() { Spin('D', 23); }
+inline void SpinRealSeconds() { Spin('S', 24); }
+
 inline void SpinBreakkey() { Spin('B', 30); }
 
 inline void Spin_Init() {
-     Spin_Mark('T', 14);
-     // Spin_Mark('C', 18);
-     Spin_Mark('I', 22);
-     Spin_Mark('S', 26);
+     Spin_Mark('C', 14);
+     Spin_Mark('Q', 22);
      Spin_Mark('B', 30);
 }
 

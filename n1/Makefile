@@ -31,7 +31,7 @@ _nekot1.o: _nekot1.s
 	$(LWASM) $< $(ASM_PRAGMATA) --obj -o'$@' --list='$@.list' --map='$@.map' --symbol-dump='$@.sym'
 _nekot1.decb: _nekot1.o
 	$(LWLINK) --format=decb $< -o'$@' --map='$@.map' --script=kernel.script --entry=entry -lgcc
-	grep [.]final[.] $@.map
+	grep -w [.]final $@.map
 	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
 
 red:

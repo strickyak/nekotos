@@ -38,3 +38,11 @@ void* memset(void* dest, int value, word count) {
         *p++ = v;
     }
 }
+
+void* memcpy(void* dest, void* src, word count) {
+    byte* s = src;
+    byte* p = dest;
+    for (word i = 0; i < count; i++) {
+        *p++ = *s++;
+    }
+}
