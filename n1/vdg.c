@@ -20,7 +20,7 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
     // vdg_op_mode |= (0x07 & Peek1(0xFF22)); // Get low 3 bits.
     Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
 
-Console_Printf(" D[%x,%x,%x] ", fb, vdg_op_mode, sam_control_bits);
+// Console_Printf(" D[%x,%x,%x] ", fb, vdg_op_mode, sam_control_bits);
 
     // Set the framebuffer address.
     {

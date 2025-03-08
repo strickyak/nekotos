@@ -19,7 +19,7 @@ void WizSend(byte* addr, word size) {
 }
 
 // HACK
-void Network_Log(const char* s) {
+void N1NetworkLog(const char* s) {
     word n = strlen(s);
     logbuf[0] = CMD_LOG;
     Poke2(logbuf+1, n);
@@ -42,7 +42,7 @@ void ExecuteReceivedCommand() {
 
     word n = Peek2(h+1);
     word p = Peek2(h+3);
-Console_Printf("%d(%x,%x)", h[0], n, p);
+// Console_Printf(" %d(%x,%x)", h[0], n, p);
 
     if (h[0] == CMD_DATA) {
         // If we ever send CMD_ECHO, expect CMD_DATA.
@@ -68,7 +68,7 @@ void CheckReceived() {
 
     if (!need_recv_payload) {
         byte err = WizRecvChunkTry(recv_head, 5);
-        if (err==NOTYET) return;
+        if (err==NOTYET) goto RESTORE;
         if (err) Fatal("RECV", err);
         need_recv_payload = true;
     }
@@ -76,13 +76,14 @@ void CheckReceived() {
     ExecuteReceivedCommand();
 
     if (need_to_start_task) {
-Console_Printf("NTS(%x).", task_to_start);
+// Console_Printf("NEED(%x).", task_to_start);
         need_to_start_task = false;
         StartTask(task_to_start);
         // Note StartTask never returns.
         // It will launch the task and allow IRQs.
     }
 
+RESTORE:
     N1IrqRestore(cc_value);
 }
 

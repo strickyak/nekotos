@@ -19,11 +19,15 @@ static void AdvanceCursor() {
     Poke1(Console.cursor, 0xFF);
 }
 
+void PutRawByte(byte x) {
+    Poke1(Console.cursor, x);
+    AdvanceCursor();
+}
 void PutChar(char c) {
     Poke1(Console.cursor, 0x20);
 
     byte x = (byte)c; // Unsigned!
-    if (x == '\n') {  // Any control char is newline.
+    if (x == '\n') {
             while (Console.cursor < PANE_LIMIT-1) {
                 PutChar(' ');
             }
@@ -31,14 +35,11 @@ void PutChar(char c) {
     } else if (x < 32) {
         // Ingore other control chars.
     } else if (x < 96) {
-            Poke1(Console.cursor, 63&x); // 6-bit ASCII
-            AdvanceCursor();
+            PutRawByte(63&x);
     } else if (x < 128) {
-            Poke1(Console.cursor, x-96); // Convert Lower to Upper.
-            AdvanceCursor();
+            PutRawByte(x-96);
     } else {
-            Poke1(Console.cursor, x); // Semigraphics
-            AdvanceCursor();
+            PutRawByte(x);
     }
 }
 

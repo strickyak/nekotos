@@ -1,5 +1,19 @@
-DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
-DEFINE_SCREEN(T, 2);   // T for Text (512 bytes == 2 pages)
+#include "n1/public.h"
+
+struct demo {
+    byte level;
+    int color, size;
+    char wut[16];
+};
+
+struct bogus {
+    byte b, o, g, u, s;
+};
+
+N1_DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
+N1_DEFINE_SCREEN(T, 2);   // T for Text (512 bytes == 2 pages)
+N1_DEFINE_REGION(Demo);
+N1_DEFINE_REGION(Bogus);
 
 // ColorSet 0 for PMode 1
 #define Green0  0
@@ -88,9 +102,9 @@ void FONT_Wrapper() {
 
 /////////////////////////////////////////////////////
 
-typedef void (*SpotDrawer)(vptr fb, byte x, byte y, byte color);
+typedef void (*SpotDrawer)(byte* fb, byte x, byte y, byte color);
 
-void DrawSpot(vptr fb, byte x, byte y, byte color) {
+void DrawSpot(byte* fb, byte x, byte y, byte color) {
   byte xshift = x & 3;  // mod 4
   byte xdist = x >> 2;  // div 4
   word addr = (word)fb + xdist + ((word)y << 5);
@@ -100,7 +114,7 @@ void DrawSpot(vptr fb, byte x, byte y, byte color) {
   b = (b & mask) | (color << bitshift);
   Poke1(addr, b);
 }
-void DrawSpotXor(vptr fb, byte x, byte y, byte color) {
+void DrawSpotXor(byte* fb, byte x, byte y, byte color) {
   byte xshift = x & 3;  // mod 4
   byte xdist = x >> 2;  // div 4
   word addr = (word)fb + xdist + ((word)y << 5);
@@ -130,59 +144,73 @@ void DrawChar(char ch, byte x, byte y, byte color) {
     }
 }
 
-void WaitForASecond() {
-    int now = Real.seconds;
-    while (now == Real.seconds) {}
+void WaitForATick() {
+    int now = N1Real.ticks;
+    while (now == N1Real.ticks) {}
 }
 
-void Slide() {
-        for (word k = 0; k < 128; k++) {
-            for (word w = 0; w < 512; w++) {
-                Poke1(G+w, w+k);
+void WaitForASecond() {
+    int now = N1Real.seconds;
+    while (now == N1Real.seconds) {}
+}
+
+volatile byte TRUE = 1;
+
+#define  END   (3*1024)
+
+void after_main() {
+        while (TRUE) {
+            for (word w = 0; w < END; w+=2) {
+                Poke2(0x0202, w);
+                Poke2(G+w, ~Peek2(G+w));
+                if ((w&3)==2) WaitForATick();
             }
         }
 }
 
-volatile byte TRUE = 1;
-int Xmain() {
-    Vdg_GameText(G, 0);
-
-    while (TRUE) {
-        Vdg_GameText(G, 0);
-        Slide();
-        Vdg_GameText(0x200, 0);
-        Slide();
-    }
-}
-
 int main() {
+    asm volatile(".globl __n1pre_entry");
     Poke2(0, FONT_Wrapper);
     Poke2(0, DrawChar);
     Poke2(0, DrawSpotXor);
+    Poke2(0, &_n1pre_entry);
 
-    Vdg_GamePMode1(G, 0);
+    // for (word w = 0; w < 50000; w++) {
+        // Poke2(0x0202, w);
+    // }
 
-    while (TRUE) {
-        Network_Log("hello blue");
-        ClearGraf(Red0);
+    N1GameShowsPMode1Screen(G, 0);
 
-        for (byte i = 0; i <96; i++) {
-            DrawSpot(G, i, i, Yellow0);
-            DrawSpot(G, i+1, i, Yellow0);
-            DrawSpot(G, i+2, i, Red0);
-            DrawSpot(G, i+3, i, Red0);
-            DrawSpot(G, i+4, i, Blue0);
-            DrawSpot(G, i+5, i, Blue0);
-            DrawSpot(G, i+6, i, Green0);
-            DrawSpot(G, i+7, i, Green0);
-        }
+    N1NetworkLog("hello BLUE");
 
-        byte x = 5;
-        for (const char* s = "HELLO BLUE"; *s; s++) {
-            DrawChar(*s, x, 30, Blue0);
-            x += 9;
-        }
-
-        while (TRUE) WaitForASecond();
+    word c0 = 0x0000;
+    word c1 = 0x5555;
+    word c2 = 0xFFFF;
+    word c3 = 0xAAAA;
+    for (byte* w = G+0*END/4; w < G+1*END/4; w+=2) {
+        Poke2(w, c1);
+        Poke2(0x0202, w);
     }
+    for (byte* w = G+1*END/4; w < G+2*END/4; w+=2) {
+        Poke2(w, c2);
+        Poke2(0x0202, w);
+    }
+    for (byte* w = G+2*END/4; w < G+3*END/4; w+=2) {
+        Poke2(w, c3);
+        Poke2(0x0202, w);
+    }
+    for (byte* w = G+3*END/4; w < G+4*END/4; w+=2) {
+        Poke2(w, c0);
+        Poke2(0x0202, w);
+    }
+
+    byte x = 2;
+    for (const char* s = "THIS IS BLUE"; *s; s++) {
+        DrawChar(*s, x, 30, Blue0);
+        x += 9;
+        Poke2(0x0202, x);
+    }
+
+    N1AfterMain(after_main);
+    // NOT REACHED.
 }

@@ -51,12 +51,12 @@ void Irq_Handler() {
 
     assert(N1Real.ticks < 6);
     if (Kern.focus_game) {
-Console_Printf("F");
+// Console_Printf("F");
         Irq_FocusGameSchedule[N1Real.ticks]();
     } else if (Kern.in_game) {
         Irq_PassiveGameSchedule[N1Real.ticks]();
     } else {
-Console_Printf("$");
+// Console_Printf("$");
         Irq_FocusShellSchedule[N1Real.ticks]();
     }
 

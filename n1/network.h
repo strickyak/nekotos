@@ -12,7 +12,7 @@ struct quint {
     word p;
 };
 
-void Network_Log(const char* s);
+void N1NetworkLog(const char* s);
 
 void CheckReceived(void);
 void WizSend(byte* addr, word size);

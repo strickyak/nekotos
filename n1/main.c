@@ -80,7 +80,8 @@ word PinDown[] STARTUP_DATA = {
     (word) N1GameShowsTextScreen,
     (word) N1GameShowsPMode1Screen,
     (word) N1GameShowsOtherScreen,
-    (word) Network_Log,
+    (word) N1AfterMain3,
+    (word) N1NetworkLog,
     (word) Fatal,
     (word) Console_Printf,
 

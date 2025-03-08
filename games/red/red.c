@@ -156,6 +156,18 @@ void WaitForASecond() {
 
 volatile byte TRUE = 1;
 
+#define  END   (3*1024)
+
+void after_main() {
+        while (TRUE) {
+            for (word w = 0; w < END; w+=2) {
+                Poke2(0x0202, w);
+                Poke2(G+w, ~Peek2(G+w));
+                if ((w&3)==2) WaitForATick();
+            }
+        }
+}
+
 int main() {
     asm volatile(".globl __n1pre_entry");
     Poke2(0, FONT_Wrapper);
@@ -163,49 +175,42 @@ int main() {
     Poke2(0, DrawSpotXor);
     Poke2(0, &_n1pre_entry);
 
-    for (word w = 0; w < 30000; w++) {
-        Poke2(0x0202, w);
-    }
+    // for (word w = 0; w < 50000; w++) {
+        // Poke2(0x0202, w);
+    // }
 
     N1GameShowsPMode1Screen(G, 0);
 
-        // Network_Log("hello green");
-#if 1
-        word c0 = 0x0000;
-        word c1 = 0x5555;
-        word c2 = 0xFFFF;
-        word c3 = 0xAAAA;
-#define  end   (3*1024)
-        for (byte* w = G+0*end/4; w < G+1*end/4; w+=2) {
-            Poke2(w, c1);
-            Poke2(0x0202, w);
-        }
-        for (byte* w = G+1*end/4; w < G+2*end/4; w+=2) {
-            Poke2(w, c2);
-            Poke2(0x0202, w);
-        }
-        for (byte* w = G+2*end/4; w < G+3*end/4; w+=2) {
-            Poke2(w, c3);
-            Poke2(0x0202, w);
-        }
-        for (byte* w = G+3*end/4; w < G+4*end/4; w+=2) {
-            Poke2(w, c0);
-            Poke2(0x0202, w);
-        }
-#endif
-        byte x = 2;
-        for (const char* s = "THIS IS RED"; *s; s++) {
-            DrawChar(*s, x, 30, Blue0);
-            x += 9;
-            Poke2(0x0202, x);
-        }
+    N1NetworkLog("hello red");
 
-        while (TRUE) {
-            for (word w = 0; w < end; w+=2) {
-                Poke2(0x0202, w);
-                Poke2(G+w, ~Peek2(G+w));
-                if ((w&3)==2) WaitForATick();
-            }
-        }
-        // NOT REACHED.
+    word c0 = 0x0000;
+    word c1 = 0x5555;
+    word c2 = 0xFFFF;
+    word c3 = 0xAAAA;
+    for (byte* w = G+0*END/4; w < G+1*END/4; w+=2) {
+        Poke2(w, c1);
+        Poke2(0x0202, w);
+    }
+    for (byte* w = G+1*END/4; w < G+2*END/4; w+=2) {
+        Poke2(w, c2);
+        Poke2(0x0202, w);
+    }
+    for (byte* w = G+2*END/4; w < G+3*END/4; w+=2) {
+        Poke2(w, c3);
+        Poke2(0x0202, w);
+    }
+    for (byte* w = G+3*END/4; w < G+4*END/4; w+=2) {
+        Poke2(w, c0);
+        Poke2(0x0202, w);
+    }
+
+    byte x = 2;
+    for (const char* s = "THIS IS RED"; *s; s++) {
+        DrawChar(*s, x, 30, Blue0);
+        x += 9;
+        Poke2(0x0202, x);
+    }
+
+    N1AfterMain(after_main);
+    // NOT REACHED.
 }

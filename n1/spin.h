@@ -10,12 +10,15 @@
 
 inline void Spin(char c, byte b) {
     Cons[b]++;
-}
+    volatile byte* p = (volatile byte*)0x3FE0;  // last graphics line
+    p[b]++;
+}   
 inline void Spin_Mark(char c, byte b) {
     Cons[b-1] = c;
 }
 
 inline void SpinChatTask() { Spin('C', 14); }
+inline void SpinKeyboardScan() { Spin('K', 18); }
 
 inline void SpinIrq() { Spin('Q', 22); }
 inline void SpinRealDecis() { Spin('D', 23); }
@@ -25,6 +28,7 @@ inline void SpinBreakkey() { Spin('B', 30); }
 
 inline void Spin_Init() {
      Spin_Mark('C', 14);
+     Spin_Mark('K', 18);
      Spin_Mark('Q', 22);
      Spin_Mark('B', 30);
 }

@@ -19,7 +19,7 @@ static bool ScanReturnChanged(byte* p, byte* prev) {
     const word out_port = Pia0PortB;
     const word in_port = Pia0PortA;
     bool z = false;
-    Console_Printf("S");
+    // Console_Printf("S");
 
     byte sense = 0x01;
     while (sense) {
@@ -30,6 +30,7 @@ static bool ScanReturnChanged(byte* p, byte* prev) {
         }
         sense <<= 1;
     }
+    SpinKeyboardScan();
     return z;
 }
 
@@ -46,10 +47,10 @@ void KeyboardHandler() {
     byte current = Keyboard.current_matrix;
     byte other = !current;
 
-    Console_Printf("K");
+    // Console_Printf("K");
     bool changed = ScanReturnChanged(Keyboard.matrix[current], Keyboard.matrix[other]);
     if (changed) {
-        Console_Printf("C");
+        // Console_Printf("C");
         SendKeyboardPacket(Keyboard.matrix[current]);
     }
 

@@ -120,6 +120,10 @@ void N1Send64(byte* ptr, byte size);
 // chunk when you are done with it.
 byte* N1Receive64();
 
+// If you can view the MCP logs, you can log to them.
+// Don't log much!
+void N1NetworkLog(const char* s);
+
 ///////////////
 //
 //  Video Mode
@@ -201,6 +205,10 @@ void N1GameChain(char* next_game_name);
 // function where the non-startup code continues.
 #define N1AfterMain(after_main) N1AfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
 void N1AfterMain3(func after_main, word* final, word* final_startup);
+
+//X #define N1_STARTER()                                                        \
+//X     word _n1pre_final __attribute__ ((section (".final")));                 \
+//X     word _n1pre_final_startup __attribute__ ((section (".final.startup")));
 
 // Global variables or data tables that are only used
 // by startup code can be marked with the attribute

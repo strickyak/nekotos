@@ -65,10 +65,12 @@ byte N1IrqSaveAndDisable() {
         :  // inputs
         : "b"  // Clobbers B
     );
+    //PutChar(64 + (cc_value & 0x10));
     return cc_value;
 }
 
 void N1IrqRestore(byte cc_value) {
+    //PutChar(65 + (cc_value & 0x10));
     asm volatile("\n"
         "  ldb %0  \n"
         "  tfr b,cc  \n"
@@ -98,10 +100,10 @@ void N1AfterMain3(func after_main, word* final, word* final_startup) {
 
 void ChatTask() {
     SwitchToChatScreen();
+
     while (Kern.always_true) {
         assert(!Kern.in_game);
         assert(!Kern.in_irq);
-        ALLOW_IRQ();
 
         CheckReceived();
         SpinChatTask();
