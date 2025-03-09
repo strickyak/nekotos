@@ -4,6 +4,7 @@
 struct vdg {
     word  game_mode;
     byte* game_framebuffer;
+    byte shadow_pia1portb;
 } Vdg;
 
 // These are for setting the Game Mode.

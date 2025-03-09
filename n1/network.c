@@ -73,7 +73,13 @@ void CheckReceived() {
         need_recv_payload = true;
     }
 
+#if NETWORK_CLICK
+    Poke1(0xFF22, Vdg.shadow_pia1portb | 0x02);  // 1-bit click
+#endif
     ExecuteReceivedCommand();
+#if NETWORK_CLICK
+    Poke1(0xFF22, Vdg.shadow_pia1portb | 0x00);  // 1-bit click
+#endif
 
     if (need_to_start_task) {
 // Console_Printf("NEED(%x).", task_to_start);

@@ -16,8 +16,7 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
 
     byte cc_value = N1IrqSaveAndDisable();
 
-
-    // vdg_op_mode |= (0x07 & Peek1(0xFF22)); // Get low 3 bits.
+    Vdg.shadow_pia1portb = vdg_op_mode;
     Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
 
 // Console_Printf(" D[%x,%x,%x] ", fb, vdg_op_mode, sam_control_bits);

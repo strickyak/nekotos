@@ -1,6 +1,9 @@
 #ifndef _N1_NETWORK_H_
 #define _N1_NETWORK_H_
 
+// Make noise on incoming packets.
+#define NETWORK_CLICK 1
+
 // struct quint is the 5-byte header of
 // every packet embedded in the TCP stream
 // to and from the MCP.  p varies with the

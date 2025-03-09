@@ -337,6 +337,10 @@ func (g *Gamer) Step(inchan chan Packet) {
 // SendGameAndLaunch takes the contents of a DECB binary,
 // and pokes it into the Coco.
 func (g *Gamer) SendGameAndLaunch(bb []byte) {
+    // Flip back to Shell mode, so you're not executing the old game
+    // while loading the new game.
+	g.SendPacket(N_START, 0, nil)
+
 	for len(bb) >= 5 {
 		c := bb[0]
 		n := (uint(bb[1]) << 8) | uint(bb[2])

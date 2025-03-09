@@ -23,18 +23,18 @@ void CWait(void) {
 
 // pia_reset table traced from coco3 startup.
 struct pia_reset { word addr; byte value; } pia_reset[] STARTUP_DATA = {
-     { 0xff21, 0x00 },
-     { 0xff23, 0x00 },
-     { 0xff20, 0xfe },
-     { 0xff22, 0xf8 },
+     { 0xff21, 0x00 },  // choose data direction
+     { 0xff23, 0x00 },  // choose data direction
+     { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
+     { 0xff22, 0xfa },  // bit 1 and bits 3-7 are outputs.
      { 0xff21, 0x34 },
      { 0xff23, 0x34 },
-     { 0xff22, 0x00 },
+     { 0xff22, 0x00 },  // output all 0s on Pia1 PortB
      { 0xff20, 0x02 },
-     { 0xff01, 0x00 },
-     { 0xff03, 0x00 },
-     { 0xff00, 0x00 },
-     { 0xff02, 0xff },
+     { 0xff01, 0x00 },  // choose data direction
+     { 0xff03, 0x00 },  // choose data direction
+     { 0xff00, 0x00 },  // inputs
+     { 0xff02, 0xff },  // outputs
      { 0xff01, 0x34 },
      { 0xff03, 0x34 },
      { 0 }
@@ -52,9 +52,9 @@ void after_main() {
     StartTask((word)ChatTask); // Start the no-game task.
 }
 
-void ClearPage0() {
-    for (word p = 0; p<256; p+=2) {
-        Poke2(p, 0);
+void ClearPage256(word p) {
+    for (word i = 0; i<256; i+=2) {
+        Poke2(p+i, 0);
     }
 }
 
@@ -93,11 +93,22 @@ word PinDown[] STARTUP_DATA = {
 };
 
 int main() {
-    Poke2(0, (word)PinDown);
+    ClearPage256(0x0000); // .bss
+    // ClearPage256(0x0100); // stack
+    ClearPage256(0x0200); // vdg console p1
+    ClearPage256(0x0300); // vdg console p2
+    ClearPage256(0x0400); // chunks of 64-byte
 
-    Poke1(0xFF90, 0x80);  // Coco3 in Compatibility Mode.
+    // Coco3 in Compatibility Mode.
+    Poke1(0xFF90, 0x80);
     Poke1(0xFF91, 0x00);
-    ClearPage0();
+
+    // Install 4 initial 64-byte chunks.
+    Reset64();
+    for (byte* p = 0x0400; p < 0x0500; p += 64) {
+        N1Free64(p);
+    }
+
     Kern_Init();
 
     // Set the IRQ vector code, for Coco 1 or 2.
@@ -131,5 +142,6 @@ int main() {
 
     // ================================
     after_main();
+    N1Pin(PinDown);
     Fatal("EXIT", 0);
 }

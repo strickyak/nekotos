@@ -86,7 +86,7 @@ void N1IrqRestore(byte cc_value);
 //  64-byte Chunks
 
 // N1Alloc64 allocate a 64 byte Chunk of memory.
-// Succeeds or calls Fatal().
+// Succeeds or returns NULL.
 byte* N1Alloc64();
 
 // N1Free64 frees a 64 byte Chunk that was allocated with N1Alloc64().
