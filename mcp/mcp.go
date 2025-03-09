@@ -14,9 +14,11 @@ import (
 const (
 	N_CLOSED  = 63
 	N_HELLO   = 64
+	N_MEMCPY  = 65
 	N_POKE    = 66
 	N_START   = 68
 	N_KEYSCAN = 69
+	N_CLIENT = 70
 	CMD_LOG   = 200
 )
 
@@ -87,6 +89,15 @@ type InputPacketizer struct {
 }
 
 func (o *InputPacketizer) Go() {
+    defer func() {
+        r := recover()
+        if r != nil {
+            log.Printf("PANIC: user %q error %v", o.gamer.handle, r)
+            close(o.out)
+            o.conn.Close()
+        }
+    }()
+
 	log.Printf("InputPacketizer GO...")
 	for {
 		// Get Header
@@ -134,6 +145,20 @@ func (g *Gamer) SendPacket(c byte, p uint, bb []byte) {
 	g.sendMutex.Unlock()
 }
 
+func (g *Gamer) SendMemCopy(d uint, s uint, count uint) {
+    pay := []byte{
+        byte(d>>8),
+        byte(d),
+        byte(s>>8),
+        byte(s),
+        byte(count>>8),
+        byte(count),
+   }
+   if true {
+    g.SendPacket(N_MEMCPY, 0, pay)
+   }
+}
+
 func (g *Gamer) SendPokeMemory(p uint, bb []byte) {
 	const M = 50
 	for len(bb) > M {
@@ -170,11 +195,25 @@ func (g *Gamer) PollPendingInput(inchan chan Packet) {
 				log.Printf("N1LOG: %q %q", g.handle, p.pay)
 			case N_KEYSCAN:
 				g.KeyScanHandler(p.pay)
+            case N_CLIENT:
+                g.ClientRequestHandler(p.p, p.pay)
 			}
 		} else {
 			break
 		}
 	}
+}
+
+func (g *Gamer) ClientRequestHandler(p uint, pay []byte) {
+    switch p {
+    case 'L': // Logging
+		log.Printf("N1Log: %q logs %q", g.handle, pay)
+    case 'S': // Partial Scoring
+        // Handle Partial Scores
+		log.Printf("N1: %q scores % 3x", g.handle, pay)
+    default:
+        panic(p)
+    }
 }
 
 const (
@@ -285,6 +324,7 @@ func (g *Gamer) PrintLine(s string) {
 	for i := 0; i < 13; i++ {
 		g.console[i] = g.console[i+1]
 	}
+	g.SendMemCopy(0x0220, 0x0240, 13*32)
 	for j := 0; j < 32; j++ {
 		if j < len(s) {
 			ch := s[j]
@@ -300,9 +340,10 @@ func (g *Gamer) PrintLine(s string) {
 		}
 	}
 
-	for i := uint(0); i < 14; i++ {
-		g.SendPokeMemory(0x0220+i*32, g.console[i][:])
-	}
+	g.SendPokeMemory(0x0220+13*32, g.console[13][:])
+	// for i := uint(0); i < 14; i++ {
+		// g.SendPokeMemory(0x0220+i*32, g.console[i][:])
+	// }
 }
 
 func (g *Gamer) Step(inchan chan Packet) {

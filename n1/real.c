@@ -9,6 +9,8 @@ static void IncrementSeconds() {
 
     ++R.seconds;
 
+    if (Kern.in_game) DoPartialScores();
+
     // Now go increment the Wall Time.
     Wall_IncrementSecond();
 }

@@ -176,23 +176,27 @@ extern CONST int N1TotalScores[N1_MAX_PLAYERS];
 //
 //  Kern Module
 
+// Do not call N1SendClientPacket directly.
+// It is used by the next few calls.
+void N1SendClientPacket(word p, char* pay, word size);
+
 // Normal end of game.  Scores are valid and may be published
 // by the kernel.
-void N1GameOver(char *why);
+#define N1GameOver(WHY)  N1SendClientPacket('o', (byte*)(WHY), 64)
 
 // Abnormal end of game.  Scores are invalid and will be ignored
 // by the kernel.
 // This is less drastic than calling Fatal(),
 // because the kernel keeps running, but it also
 // indicates something went wrong that should be fixed.
-void N1GameAbort(char *why);
+#define N1GameAbort(WHY)  N1SendClientPacket('a', (byte*)(WHY), 64)
 
 // Replace the current game with the named game.
 // This can be used to write different "levels" or
 // interstitial screens as a chain of games.
 // Carry scores forward to the new game.
 // Common pre-allocated regions are also kept in memory.
-void N1GameChain(char* next_game_name);
+#define N1GameChain(NEXT_GAME_NAME)  N1SendClientPacket('c', (byte*)(NEXT_GAME_NAME), 64)
 
 // N1BeginMain must be called at the beginning of your main()
 // function.
