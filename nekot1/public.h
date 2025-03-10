@@ -12,16 +12,16 @@
 
 typedef unsigned char gbool;
 typedef unsigned char gbyte;  // Best type for a 8-bit machine gbyte.
-typedef unsigned int word;  // Best type for a 16-bit machine word.
-typedef void (*func)(void);
+typedef unsigned int gword;  // Best type for a 16-bit machine gword.
+typedef void (*gfunc)(void);
 typedef union wordorbytes {
-    word w;
+    gword w;
     gbyte b[2];
-} wob;
+} gwob;
 
-#define true ((gbool)1)
-#define false ((gbool)0)
-#define NULL ((void*)0)
+#define gTRUE ((gbool)1)
+#define gFALSE ((gbool)0)
+#define gNULL ((void*)0)
 
 #ifndef gCONST
 #define gCONST const   // For variables the Kernel changes, but Games must not.
@@ -31,16 +31,16 @@ typedef union wordorbytes {
 // they are required for some "nekot1/public.h" macros to work.
 #include "nekot1/friend.h"
 
-#define Peek1(ADDR) (*(volatile gbyte*)(word)(ADDR))
-#define Poke1(ADDR,VALUE) (*(volatile gbyte*)(word)(ADDR) = (gbyte)(VALUE))
+#define Peek1(ADDR) (*(volatile gbyte*)(gword)(ADDR))
+#define Poke1(ADDR,VALUE) (*(volatile gbyte*)(gword)(ADDR) = (gbyte)(VALUE))
 
-#define Peek2(ADDR) (*(volatile word*)(word)(ADDR))
-#define Poke2(ADDR,VALUE) (*(volatile word*)(word)(ADDR) = (word)(VALUE))
+#define Peek2(ADDR) (*(volatile gword*)(gword)(ADDR))
+#define Poke2(ADDR,VALUE) (*(volatile gword*)(gword)(ADDR) = (gword)(VALUE))
 
 // These do a Peek1, some bit manipulaton, and a Poke1.
-#define PAND(ADDR, X) ((*(volatile gbyte*)(word)(ADDR)) &= (gbyte)(X))
-#define POR(ADDR, X) ((*(volatile gbyte*)(word)(ADDR)) |= (gbyte)(X))
-#define PXOR(ADDR, X) ((*(volatile gbyte*)(word)(ADDR)) ^= (gbyte)(X))
+#define PAND(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) &= (gbyte)(X))
+#define POR(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) |= (gbyte)(X))
+#define PXOR(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) ^= (gbyte)(X))
 
 // If your ".bss" allocation of 128 bytes in Page 0 (the direct page)
 // fills up, you can mark some of the global variable definitions with
@@ -49,7 +49,7 @@ typedef union wordorbytes {
 
 #define assert(COND) if (!(COND)) Fatal(__FILE__, __LINE__)
 
-void Fatal(const char* s, word value);
+void Fatal(const char* s, gword value);
 
 #define INHIBIT_IRQ() asm volatile("  orcc #$10")
 #define ALLOW_IRQ()   asm volatile("  andcc #^$10")
@@ -90,11 +90,11 @@ void gIrqRestore(gbyte cc_value);
 //  64-gbyte Chunks
 
 // gAlloc64 allocate a 64 gbyte Chunk of memory.
-// Succeeds or returns NULL.
+// Succeeds or returns gNULL.
 gbyte* gAlloc64();
 
 // gFree64 frees a 64 gbyte Chunk that was allocated with gAlloc64().
-// If ptr is NULL, this function returns without doing anything.
+// If ptr is gNULL, this function returns without doing anything.
 void gFree64(gbyte* ptr);
 
 /////////////////////
@@ -116,7 +116,7 @@ void gSend64(gbyte* ptr, gbyte size);
 // gReceive64 attempts to receive a "multicast" message sent by
 // anyone in your game shard, including your own,
 // that were set with gSend().  If no message has
-// been received, the NULL pointer is returned.
+// been received, the gNULL pointer is returned.
 // If you need to know the length of the received
 // message, that needs to be sent in the "fixed"
 // portion at the front of the message, perhaps as
@@ -140,7 +140,7 @@ void gGameShowsPMode1Screen(gbyte* screen_addr, gbyte colorset);
 
 // gModeForGame sets the VDG screen mode for game play to the given mode_code.
 // TODO: document mode_code.
-void gModeForGame(gbyte* screen_addr, word mode_code);
+void gModeForGame(gbyte* screen_addr, gword mode_code);
 
 /////////////////////
 //
@@ -228,11 +228,11 @@ extern struct score {
 // The following Kern variables can be read by the game
 // to find out what state the Kernel is in.
 //
-// A game should always see `in_game` is true!
-// A game should always see `in_irq` is false!
+// A game should always see `in_game` is gTRUE!
+// A game should always see `in_irq` is gFALSE!
 //
 // The important one is `focus_game`:  If `focus_game`
-// is true, the game can scan the keyboard (but it must
+// is gTRUE, the game can scan the keyboard (but it must
 // disable interrupts while doing so).
 //
 // If the game has an infinite loop (say, as the
@@ -242,7 +242,7 @@ extern struct score {
 //
 // rather than
 //
-//     while (true) { ... }
+//     while (gTRUE) { ... }
 //
 // due to bugs in GCC.
 
@@ -250,22 +250,22 @@ struct kern {
     // The active game also owns and can scan the keyboard
     // (except for the BREAK key), and the game's screen
     // is being shown.   If a game is active but
-    // focus_game is false, the game must ignore the
+    // focus_game is gFALSE, the game must ignore the
     // keyboard (not scan it!) and the game's screen is
     // not visible -- the Chat screen is shown, instead.
     gbool volatile focus_game;
 
-    // gKern.always_true must always be true.
+    // gKern.always_true must always be gTRUE.
     gbool volatile gCONST always_true;
 
     // The following fields are not needed by games.
 
     // A game is active.
-    // From a game, this should always be seen as true.
+    // From a game, this should always be seen as gTRUE.
     gbool volatile gCONST in_game;
 
     // We are currently handling a 60Hz Clock IRQ.
-    // From a game, this should always be seen as false.
+    // From a game, this should always be seen as gFALSE.
     gbool volatile gCONST in_irq;
 
 };
@@ -286,7 +286,7 @@ extern struct kern gKern;
 struct real {
     gbyte volatile ticks;  // Changes at 60Hz:  0 to 5
     gbyte volatile decis;  // Tenths of a second: 0 to 9
-    word volatile seconds;  // 0 to 65535
+    gword volatile seconds;  // 0 to 65535
 };
 extern gCONST struct real gReal;
 

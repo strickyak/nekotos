@@ -23,9 +23,9 @@ static void SwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bi
 
     // Set the framebuffer address.
     {
-        word bit = 0x0200;  // Start with bit F0 (CoCo Hardware Reference.pdf)
+        gword bit = 0x0200;  // Start with bit F0 (CoCo Hardware Reference.pdf)
         for (gbyte i=0; i<14; i+=2) {  // 7 iterations.
-            gbool b = (((word)fb & bit) != 0); 
+            gbool b = (((gword)fb & bit) != 0); 
             Poke1(0xFFC6 + i + b, 0); // 0xFFC6 is F0.
             bit <<= 1;
         }
@@ -53,7 +53,7 @@ static void SwitchToDisplayPMode1(gbyte* fb, gbyte colorset) {
 }
 // Effective immediately.
 void SwitchToGameScreen() {
-    wob w;
+    gwob w;
     w.w = Vdg.game_mode;
     SwitchDisplayMode(Vdg.game_framebuffer, w.b[0], w.b[1]);
 }
@@ -70,7 +70,7 @@ void gGameShowsPMode1Screen(gbyte* fb, gbyte colorset) {
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();
 }
-void gGameShowsOtherScreen(gbyte* fb, word mode_code) {
+void gGameShowsOtherScreen(gbyte* fb, gword mode_code) {
     Vdg.game_mode = mode_code;
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();

@@ -2,9 +2,9 @@
 #define _NEKOT1_ALLOC64_H_
 
 // gAlloc64 returns a pointer to a 64-gbyte
-// chunk of memory, or it returns NULL
+// chunk of memory, or it returns gNULL
 // (the zero pointer).  You can assert the
-// result is not NULL using assert():
+// result is not gNULL using assert():
 //    gbyte* p = gAlloc64();
 //    assert(p);
 gbyte* gAlloc64();

@@ -12,8 +12,8 @@ volatile gbyte TRUE = 1;
 gbyte board[2][W][H] MORE_DATA;
 
 void ComputeLife(gbyte in[W][H], gbyte out[W][H]) {
-    for (word y = 0; y < H; y++) {
-        for (word x = 0; x < W; x++) {
+    for (gword y = 0; y < H; y++) {
+        for (gword x = 0; x < W; x++) {
             gbyte n =
                 in[MODW(x-1)][MODH(y-1)] +
                 in[MODW(x-1)][y] +
@@ -34,8 +34,8 @@ void ComputeLife(gbyte in[W][H], gbyte out[W][H]) {
 
 void DisplayLife(gbyte in[W][H]) {
     volatile gbyte* p = (volatile gbyte*)D;
-    for (word y = 0; y < H; y+=2) {
-        for (word x = 0; x < W; x+=2) {
+    for (gword y = 0; y < H; y+=2) {
+        for (gword x = 0; x < W; x+=2) {
             *p = '#';
             gbyte z = 0x80;
             if (in[x][y]) z += 0x08;
@@ -47,7 +47,7 @@ void DisplayLife(gbyte in[W][H]) {
     }
 }
 
-volatile word generation;
+volatile gword generation;
 void after_main() {
         while (TRUE) {
             DisplayLife(board[0]);
@@ -65,18 +65,18 @@ int main() {
     gGameShowsTextScreen(D, 1);
     gNetworkLog("hello life");
 
-    for (word y = 0; y < H; y++) {
-        for (word x = 0; x < W; x++) {
+    for (gword y = 0; y < H; y++) {
+        for (gword x = 0; x < W; x++) {
             board[0][x][y] = board[1][x][y] = 0;
         }
     }
 
-    for (word y = 2; y < H*3/4; y++) {
-        for (word x = 2; x < W*3/4; x++) {
+    for (gword y = 2; y < H*3/4; y++) {
+        for (gword x = 2; x < W*3/4; x++) {
             gbyte z = (gbyte)x & (gbyte)y;
             gbyte c = gReal.ticks + gReal.decis + gReal.seconds;
             gbyte b = 1;
-            for (word i = 0; i<8; i++) {
+            for (gword i = 0; i<8; i++) {
                 if ((b&z) != 0) c++;
                 b <<= 1;
             }

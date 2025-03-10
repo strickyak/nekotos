@@ -2,12 +2,12 @@
 #define _NEKOT1_CONSOLE_H_
 
 struct console {
-    word cursor;
+    gword cursor;
 } Console;
 
 void Console_Init(void);
 
-#define CONSOLE_BEGIN (word)Cons
+#define CONSOLE_BEGIN (gword)Cons
 #define CONSOLE_LEN   0x200
 #define CONSOLE_LIMIT (CONSOLE_BEGIN + CONSOLE_LEN)
 
@@ -17,8 +17,8 @@ void Console_Init(void);
 
 void PutChar(char c);
 void PutStr(const char* s);
-void PutDec(word x);
-gbyte DivMod10(word x, word* out_div);  // returns mod
+void PutDec(gword x);
+gbyte DivMod10(gword x, gword* out_div);  // returns mod
 // void Console_Printf(const char* format, ...);
 
 #endif // _NEKOT1_CONSOLE_H_

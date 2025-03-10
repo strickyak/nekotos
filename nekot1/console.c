@@ -6,11 +6,11 @@ static void AdvanceCursor() {
     ++Console.cursor;
     while (Console.cursor >= PANE_LIMIT) {
         // Scroll Pane upward
-        for (word p = PANE_BEGIN; p < PANE_LIMIT-32; p+=2) {
+        for (gword p = PANE_BEGIN; p < PANE_LIMIT-32; p+=2) {
             Poke2(p, Peek2(p+32));
         }
         // Clear bottom Pane line
-        for (word p = PANE_LIMIT-32; p < PANE_LIMIT; p+=2) {
+        for (gword p = PANE_LIMIT-32; p < PANE_LIMIT; p+=2) {
             Poke2(p, 0x2020);
         }
         // Move cursor back into bottom Pane line.
@@ -52,15 +52,15 @@ void PutStr(const char* s) {
 #if 0
 char HexAlphabet[] = "0123456789ABCDEF";
 
-void PutHex(word x) {
+void PutHex(gword x) {
   if (x > 15u) {
     PutHex(x >> 4u);
   }
   PutChar(HexAlphabet[15u & x]);
 }
 #endif
-gbyte DivMod10(word x, word* out_div) {  // returns mod
-  word div = 0;
+gbyte DivMod10(gword x, gword* out_div) {  // returns mod
+  gword div = 0;
   while (x >= 10000) x -= 10000, div += 1000;
   while (x >= 1000) x -= 1000, div += 100;
   while (x >= 100) x -= 100, div += 10;
@@ -68,8 +68,8 @@ gbyte DivMod10(word x, word* out_div) {  // returns mod
   *out_div = div;
   return (gbyte)x;
 }
-void PutDec(word x) {
-  word div;
+void PutDec(gword x) {
+  gword div;
   if (x > 9u) {
     // eschew div // PutDec(x / 10u);
     DivMod10(x, &div);
@@ -113,14 +113,14 @@ void Console_Printf(const char* format, ...) {
             case 'u':
             case 'x':
                 {
-                    word x = va_arg(ap, word);
+                    gword x = va_arg(ap, gword);
                     PutDec(x);
                 }
                 break;
 #if 0
             case 'x':
                 {
-                    word x = va_arg(ap, word);
+                    gword x = va_arg(ap, gword);
                     PutChar('$');
                     PutHex(x);
                 }
@@ -145,15 +145,15 @@ void Console_Init() {
     // Poke2(0, AdvanceCursor);
 
     // Draw a greenish bar across the top of the Console.
-    for (word p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
+    for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
         Poke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
     // Fill the body of the screen with spaces.
-    for (word p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
+    for (gword p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
         Poke2(p, 0x2020);
     }
     // Draw a blueish bar across the bottom of the Console.
-    for (word p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
+    for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
         Poke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
     }
     Console.cursor = PANE_LIMIT - 32;

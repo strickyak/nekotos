@@ -1,20 +1,20 @@
 #include "nekot1/private.h"
 
-void MemCopy(gbyte *dest, const gbyte *src, word count) {
+void MemCopy(gbyte *dest, const gbyte *src, gword count) {
     // If count is odd, copy an initial gbyte.
     if (count & 1) {
         *dest++ = *src++;
     }
     // Now use a stride of 2.
     count >>= 1;  // Divide count by 2.
-    word* d = (word*)dest;
-    word* s = (word*)src;
-    for (word i = 0; i < count; i++) {
+    gword* d = (gword*)dest;
+    gword* s = (gword*)src;
+    for (gword i = 0; i < count; i++) {
         *d++ = *s++;
     }
 }
 
-void MemSet(gbyte* dest, gbyte value, word count) {
+void MemSet(gbyte* dest, gbyte value, gword count) {
     // If count is odd, set an initial gbyte.
     if (count & 1) {
         *dest++ = value;
@@ -22,27 +22,27 @@ void MemSet(gbyte* dest, gbyte value, word count) {
     // Now use a stride of 2.
     count >>= 1;  // Divide count by 2.
 
-    wob w;
+    gwob w;
     w.b[0] = w.b[1] = value;
 
-    word* d = (word*)dest;
-    for (word i = 0; i < count; i++) {
+    gword* d = (gword*)dest;
+    for (gword i = 0; i < count; i++) {
         *d++ = w.w;
     }
 }
 
-void* memset(void* dest, int value, word count) {
+void* memset(void* dest, int value, gword count) {
     gbyte* p = dest;
     gbyte v = (gbyte)value;
-    for (word i = 0; i < count; i++) {
+    for (gword i = 0; i < count; i++) {
         *p++ = v;
     }
 }
 
-void* memcpy(void* dest, void* src, word count) {
+void* memcpy(void* dest, void* src, gword count) {
     gbyte* s = src;
     gbyte* p = dest;
-    for (word i = 0; i < count; i++) {
+    for (gword i = 0; i < count; i++) {
         *p++ = *s++;
     }
 }

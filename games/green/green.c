@@ -107,7 +107,7 @@ typedef void (*SpotDrawer)(gbyte* fb, gbyte x, gbyte y, gbyte color);
 void DrawSpot(gbyte* fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
-  word addr = (word)fb + xdist + ((word)y << 5);
+  gword addr = (gword)fb + xdist + ((gword)y << 5);
   gbyte b = Peek1(addr);
   gbyte bitshift = (3 - xshift) << 1;
   gbyte mask = ~(3 << bitshift);
@@ -117,23 +117,23 @@ void DrawSpot(gbyte* fb, gbyte x, gbyte y, gbyte color) {
 void DrawSpotXor(gbyte* fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
-  word addr = (word)fb + xdist + ((word)y << 5);
+  gword addr = (gword)fb + xdist + ((gword)y << 5);
   PXOR(addr, (color << ((3 - xshift) << 1)));
 }
 void ClearGraf(gbyte color) {
     color &= 3;
-    wob c;
+    gwob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
-    for (word i = 0; i < 3*1024; i+=2) {
+    for (gword i = 0; i < 3*1024; i+=2) {
         Poke2(G+i, c.w);
     }
 }
 
 extern gbyte FONT[];
 void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
-    word c = ch - 32;
-    word p = (word)FONT + (c<<3) + (c<<2);
-    for (word i = 0; i < 8; i++) {
+    gword c = ch - 32;
+    gword p = (gword)FONT + (c<<3) + (c<<2);
+    for (gword i = 0; i < 8; i++) {
         gbyte bits = Peek1(p++);
         gbyte probe = 0x80u;
         for (gbyte j = 0; j < 8; j++) {
@@ -160,7 +160,7 @@ volatile gbyte TRUE = 1;
 
 void after_main() {
         while (TRUE) {
-            for (word w = 0; w < END; w+=2) {
+            for (gword w = 0; w < END; w+=2) {
                 Poke2(0x0202, w);
                 Poke2(G+w, ~Peek2(G+w));
                 if ((w&3)==2) WaitForATick();
@@ -174,10 +174,10 @@ int main() {
     gGameShowsPMode1Screen(G, 0);
     gNetworkLog("hello GREEN");
 
-    word c0 = 0x0000;
-    word c1 = 0x5555;
-    word c2 = 0xFFFF;
-    word c3 = 0xAAAA;
+    gword c0 = 0x0000;
+    gword c1 = 0x5555;
+    gword c2 = 0xFFFF;
+    gword c3 = 0xAAAA;
     for (gbyte* w = G+0*END/4; w < G+1*END/4; w+=2) {
         Poke2(w, c1);
         Poke2(0x0202, w);

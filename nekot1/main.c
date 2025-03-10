@@ -3,10 +3,10 @@
 // main.c
 
 // Use our alternate data sections.
-word _More0 MORE_DATA; // not .bss
-word _More1 MORE_DATA = 0x9998; // not .data
-word _Final __attribute__ ((section (".final"))) = 0x9990;
-word _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
+gword _More0 MORE_DATA; // not .bss
+gword _More1 MORE_DATA = 0x9998; // not .data
+gword _Final __attribute__ ((section (".final"))) = 0x9990;
+gword _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
 
 #if 0
 // This is a "Null Game" that does nothing.
@@ -22,7 +22,7 @@ void CWait(void) {
 #endif
 
 // pia_reset table traced from coco3 startup.
-struct pia_reset { word addr; gbyte value; } pia_reset[] STARTUP_DATA = {
+struct pia_reset { gword addr; gbyte value; } pia_reset[] STARTUP_DATA = {
      { 0xff21, 0x00 },  // choose data direction
      { 0xff23, 0x00 },  // choose data direction
      { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
@@ -42,18 +42,18 @@ struct pia_reset { word addr; gbyte value; } pia_reset[] STARTUP_DATA = {
 
 void after_main() {
     // Wipe out the startup code, to prove it is never needed again.
-    for (gbyte* p = sizeof(word) + (gbyte*)&_Final;
+    for (gbyte* p = sizeof(gword) + (gbyte*)&_Final;
          p < (gbyte*)_Final_Startup;
          p++) {
         *p = 0;
     }
 
     ALLOW_IRQ();
-    StartTask((word)ChatTask); // Start the no-game task.
+    StartTask((gword)ChatTask); // Start the no-game task.
 }
 
-void ClearPage256(word p) {
-    for (word i = 0; i<256; i+=2) {
+void ClearPage256(gword p) {
+    for (gword i = 0; i<256; i+=2) {
         Poke2(p+i, 0);
     }
 }
@@ -68,30 +68,30 @@ void before_main() {
         );
 }
 
-word PinDown[] STARTUP_DATA = {
-    (word) after_main,
+gword PinDown[] STARTUP_DATA = {
+    (gword) after_main,
 
-    (word) Breakkey_Handler,
-    (word) Irq_Handler,
-    (word) Irq_Handler_entry,
-    (word) Irq_Handler_Wrapper,
-    (word) Network_Handler,
+    (gword) Breakkey_Handler,
+    (gword) Irq_Handler,
+    (gword) Irq_Handler_entry,
+    (gword) Irq_Handler_Wrapper,
+    (gword) Network_Handler,
 
-    (word) gGameShowsTextScreen,
-    (word) gGameShowsPMode1Screen,
-    (word) gGameShowsOtherScreen,
-    (word) gAfterMain3,
-    (word) gNetworkLog,
-    (word) Fatal,
-    // (word) Console_Printf,
-    (word) PutStr,
-    (word) PutChar,
+    (gword) gGameShowsTextScreen,
+    (gword) gGameShowsPMode1Screen,
+    (gword) gGameShowsOtherScreen,
+    (gword) gAfterMain3,
+    (gword) gNetworkLog,
+    (gword) Fatal,
+    // (gword) Console_Printf,
+    (gword) PutStr,
+    (gword) PutChar,
 
-    (word) before_main,
-    (word) &_More0,
-    (word) &_More1,
-    (word) &_Final,
-    (word) &_Final_Startup,
+    (gword) before_main,
+    (gword) &_More0,
+    (gword) &_More1,
+    (gword) &_Final,
+    (gword) &_Final_Startup,
 };
 
 #if 0
@@ -99,8 +99,8 @@ void TestByte(gbyte a) {
     asm volatile("  LDA %0" : : "m" (a));
 }
 
-void TestWord(word foo) {
-    wob x = { .w= foo };
+void TestWord(gword foo) {
+    gwob x = { .w= foo };
     TestByte(x.b[0]);
     TestByte(x.b[1]);
 }

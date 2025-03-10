@@ -2,7 +2,7 @@
 #define _NEKOT1_VDG_H_
 
 struct vdg {
-    word  game_mode;
+    gword  game_mode;
     gbyte* game_framebuffer;
     gbyte shadow_pia1portb;
 } Vdg;
@@ -24,7 +24,7 @@ void gGameShowsPMode1Screen(gbyte* screen_addr, gbyte colorset);
 // The V2, V1, V0 bits are the low three bits
 // (in the low gbyte) of mode_code.
 // public
-void gGameShowsOtherScreen(gbyte* screen_addr, word mode_code);
+void gGameShowsOtherScreen(gbyte* screen_addr, gword mode_code);
 
 #define COLORSET_GREEN  0
 #define COLORSET_ORANGE 1

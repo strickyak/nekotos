@@ -15,10 +15,10 @@
 
 #define JMP_Extended  (gbyte)0x7E
 
-void MemCopy(gbyte *dest, const gbyte *src, word count);
-void MemSet(gbyte* dest, gbyte value, word count);
-void* memset(void* dest, int value, word count);
+void MemCopy(gbyte *dest, const gbyte *src, gword count);
+void MemSet(gbyte* dest, gbyte value, gword count);
+void* memset(void* dest, int value, gword count);
 
-void Fatal(const char* s, word arg);
+void Fatal(const char* s, gword arg);
 
 #endif // _NEKOT1_PRELUDE_H_

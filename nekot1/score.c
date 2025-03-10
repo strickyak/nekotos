@@ -12,7 +12,7 @@ int OldPartialScores[gMAX_PLAYERS] MORE_DATA;
 void DoPartialScores() {
     assert(Kern.in_game);
     assert(Kern.in_irq);
-    gbyte dirty = false;
+    gbyte dirty = gFALSE;
     gbyte np = gNumberOfPlayers;
     {
         int* o = OldPartialScores;
@@ -20,7 +20,7 @@ void DoPartialScores() {
 
         for (gbyte i = 0; i < np; i++) {
             if (*o++ != *p++) {
-                dirty = true;
+                dirty = gTRUE;
                 break;
             }
         }

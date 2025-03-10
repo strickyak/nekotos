@@ -5,7 +5,7 @@ void KeyboardHandler(void);
 
 void NOOP() {}
 
-func Irq_FocusGameSchedule[6] = {
+gfunc Irq_FocusGameSchedule[6] = {
     Network_Handler,
     Breakkey_Handler,
 
@@ -16,7 +16,7 @@ func Irq_FocusGameSchedule[6] = {
     Breakkey_Handler,
 };
 
-func Irq_PassiveGameSchedule[6] = {
+gfunc Irq_PassiveGameSchedule[6] = {
     Network_Handler,
     Breakkey_Handler,
 
@@ -27,7 +27,7 @@ func Irq_PassiveGameSchedule[6] = {
     KeyboardHandler,
 };
 
-func Irq_FocusShellSchedule[6] = {
+gfunc Irq_FocusShellSchedule[6] = {
     KeyboardHandler,
     Breakkey_Handler,
 
@@ -39,11 +39,11 @@ func Irq_FocusShellSchedule[6] = {
 };
 
 void Irq_Handler() {
-    Kern.in_irq = true;
+    Kern.in_irq = gTRUE;
     SpinIrq();
 
     // Clear the VSYNC IRQ by reading PortB output register.
-    word const clear_irq = Pia0PortB;
+    gword const clear_irq = Pia0PortB;
     (void) Peek1(clear_irq);
 
     Real_IncrementTicks();
@@ -60,7 +60,7 @@ void Irq_Handler() {
         Irq_FocusShellSchedule[gReal.ticks]();
     }
 
-    Kern.in_irq = false;
+    Kern.in_irq = gFALSE;
 }
 
 void Irq_Handler_Wrapper() {

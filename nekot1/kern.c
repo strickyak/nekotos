@@ -11,7 +11,7 @@ void FatalSpin(const char *why) {
     }
 }
 
-void Fatal(const char* why, word arg) {
+void Fatal(const char* why, gword arg) {
     INHIBIT_IRQ();
 
     SwitchToChatScreen();
@@ -30,24 +30,24 @@ void Fatal(const char* why, word arg) {
 // whether or not we were in the IRQ handler
 // when we got here.
 // Unless the entry is ChatTask, it starts 
-// with in_game mode set to true.
-void StartTask(word entry) {
+// with in_game mode set to gTRUE.
+void StartTask(gword entry) {
     if (!entry) {
-        entry = (word)ChatTask;
+        entry = (gword)ChatTask;
     }
 
-    if (entry == (word)ChatTask) {
-        Kern.in_game = false;
-        Kern.focus_game = false;
+    if (entry == (gword)ChatTask) {
+        Kern.in_game = gFALSE;
+        Kern.focus_game = gFALSE;
     } else {
-        Kern.in_game = true;
-        Kern.focus_game = true;
+        Kern.in_game = gTRUE;
+        Kern.focus_game = gTRUE;
         // Until the game changes the display,
         // you get an Orange Console.
         gGameShowsTextScreen(Cons, COLORSET_ORANGE);
     }
 
-    Kern.in_irq = false;
+    Kern.in_irq = gFALSE;
     asm volatile("\n"
         "  ldx   %0      \n"  // entry point
         "  lds   #$01FE  \n"  // Reset the stack
@@ -84,9 +84,9 @@ void gIrqRestore(gbyte cc_value) {
     );
 }
 
-void gAfterMain3(func after_main, word* final, word* final_startup) {
+void gAfterMain3(gfunc after_main, gword* final, gword* final_startup) {
     // Prove that startup is no longer used.
-    for (word w = (word)final; w < (word)final_startup; w++) {
+    for (gword w = (gword)final; w < (gword)final_startup; w++) {
         Poke1(w, 0x3F);
     }
 
@@ -121,8 +121,8 @@ void Network_Handler() {
 }
 
 void Kern_Init() {
-    Kern.in_game = false;
-    Kern.focus_game = false;
-    Kern.in_irq = false;
-    Kern.always_true = true;
+    Kern.in_game = gFALSE;
+    Kern.focus_game = gFALSE;
+    Kern.in_irq = gFALSE;
+    Kern.always_true = gTRUE;
 }

@@ -5,7 +5,7 @@
 // How to talk to the four hardware ports.
 struct wiz_port {
   volatile gbyte command;
-  volatile word addr;
+  volatile gword addr;
   volatile gbyte data;
 };
 
@@ -16,43 +16,43 @@ struct wiz_port {
 
 //////////////////////////////////////
 
-gbyte WizGet1(word reg) {
+gbyte WizGet1(gword reg) {
   WIZ->addr = reg;
   return WIZ->data;
 }
-word WizGet2(word reg) {
+gword WizGet2(gword reg) {
   WIZ->addr = reg;
   gbyte z_hi = WIZ->data;
   gbyte z_lo = WIZ->data;
-  return ((word)(z_hi) << 8) + (word)z_lo;
+  return ((gword)(z_hi) << 8) + (gword)z_lo;
 }
-void WizGetN(word reg, void* buffer, word size) {
+void WizGetN(gword reg, void* buffer, gword size) {
   volatile struct wiz_port* wiz = WIZ;
   gbyte* to = (gbyte*)buffer;
   wiz->addr = reg;
-  for (word i = size; i; i--) {
+  for (gword i = size; i; i--) {
     *to++ = wiz->data;
   }
 }
-void WizPut1(word reg, gbyte value) {
+void WizPut1(gword reg, gbyte value) {
   WIZ->addr = reg;
   WIZ->data = value;
 }
-void WizPut2(word reg, word value) {
+void WizPut2(gword reg, gword value) {
   WIZ->addr = reg;
   WIZ->data = (gbyte)(value >> 8);
   WIZ->data = (gbyte)(value);
 }
-void WizPutN(word reg, const void* data, word size) {
+void WizPutN(gword reg, const void* data, gword size) {
   volatile struct wiz_port* wiz = WIZ;
   const gbyte* from = (const gbyte*)data;
   wiz->addr = reg;
-  for (word i = size; i; i--) {
+  for (gword i = size; i; i--) {
     wiz->data = *from++;
   }
 }
 
-word WizTicks() { return WizGet2(0x0082 /*TCNTR Tick Counter*/); }
+gword WizTicks() { return WizGet2(0x0082 /*TCNTR Tick Counter*/); }
 gbyte WizTocks() { return WizGet1(0x0082 /*TCNTR Tick Counter*/); }
 
 gbool ValidateWizPort(struct wiz_port* p) {
@@ -96,10 +96,10 @@ void WizWaitStatus(gbyte want) {
 ////////////////////////////////////////
 
 // returns tx_ptr
-tx_ptr_t WizReserveToSend( word n) {
+tx_ptr_t WizReserveToSend( gword n) {
   // PrintH("ResTS %d;", n);
   // Wait until free space is available.
-  word free_size;
+  gword free_size;
   do {
     free_size = WizGet2(B + SK_TX_FSR0);
     // PrintH("Res free %d;", free_size);
@@ -109,13 +109,13 @@ tx_ptr_t WizReserveToSend( word n) {
 }
 
 tx_ptr_t WizDataToSend( tx_ptr_t tx_ptr,
-                       const char* data, word n) {
-  word begin = tx_ptr;   // begin: Beneath RING_SIZE.
-  word end = begin + n;  // end:  Sum may not be beneath RING_SIZE.
+                       const char* data, gword n) {
+  gword begin = tx_ptr;   // begin: Beneath RING_SIZE.
+  gword end = begin + n;  // end:  Sum may not be beneath RING_SIZE.
 
   if (end >= RING_SIZE) {
-    word first_n = RING_SIZE - begin;
-    word second_n = n - first_n;
+    gword first_n = RING_SIZE - begin;
+    gword second_n = n - first_n;
     WizPutN(T + begin, data, first_n);
     WizPutN(T, data + first_n, second_n);
   } else {
@@ -124,12 +124,12 @@ tx_ptr_t WizDataToSend( tx_ptr_t tx_ptr,
   return (n + tx_ptr) & RING_MASK;
 }
 tx_ptr_t WizBytesToSend( tx_ptr_t tx_ptr,
-                        const gbyte* data, word n) {
+                        const gbyte* data, gword n) {
   return WizDataToSend(tx_ptr, (char*)data, n);
 }
 
-void WizFinalizeSend( word n) {
-  word tx_wr = WizGet2(B + SK_TX_WR0);
+void WizFinalizeSend( gword n) {
+  gword tx_wr = WizGet2(B + SK_TX_WR0);
   tx_wr += n;
   WizPut2(B + SK_TX_WR0, tx_wr);
   WizIssueCommand(SK_CR_SEND);
@@ -145,7 +145,7 @@ errnum WizCheck() {
   }
   return OKAY;
 }
-errnum WizSendChunk( char* data, word n) {
+errnum WizSendChunk( char* data, gword n) {
   // PrintH("Ax WizSendChunk %d@%d : %d %d %d %d %d", n, data, data[0], data[1],
   // data[2], data[3], data[4]);
   errnum e = WizCheck();
@@ -159,7 +159,7 @@ errnum WizSendChunk( char* data, word n) {
 
 //////////////////////////////////////////////////////////////////
 
-errnum WizRecvGetBytesWaiting(word* bytes_waiting_out) {
+errnum WizRecvGetBytesWaiting(gword* bytes_waiting_out) {
   errnum e = WizCheck();
   if (e) return e;
 
@@ -167,19 +167,19 @@ errnum WizRecvGetBytesWaiting(word* bytes_waiting_out) {
   return OKAY;
 }
 
-errnum WizRecvChunkTry( gbyte* buf, word n) {
-  word bytes_waiting = 0;
+errnum WizRecvChunkTry( gbyte* buf, gword n) {
+  gword bytes_waiting = 0;
   errnum e = WizRecvGetBytesWaiting(& bytes_waiting);
   if (e) return e;
   if (bytes_waiting < n) return NOTYET;
 
-  word rd = WizGet2(B + SK_RX_RD0);
-  word begin = rd & RING_MASK;  // begin: Beneath RING_SIZE.
-  word end = begin + n;         // end: Sum may not be beneath RING_SIZE.
+  gword rd = WizGet2(B + SK_RX_RD0);
+  gword begin = rd & RING_MASK;  // begin: Beneath RING_SIZE.
+  gword end = begin + n;         // end: Sum may not be beneath RING_SIZE.
 
   if (end >= RING_SIZE) {
-    word first_n = RING_SIZE - begin;
-    word second_n = n - first_n;
+    gword first_n = RING_SIZE - begin;
+    gword second_n = n - first_n;
     WizGetN(R + begin, buf, first_n);
     WizGetN(R, buf + first_n, second_n);
   } else {
@@ -191,7 +191,7 @@ errnum WizRecvChunkTry( gbyte* buf, word n) {
   return OKAY;
 }
 
-errnum WizRecvChunk( gbyte* buf, word n) {
+errnum WizRecvChunk( gbyte* buf, gword n) {
   // PrintH("WizRecvChunk %d...", n);
   errnum e;
   do {
@@ -201,7 +201,7 @@ errnum WizRecvChunk( gbyte* buf, word n) {
   // buf[4]);
   return e;
 }
-errnum WizRecvChunkBytes( gbyte* buf, word n) {
+errnum WizRecvChunkBytes( gbyte* buf, gword n) {
   return WizRecvChunk(buf, n);
 }
 
@@ -212,9 +212,9 @@ void Wiznet_Init() {
     volatile gbyte* p = Cons + WIZNET_BAR_LOCATION;
     p[-1] = 'W';
     FindWizPort();
-    if ((word)Wiznet.wiz_port == 0xFF68u) {
+    if ((gword)Wiznet.wiz_port == 0xFF68u) {
          p[0] = '6';
-    } else if ((word)Wiznet.wiz_port == 0xFF78u) {
+    } else if ((gword)Wiznet.wiz_port == 0xFF78u) {
          p[0] = '7';
     }
 }

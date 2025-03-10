@@ -4,17 +4,17 @@ static void DoBreak(void) {
     if (Kern.focus_game) {
         // FOCUS IS IN GAME.
         // Switch focus to chat.
-        Kern.focus_game = false;
+        Kern.focus_game = gFALSE;
         SwitchToChatScreen();
     } else {
         // FOCUS IS IN CHAT.
         if (Kern.in_game) {
             // Switch focus to game.
-            Kern.focus_game = true;
+            Kern.focus_game = gTRUE;
             SwitchToGameScreen();
         } else {
             // Probaby already in chat, but force it again.
-            Kern.focus_game = false;
+            Kern.focus_game = gFALSE;
             SwitchToChatScreen();
         }
     }
@@ -37,12 +37,12 @@ void Breakkey_Handler(void) {
     if ((sense & BREAKKEY_SENSE_BIT) == 0) {
         // BREAK KEY DOWN
         if (!Breakkey.break_key_was_down) {
-            Breakkey.break_key_was_down = true;
+            Breakkey.break_key_was_down = gTRUE;
             DoBreak();
         }
         SpinBreakkey();
     } else {
         // BREAK KEY UP
-        Breakkey.break_key_was_down = false;
+        Breakkey.break_key_was_down = gFALSE;
     }
 }

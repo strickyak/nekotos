@@ -1,16 +1,16 @@
 #include "nekot1/private.h"
 
 static gbool ScanReturnChanged(gbyte* p, gbyte* prev) {
-    const word out_port = Pia0PortB;
-    const word in_port = Pia0PortA;
-    gbool z = false;
+    const gword out_port = Pia0PortB;
+    const gword in_port = Pia0PortA;
+    gbool z = gFALSE;
 
     gbyte sense = 0x01;
     while (sense) {
         Poke1(out_port, ~(gbyte)sense);
         *p = 0x7F & ~Peek1(in_port);
         if (*p++ != *prev++) {
-            z = true; // found a difference.
+            z = gTRUE; // found a difference.
         }
         sense <<= 1;
     }

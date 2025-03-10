@@ -2,13 +2,13 @@
 
 gbyte logbuf[30];
 
-word strlen(const char* s) {
+gword strlen(const char* s) {
     const char* p = s;
     while (*p) ++p;
     return p-s;
 }
 
-void WizSend(gbyte* addr, word size) {
+void WizSend(gbyte* addr, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
 
     tx_ptr_t t = WizReserveToSend(size);
@@ -18,7 +18,7 @@ void WizSend(gbyte* addr, word size) {
     gIrqRestore(cc_value);
 }
 
-void gSendClientPacket(word p, char* pay, word size) {
+void gSendClientPacket(gword p, char* pay, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
 
     logbuf[0] = NEKOT_CLIENT;
@@ -34,7 +34,7 @@ void gSendClientPacket(word p, char* pay, word size) {
 void gNetworkLog(const char* s) {
     gbyte cc_value = gIrqSaveAndDisable();
     // Still uses CMD_LOG=200.  TODO convert to CLIENT=70.
-    word n = strlen(s);
+    gword n = strlen(s);
     logbuf[0] = CMD_LOG;
     Poke2(logbuf+1, n);
     Poke2(logbuf+3, 0);
@@ -49,14 +49,14 @@ MORE_DATA gbyte recv_buf[64];
 
 gbool need_recv_payload;
 gbool need_to_start_task;
-word task_to_start;
+gword task_to_start;
 
 void ExecuteReceivedCommand() {
     gbyte* h = recv_head;
     gbyte* b = recv_buf;
 
-    word n = Peek2(h+1);
-    word p = Peek2(h+3);
+    gword n = Peek2(h+1);
+    gword p = Peek2(h+3);
 
     if (h[0] == CMD_DATA) {
         // If we ever send CMD_ECHO, expect CMD_DATA.
@@ -71,16 +71,16 @@ void ExecuteReceivedCommand() {
         if (e2==NOTYET) return;
         if (e2) Fatal("E-P",e2);
     } else if (h[0] == NEKOT_CALL) { // 67
-        func fn = (func)p;
+        gfunc fn = (gfunc)p;
         fn();
     } else if (h[0] == NEKOT_LAUNCH) { // 68
         task_to_start = p;
-        need_to_start_task = true;
+        need_to_start_task = gTRUE;
     } else {
         Fatal("XRC", h[0]);
     }
 
-    need_recv_payload = false;
+    need_recv_payload = gFALSE;
 }
 
 void CheckReceived() {
@@ -90,7 +90,7 @@ void CheckReceived() {
         gbyte err = WizRecvChunkTry(recv_head, 5);
         if (err==NOTYET) goto RESTORE;
         if (err) Fatal("RECV", err);
-        need_recv_payload = true;
+        need_recv_payload = gTRUE;
     }
 
 #if NETWORK_CLICK
@@ -103,7 +103,7 @@ void CheckReceived() {
 
     if (need_to_start_task) {
 // Console_Printf("NEED(%d).", task_to_start);
-        need_to_start_task = false;
+        need_to_start_task = gFALSE;
         StartTask(task_to_start);
         // Note StartTask never returns.
         // It will launch the task and allow IRQs.

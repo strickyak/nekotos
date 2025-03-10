@@ -9,7 +9,7 @@ void Kern_Init();
 void ChatTask();
 void Network_Handler();
 
-void StartTask(word entry);
+void StartTask(gword entry);
 
 // Shouldn't these be public?
 gbyte IrqSaveAndDisable();

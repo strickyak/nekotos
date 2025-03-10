@@ -3,14 +3,14 @@
 #define MAGIC64 0x1EE1
 
 typedef struct header64 {
-    word magic;
+    gword magic;
     struct header64* next;
 } H64;
 
 H64* root64;
 
 gbyte* gAlloc64() {
-    H64* z = NULL;
+    H64* z = gNULL;
     gbyte cc_value = gIrqSaveAndDisable();
 
     if (root64) {
@@ -38,5 +38,5 @@ void gFree64(gbyte* p) {
 }
 
 void Reset64() {
-    root64 = NULL;
+    root64 = gNULL;
 }
