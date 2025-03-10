@@ -97,12 +97,12 @@ void WizWaitStatus(byte want) {
 
 // returns tx_ptr
 tx_ptr_t WizReserveToSend( word n) {
-  // PrintH("ResTS %x;", n);
+  // PrintH("ResTS %d;", n);
   // Wait until free space is available.
   word free_size;
   do {
     free_size = WizGet2(B + SK_TX_FSR0);
-    // PrintH("Res free %x;", free_size);
+    // PrintH("Res free %d;", free_size);
   } while (free_size < n);
 
   return WizGet2(B + SK_TX_WR0) & RING_MASK;
@@ -146,7 +146,7 @@ errnum WizCheck() {
   return OKAY;
 }
 errnum WizSendChunk( char* data, word n) {
-  // PrintH("Ax WizSendChunk %x@%x : %x %x %x %x %x", n, data, data[0], data[1],
+  // PrintH("Ax WizSendChunk %d@%d : %d %d %d %d %d", n, data, data[0], data[1],
   // data[2], data[3], data[4]);
   errnum e = WizCheck();
   if (e) return e;
@@ -192,12 +192,12 @@ errnum WizRecvChunkTry( byte* buf, word n) {
 }
 
 errnum WizRecvChunk( byte* buf, word n) {
-  // PrintH("WizRecvChunk %x...", n);
+  // PrintH("WizRecvChunk %d...", n);
   errnum e;
   do {
     e = WizRecvChunkTry(buf, n);
   } while (e == NOTYET);
-  // PrintH("WRC %x: %x %x %x %x %x.", n, buf[0], buf[1], buf[2], buf[3],
+  // PrintH("WRC %d: %d %d %d %d %d.", n, buf[0], buf[1], buf[2], buf[3],
   // buf[4]);
   return e;
 }

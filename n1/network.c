@@ -65,7 +65,7 @@ void ExecuteReceivedCommand() {
         if (e2==NOTYET) return;
         if (e2) Fatal("E-M",e2);
 
-        MemCopy(Peek2(b), Peek2(b+2), Peek2(b+4));
+        MemCopy((byte*)Peek2(b), (byte*)Peek2(b+2), Peek2(b+4));
     } else if (h[0] == NEKOT_POKE) { // 66
         errnum e2 = WizRecvChunkTry((byte*)p, n);
         if (e2==NOTYET) return;
@@ -102,7 +102,7 @@ void CheckReceived() {
 #endif
 
     if (need_to_start_task) {
-// Console_Printf("NEED(%x).", task_to_start);
+// Console_Printf("NEED(%d).", task_to_start);
         need_to_start_task = false;
         StartTask(task_to_start);
         // Note StartTask never returns.

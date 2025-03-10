@@ -19,7 +19,7 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
     Vdg.shadow_pia1portb = vdg_op_mode;
     Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
 
-// Console_Printf(" D[%x,%x,%x] ", fb, vdg_op_mode, sam_control_bits);
+// Console_Printf(" D[%d,%d,%d] ", fb, vdg_op_mode, sam_control_bits);
 
     // Set the framebuffer address.
     {

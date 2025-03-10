@@ -15,7 +15,7 @@ byte* N1Alloc64() {
 
     if (root64) {
         assert(root64->magic == MAGIC64);
-        z = (byte*)root64;
+        z = root64;
         root64 = root64->next;
         z->magic = 0;
     }

@@ -83,7 +83,9 @@ word PinDown[] STARTUP_DATA = {
     (word) N1AfterMain3,
     (word) N1NetworkLog,
     (word) Fatal,
-    (word) Console_Printf,
+    // (word) Console_Printf,
+    (word) PutStr,
+    (word) PutChar,
 
     (word) before_main,
     (word) &_More0,
@@ -92,7 +94,25 @@ word PinDown[] STARTUP_DATA = {
     (word) &_Final_Startup,
 };
 
+#if 0
+void TestByte(byte a) {
+    asm volatile("  LDA %0" : : "m" (a));
+}
+
+void TestWord(word foo) {
+    wob x = { .w= foo };
+    TestByte(x.b[0]);
+    TestByte(x.b[1]);
+}
+#endif
+
 int main() {
+#if 0
+    N1Pin(TestByte);
+    N1Pin(TestWord);
+    TestWord(0x1234);
+    TestWord(0x5678);
+#endif
     ClearPage256(0x0000); // .bss
     // ClearPage256(0x0100); // stack
     ClearPage256(0x0200); // vdg console p1
@@ -105,7 +125,7 @@ int main() {
 
     // Install 4 initial 64-byte chunks.
     Reset64();
-    for (byte* p = 0x0400; p < 0x0500; p += 64) {
+    for (byte* p = (byte*)0x0400; p < (byte*)0x0500; p += 64) {
         N1Free64(p);
     }
 
@@ -127,10 +147,8 @@ int main() {
     }
     Vdg_Init();
 
-    Poke2(0, PutStr);
-    Poke2(0, PutChar);
 
-    Console_Printf("NEKOT %s\n", "MICROKERNEL");
+    PutStr("\nNEKOT MICROKERNEL\n");
     Spin_Init();
 
     Peek1(0xFF02);        // Clear VSYNC IRQ

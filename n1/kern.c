@@ -15,7 +15,11 @@ void Fatal(const char* why, word arg) {
     INHIBIT_IRQ();
 
     SwitchToChatScreen();
-    Console_Printf("\nFATAL (%s, %x, %u, %d.)", why, arg, arg, arg);
+    // Console_Printf("\nFATAL (%s, %d)", why, arg);
+    PutStr("\nFATAL ");
+    PutDec(arg);
+    PutStr(": ");
+    PutStr(why);
     FatalSpin(why);
 }
 

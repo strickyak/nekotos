@@ -49,6 +49,7 @@ void PutStr(const char* s) {
     }
 }
 
+#if 0
 char HexAlphabet[] = "0123456789ABCDEF";
 
 void PutHex(word x) {
@@ -57,6 +58,7 @@ void PutHex(word x) {
   }
   PutChar(HexAlphabet[15u & x]);
 }
+#endif
 byte DivMod10(word x, word* out_div) {  // returns mod
   word div = 0;
   while (x >= 10000) x -= 10000, div += 1000;
@@ -76,6 +78,7 @@ void PutDec(word x) {
   // eschew mod // PutChar('0' + (byte)(x % 10u));
   PutChar('0' + DivMod10(x, &div));
 }
+#if 0
 void PutSigned(int x) {
     if (x<0) {
         x = -x;
@@ -83,6 +86,8 @@ void PutSigned(int x) {
     }
     PutDec(x);
 }
+#endif
+#if 0
 void Console_Printf(const char* format, ...) {
     byte cc_value = N1IrqSaveAndDisable();
 
@@ -98,17 +103,21 @@ void Console_Printf(const char* format, ...) {
             s++;
             switch (*s) {
             case 'd':
+#if 0
                 {
                     int x = va_arg(ap, int);
-                    PutSigned(x);
+                    PutDec(x);
                 }
                 break;
+#endif
             case 'u':
+            case 'x':
                 {
                     word x = va_arg(ap, word);
                     PutDec(x);
                 }
                 break;
+#if 0
             case 'x':
                 {
                     word x = va_arg(ap, word);
@@ -116,6 +125,7 @@ void Console_Printf(const char* format, ...) {
                     PutHex(x);
                 }
                 break;
+#endif
             case 's':
                 {
                     char* x = va_arg(ap, char*);
@@ -129,6 +139,7 @@ void Console_Printf(const char* format, ...) {
     }
     N1IrqRestore(cc_value);
 }
+#endif
 
 void Console_Init() {
     // Poke2(0, AdvanceCursor);
