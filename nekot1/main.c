@@ -22,7 +22,7 @@ void CWait(void) {
 #endif
 
 // pia_reset table traced from coco3 startup.
-struct pia_reset { gword addr; gbyte value; } pia_reset[] STARTUP_DATA = {
+struct pia_reset { gword addr; gbyte value; } pia_reset[] gSTARTUP_DATA = {
      { 0xff21, 0x00 },  // choose data direction
      { 0xff23, 0x00 },  // choose data direction
      { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
@@ -68,7 +68,7 @@ void before_main() {
         );
 }
 
-gword PinDown[] STARTUP_DATA = {
+gword PinDown[] gSTARTUP_DATA = {
     (gword) after_main,
 
     (gword) Breakkey_Handler,

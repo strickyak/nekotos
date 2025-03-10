@@ -221,9 +221,9 @@ extern struct score {
 
 // Global variables or data tables that are only used
 // by startup code can be marked with the attribute
-// STARTUP_DATA.  They will be freed when you call
+// gSTARTUP_DATA.  They will be freed when you call
 // gAfterMain().
-#define STARTUP_DATA   __attribute__ ((section (".data.startup")))
+#define gSTARTUP_DATA   __attribute__ ((section (".data.startup")))
 
 // The following gKern variables can be read by the game
 // to find out what state the Kernel is in.
