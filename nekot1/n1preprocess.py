@@ -10,8 +10,8 @@ if len(sys.argv) != 3:
 r = open(sys.argv[1], "r")
 w = open(sys.argv[2], "w")
 
-DoesDefineScreen = re.compile(r'\s*g_DEFINE_SCREEN\s*[(]\s*(\w+)\s*,\s*(\d+)\s*[)]').match
-DoesDefineRegion = re.compile(r'\s*g_DEFINE_REGION\s*[(]\s*(\w+)\s*,\s*([\w ]+)[)]').match
+DoesDefineScreen = re.compile(r'\s*gSCREEN\s*[(]\s*(\w+)\s*,\s*(\d+)\s*[)]').match
+DoesDefineRegion = re.compile(r'\s*gREGION\s*[(]\s*(\w+)\s*,\s*([\w ]+)[)]').match
 
 ceiling = 0x4000
 screens = []
@@ -40,19 +40,19 @@ def out(s): print(s, file=w)
 
 out(f'// This file is generated from {sys.argv[1]} by n1preprocess.py')
 out(f'')
-out(f'#define g_DEFINE_SCREEN(Name,NumPages)')
-out(f'#define g_DEFINE_REGION(Name)')
+out(f'#define gSCREEN(Name,NumPages)')
+out(f'#define gREGION(Name,Type)')
 out(f'')
 
 for scr in screens:
     out(f'#define  {scr["name"]}  ((gbyte*)0x{scr["addr"]:04x})  // {scr["pages"]} pages')
-out(f'#define  _gPRE_SCREENS   0x{ceiling:04x}')
+out(f'#define  _nPRE_SCREENS   0x{ceiling:04x}')
 
-addr = '_gPRE_SCREENS'
+addr = '_nPRE_SCREENS'
 for rgn in regions:
     addr += f' - sizeof ({rgn[1]})'
     out(f'#define  {rgn[0]}  (*({rgn[1]} *)({addr}))')
-out(f'#define  _gPRE_REGIONS   ({addr})')
+out(f'#define  _nPRE_REGIONS   ({addr})')
 
 out('')
 out('int _n1pre_final           __attribute__ ((section (".final"))) = 0xAEEE;')
@@ -70,7 +70,7 @@ out('')
 
 out(f'#line 1000000 "{sys.argv[2]}"')
 out('')
-out('int const _n1pre_screens = _gPRE_SCREENS;')
-out('int const _n1pre_regions = _gPRE_REGIONS;')
+out('int const _n1pre_screens = _nPRE_SCREENS;')
+out('int const _n1pre_regions = _nPRE_REGIONS;')
 out('struct _n1pre_entry const _n1pre_entry __attribute__ ((section (".text.entry"))) = {0x7E/*JMP_Extended*/, (int)main};')
 out('//END.')

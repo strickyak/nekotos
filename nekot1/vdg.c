@@ -6,7 +6,8 @@
 // Our PMode1 is Display Mode "G3C".
 //
 // The vdg_op_mode are written to $FF22 (Pia1PortB).
-// The low three bits can be set high.
+// The low three bits can be set to 0s.
+// (Note that Bit 1 is the 1-Bit Speaker Output.)
 //
 // See page 3 in "CoCo Hardware Reference.pdf".
 // The sam_control_bits are called "FFC0-FFC5 Video Display Mode".
@@ -70,7 +71,7 @@ void gPMode1Screen(gbyte* fb, gbyte colorset) {
     Vdg.game_framebuffer = fb;
     if (gKern.focus_game) SwitchToGameScreen();
 }
-void gGameShowsOtherScreen(gbyte* fb, gword mode_code) {
+void gModeScreen(gbyte* fb, gword mode_code) {
     Vdg.game_mode = mode_code;
     Vdg.game_framebuffer = fb;
     if (gKern.focus_game) SwitchToGameScreen();

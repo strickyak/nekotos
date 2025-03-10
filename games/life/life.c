@@ -1,6 +1,6 @@
 #include "nekot1/public.h"
 
-g_DEFINE_SCREEN(D, 2);  // D for Semigraphics Display
+gSCREEN(D, 2);  // D for Semigraphics Display
 
 volatile gbyte TRUE = 1;
 

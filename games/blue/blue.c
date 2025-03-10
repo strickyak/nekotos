@@ -10,10 +10,10 @@ struct bogus {
     gbyte b, o, g, u, s;
 };
 
-g_DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
-g_DEFINE_SCREEN(T, 2);   // T for Text (512 bytes == 2 pages)
-g_DEFINE_REGION(Demo);
-g_DEFINE_REGION(Bogus);
+gSCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
+gSCREEN(T, 2);   // T for Text (512 bytes == 2 pages)
+gREGION(Demo, struct demo);
+gREGION(Bogus, struct bogus);
 
 // ColorSet 0 for PMode 1
 #define Green0  0
