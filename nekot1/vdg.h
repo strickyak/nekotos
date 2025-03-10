@@ -3,15 +3,15 @@
 
 struct vdg {
     word  game_mode;
-    byte* game_framebuffer;
-    byte shadow_pia1portb;
+    gbyte* game_framebuffer;
+    gbyte shadow_pia1portb;
 } Vdg;
 
 // These are for setting the Game Mode.
 // public
-void gGameShowsTextScreen(byte* screen_addr, byte colorset);
+void gGameShowsTextScreen(gbyte* screen_addr, gbyte colorset);
 // public
-void gGameShowsPMode1Screen(byte* screen_addr, byte colorset);
+void gGameShowsPMode1Screen(gbyte* screen_addr, gbyte colorset);
 
 // gGameShowsOtherScreen requests game modes other
 // Text and PMode1.  You must know the high bits
@@ -20,11 +20,11 @@ void gGameShowsPMode1Screen(byte* screen_addr, byte colorset);
 // "FFC0 - FFC5 Video display mode" bits for the SAM chip.
 // Mode_code contains both of those.
 // The top five bits of $FF22 are the top five bits
-// (in the high byte) of mode_code.
+// (in the high gbyte) of mode_code.
 // The V2, V1, V0 bits are the low three bits
-// (in the low byte) of mode_code.
+// (in the low gbyte) of mode_code.
 // public
-void gGameShowsOtherScreen(byte* screen_addr, word mode_code);
+void gGameShowsOtherScreen(gbyte* screen_addr, word mode_code);
 
 #define COLORSET_GREEN  0
 #define COLORSET_ORANGE 1

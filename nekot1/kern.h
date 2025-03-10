@@ -12,8 +12,8 @@ void Network_Handler();
 void StartTask(word entry);
 
 // Shouldn't these be public?
-byte IrqSaveAndDisable();
-void IrqRestore(byte cc_value);
+gbyte IrqSaveAndDisable();
+void IrqRestore(gbyte cc_value);
 
 /*
 ///////////////////////////////////////

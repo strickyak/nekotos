@@ -1,13 +1,13 @@
 #include "nekot1/public.h"
 
 struct demo {
-    byte level;
+    gbyte level;
     int color, size;
     char wut[16];
 };
 
 struct bogus {
-    byte b, o, g, u, s;
+    gbyte b, o, g, u, s;
 };
 
 g_DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
@@ -102,25 +102,25 @@ void FONT_Wrapper() {
 
 /////////////////////////////////////////////////////
 
-typedef void (*SpotDrawer)(byte* fb, byte x, byte y, byte color);
+typedef void (*SpotDrawer)(gbyte* fb, gbyte x, gbyte y, gbyte color);
 
-void DrawSpot(byte* fb, byte x, byte y, byte color) {
-  byte xshift = x & 3;  // mod 4
-  byte xdist = x >> 2;  // div 4
+void DrawSpot(gbyte* fb, gbyte x, gbyte y, gbyte color) {
+  gbyte xshift = x & 3;  // mod 4
+  gbyte xdist = x >> 2;  // div 4
   word addr = (word)fb + xdist + ((word)y << 5);
-  byte b = Peek1(addr);
-  byte bitshift = (3 - xshift) << 1;
-  byte mask = ~(3 << bitshift);
+  gbyte b = Peek1(addr);
+  gbyte bitshift = (3 - xshift) << 1;
+  gbyte mask = ~(3 << bitshift);
   b = (b & mask) | (color << bitshift);
   Poke1(addr, b);
 }
-void DrawSpotXor(byte* fb, byte x, byte y, byte color) {
-  byte xshift = x & 3;  // mod 4
-  byte xdist = x >> 2;  // div 4
+void DrawSpotXor(gbyte* fb, gbyte x, gbyte y, gbyte color) {
+  gbyte xshift = x & 3;  // mod 4
+  gbyte xdist = x >> 2;  // div 4
   word addr = (word)fb + xdist + ((word)y << 5);
   PXOR(addr, (color << ((3 - xshift) << 1)));
 }
-void ClearGraf(byte color) {
+void ClearGraf(gbyte color) {
     color &= 3;
     wob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
@@ -129,14 +129,14 @@ void ClearGraf(byte color) {
     }
 }
 
-extern byte FONT[];
-void DrawChar(char ch, byte x, byte y, byte color) {
+extern gbyte FONT[];
+void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
     word c = ch - 32;
     word p = (word)FONT + (c<<3) + (c<<2);
     for (word i = 0; i < 8; i++) {
-        byte bits = Peek1(p++);
-        byte probe = 0x80u;
-        for (byte j = 0; j < 8; j++) {
+        gbyte bits = Peek1(p++);
+        gbyte probe = 0x80u;
+        for (gbyte j = 0; j < 8; j++) {
             if (bits & probe)
                 DrawSpotXor(G, x+j, y+i, Blue0);
             probe >>= 1;
@@ -154,7 +154,7 @@ void WaitForASecond() {
     while (now == gReal.seconds) {}
 }
 
-volatile byte TRUE = 1;
+volatile gbyte TRUE = 1;
 
 #define  END   (3*1024)
 
@@ -178,24 +178,24 @@ int main() {
     word c1 = 0x5555;
     word c2 = 0xFFFF;
     word c3 = 0xAAAA;
-    for (byte* w = G+0*END/4; w < G+1*END/4; w+=2) {
+    for (gbyte* w = G+0*END/4; w < G+1*END/4; w+=2) {
         Poke2(w, c1);
         Poke2(0x0202, w);
     }
-    for (byte* w = G+1*END/4; w < G+2*END/4; w+=2) {
+    for (gbyte* w = G+1*END/4; w < G+2*END/4; w+=2) {
         Poke2(w, c2);
         Poke2(0x0202, w);
     }
-    for (byte* w = G+2*END/4; w < G+3*END/4; w+=2) {
+    for (gbyte* w = G+2*END/4; w < G+3*END/4; w+=2) {
         Poke2(w, c3);
         Poke2(0x0202, w);
     }
-    for (byte* w = G+3*END/4; w < G+4*END/4; w+=2) {
+    for (gbyte* w = G+3*END/4; w < G+4*END/4; w+=2) {
         Poke2(w, c0);
         Poke2(0x0202, w);
     }
 
-    byte x = 2;
+    gbyte x = 2;
     for (const char* s = "THIS IS GREEN"; *s; s++) {
         DrawChar(*s, x, 30, Blue0);
         x += 9;

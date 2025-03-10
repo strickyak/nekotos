@@ -2,19 +2,19 @@
 
 g_DEFINE_SCREEN(D, 2);  // D for Semigraphics Display
 
-volatile byte TRUE = 1;
+volatile gbyte TRUE = 1;
 
 #define H 32  // must be a power of 2
 #define W 64  // must be a power of 2
 #define MODH(A) ((H-1)&(A))
 #define MODW(A) ((W-1)&(A))
 
-byte board[2][W][H] MORE_DATA;
+gbyte board[2][W][H] MORE_DATA;
 
-void ComputeLife(byte in[W][H], byte out[W][H]) {
+void ComputeLife(gbyte in[W][H], gbyte out[W][H]) {
     for (word y = 0; y < H; y++) {
         for (word x = 0; x < W; x++) {
-            byte n =
+            gbyte n =
                 in[MODW(x-1)][MODH(y-1)] +
                 in[MODW(x-1)][y] +
                 in[MODW(x-1)][MODH(y+1)] +
@@ -32,12 +32,12 @@ void ComputeLife(byte in[W][H], byte out[W][H]) {
     }
 }
 
-void DisplayLife(byte in[W][H]) {
-    volatile byte* p = (volatile byte*)D;
+void DisplayLife(gbyte in[W][H]) {
+    volatile gbyte* p = (volatile gbyte*)D;
     for (word y = 0; y < H; y+=2) {
         for (word x = 0; x < W; x+=2) {
             *p = '#';
-            byte z = 0x80;
+            gbyte z = 0x80;
             if (in[x][y]) z += 0x08;
             if (in[x+1][y]) z += 0x04;
             if (in[x][y+1]) z += 0x02;
@@ -73,9 +73,9 @@ int main() {
 
     for (word y = 2; y < H*3/4; y++) {
         for (word x = 2; x < W*3/4; x++) {
-            byte z = (byte)x & (byte)y;
-            byte c = gReal.ticks + gReal.decis + gReal.seconds;
-            byte b = 1;
+            gbyte z = (gbyte)x & (gbyte)y;
+            gbyte c = gReal.ticks + gReal.decis + gReal.seconds;
+            gbyte b = 1;
             for (word i = 0; i<8; i++) {
                 if ((b&z) != 0) c++;
                 b <<= 1;

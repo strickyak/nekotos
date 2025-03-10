@@ -2,7 +2,7 @@
 #define _NEKOT1_BREAKKEY_H_
 
 struct breakkey {
-    bool volatile break_key_was_down;
+    gbool volatile break_key_was_down;
 } Breakkey;
 
 // Break_Handler is called on interrupt.

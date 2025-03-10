@@ -1,7 +1,7 @@
 #include "nekot1/private.h"
 
-void MemCopy(byte *dest, const byte *src, word count) {
-    // If count is odd, copy an initial byte.
+void MemCopy(gbyte *dest, const gbyte *src, word count) {
+    // If count is odd, copy an initial gbyte.
     if (count & 1) {
         *dest++ = *src++;
     }
@@ -14,8 +14,8 @@ void MemCopy(byte *dest, const byte *src, word count) {
     }
 }
 
-void MemSet(byte* dest, byte value, word count) {
-    // If count is odd, set an initial byte.
+void MemSet(gbyte* dest, gbyte value, word count) {
+    // If count is odd, set an initial gbyte.
     if (count & 1) {
         *dest++ = value;
     }
@@ -32,16 +32,16 @@ void MemSet(byte* dest, byte value, word count) {
 }
 
 void* memset(void* dest, int value, word count) {
-    byte* p = dest;
-    byte v = (byte)value;
+    gbyte* p = dest;
+    gbyte v = (gbyte)value;
     for (word i = 0; i < count; i++) {
         *p++ = v;
     }
 }
 
 void* memcpy(void* dest, void* src, word count) {
-    byte* s = src;
-    byte* p = dest;
+    gbyte* s = src;
+    gbyte* p = dest;
     for (word i = 0; i < count; i++) {
         *p++ = *s++;
     }

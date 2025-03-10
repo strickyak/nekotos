@@ -11,10 +11,10 @@
 // See page 3 in "CoCo Hardware Reference.pdf".
 // The sam_control_bits are called "FFC0-FFC5 Video Display Mode".
 
-static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits) {
+static void SwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bits) {
     vdg_op_mode &= 0xF8;  // only top 5 bits matter.
 
-    byte cc_value = gIrqSaveAndDisable();
+    gbyte cc_value = gIrqSaveAndDisable();
 
     Vdg.shadow_pia1portb = vdg_op_mode;
     Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
@@ -24,8 +24,8 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
     // Set the framebuffer address.
     {
         word bit = 0x0200;  // Start with bit F0 (CoCo Hardware Reference.pdf)
-        for (byte i=0; i<14; i+=2) {  // 7 iterations.
-            bool b = (((word)fb & bit) != 0); 
+        for (gbyte i=0; i<14; i+=2) {  // 7 iterations.
+            gbool b = (((word)fb & bit) != 0); 
             Poke1(0xFFC6 + i + b, 0); // 0xFFC6 is F0.
             bit <<= 1;
         }
@@ -33,9 +33,9 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
 
     // Set the V2, V1, V0 SAM bits.
     {
-        byte bit = 0x01;
-        for (byte i=0; i<6; i+=2) {  // 3 iterations.
-            bool b = ((sam_control_bits & bit) != 0); 
+        gbyte bit = 0x01;
+        for (gbyte i=0; i<6; i+=2) {  // 3 iterations.
+            gbool b = ((sam_control_bits & bit) != 0); 
             Poke1(0xFFC0 + i + b, 0); // 0xFFC0 is V0.
             bit <<= 1;
         }
@@ -44,11 +44,11 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
     gIrqRestore(cc_value);
 }
 // Effective immediately.
-static void SwitchToDisplayText(byte* fb, byte colorset) {
+static void SwitchToDisplayText(gbyte* fb, gbyte colorset) {
     SwitchDisplayMode(fb, (colorset?8:0), 0);
 }
 // Effective immediately.
-static void SwitchToDisplayPMode1(byte* fb, byte colorset) {
+static void SwitchToDisplayPMode1(gbyte* fb, gbyte colorset) {
     SwitchDisplayMode(fb, 0xC0 + (colorset?8:0), 4);
 }
 // Effective immediately.
@@ -60,17 +60,17 @@ void SwitchToGameScreen() {
 
 // These are for Game Mode.
 // They remember what to change back to, after Chat mode.
-void gGameShowsTextScreen(byte* fb, byte colorset) {
+void gGameShowsTextScreen(gbyte* fb, gbyte colorset) {
     Vdg.game_mode = (colorset? 0x0800: 0x0000);
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();
 }
-void gGameShowsPMode1Screen(byte* fb, byte colorset) {
+void gGameShowsPMode1Screen(gbyte* fb, gbyte colorset) {
     Vdg.game_mode = (colorset? 0xC804: 0xC004);
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();
 }
-void gGameShowsOtherScreen(byte* fb, word mode_code) {
+void gGameShowsOtherScreen(gbyte* fb, word mode_code) {
     Vdg.game_mode = mode_code;
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();

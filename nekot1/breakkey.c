@@ -27,11 +27,11 @@ static void DoBreak(void) {
 // Break_Handler is called on interrupt.
 void Breakkey_Handler(void) {
     // Place the keyboard probe signal for BREAK
-    const byte probe = ~(byte)BREAKKEY_PROBE_BIT;
+    const gbyte probe = ~(gbyte)BREAKKEY_PROBE_BIT;
     Poke1(Pia0PortB, probe);
 
     // Read the sense port and check the bit.
-    byte sense = Peek1(Pia0PortA);
+    gbyte sense = Peek1(Pia0PortA);
 
     // Debounce.
     if ((sense & BREAKKEY_SENSE_BIT) == 0) {

@@ -4,13 +4,13 @@
 // Make noise on incoming packets.
 #define NETWORK_CLICK 1
 
-// struct quint is the 5-byte header of
+// struct quint is the 5-gbyte header of
 // every packet embedded in the TCP stream
 // to and from the MCP.  p varies with the
 // command.  n is the number of bytes to
 // immediately follow for the payload.
 struct quint {
-    byte cmd;
+    gbyte cmd;
     word n;
     word p;
 };
@@ -18,7 +18,7 @@ struct quint {
 void gNetworkLog(const char* s);
 
 void CheckReceived(void);
-void WizSend(byte* addr, word size);
+void WizSend(gbyte* addr, word size);
 void gSendClientPacket(word p, char* pay, word size);
 
 void HelloMCP();

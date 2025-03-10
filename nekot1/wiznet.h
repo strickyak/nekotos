@@ -2,7 +2,7 @@
 #define _NEKOT1_WIZNET_H_
 
 typedef word tx_ptr_t;
-typedef byte errnum;
+typedef gbyte errnum;
 
 struct wiznet {
     struct wiz_port *wiz_port;
@@ -12,11 +12,11 @@ void Wiznet_Init(void);
 
 tx_ptr_t WizReserveToSend( word n);
 tx_ptr_t WizBytesToSend( tx_ptr_t tx_ptr,
-                        const byte* data, word n);
+                        const gbyte* data, word n);
 void WizFinalizeSend( word n);
 
 errnum WizRecvGetBytesWaiting(word* bytes_waiting_out);
-errnum WizRecvChunkTry( byte* buf, word n);
+errnum WizRecvChunkTry( gbyte* buf, word n);
 
 #define RING_SIZE 2048
 #define RING_MASK (RING_SIZE - 1)

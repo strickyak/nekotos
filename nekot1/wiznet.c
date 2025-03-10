@@ -4,9 +4,9 @@
 
 // How to talk to the four hardware ports.
 struct wiz_port {
-  volatile byte command;
+  volatile gbyte command;
   volatile word addr;
-  volatile byte data;
+  volatile gbyte data;
 };
 
 // Axiom uses Socket 1 (of 0 thru 3).
@@ -16,36 +16,36 @@ struct wiz_port {
 
 //////////////////////////////////////
 
-byte WizGet1(word reg) {
+gbyte WizGet1(word reg) {
   WIZ->addr = reg;
   return WIZ->data;
 }
 word WizGet2(word reg) {
   WIZ->addr = reg;
-  byte z_hi = WIZ->data;
-  byte z_lo = WIZ->data;
+  gbyte z_hi = WIZ->data;
+  gbyte z_lo = WIZ->data;
   return ((word)(z_hi) << 8) + (word)z_lo;
 }
 void WizGetN(word reg, void* buffer, word size) {
   volatile struct wiz_port* wiz = WIZ;
-  byte* to = (byte*)buffer;
+  gbyte* to = (gbyte*)buffer;
   wiz->addr = reg;
   for (word i = size; i; i--) {
     *to++ = wiz->data;
   }
 }
-void WizPut1(word reg, byte value) {
+void WizPut1(word reg, gbyte value) {
   WIZ->addr = reg;
   WIZ->data = value;
 }
 void WizPut2(word reg, word value) {
   WIZ->addr = reg;
-  WIZ->data = (byte)(value >> 8);
-  WIZ->data = (byte)(value);
+  WIZ->data = (gbyte)(value >> 8);
+  WIZ->data = (gbyte)(value);
 }
 void WizPutN(word reg, const void* data, word size) {
   volatile struct wiz_port* wiz = WIZ;
-  const byte* from = (const byte*)data;
+  const gbyte* from = (const gbyte*)data;
   wiz->addr = reg;
   for (word i = size; i; i--) {
     wiz->data = *from++;
@@ -53,10 +53,10 @@ void WizPutN(word reg, const void* data, word size) {
 }
 
 word WizTicks() { return WizGet2(0x0082 /*TCNTR Tick Counter*/); }
-byte WizTocks() { return WizGet1(0x0082 /*TCNTR Tick Counter*/); }
+gbyte WizTocks() { return WizGet1(0x0082 /*TCNTR Tick Counter*/); }
 
-bool ValidateWizPort(struct wiz_port* p) {
-  byte status = p->command;
+gbool ValidateWizPort(struct wiz_port* p) {
+  gbyte status = p->command;
   return (status == 3);
 }
 
@@ -76,15 +76,15 @@ void FindWizPort() {
 
 //////////////////////////////////////////
 
-void WizIssueCommand(byte cmd) {
+void WizIssueCommand(gbyte cmd) {
   WizPut1(B + SK_CR, cmd);
   while (WizGet1(B + SK_CR)) {
   }
 }
 
-void WizWaitStatus(byte want) {
-  byte status;
-  byte stuck = 200;
+void WizWaitStatus(gbyte want) {
+  gbyte status;
+  gbyte stuck = 200;
   do {
     status = WizGet1(B + SK_SR);
     if (!--stuck) Fatal("W", status);
@@ -124,7 +124,7 @@ tx_ptr_t WizDataToSend( tx_ptr_t tx_ptr,
   return (n + tx_ptr) & RING_MASK;
 }
 tx_ptr_t WizBytesToSend( tx_ptr_t tx_ptr,
-                        const byte* data, word n) {
+                        const gbyte* data, word n) {
   return WizDataToSend(tx_ptr, (char*)data, n);
 }
 
@@ -136,7 +136,7 @@ void WizFinalizeSend( word n) {
 }
 
 errnum WizCheck() {
-  byte ir = WizGet1(B + SK_IR);  // Socket Interrupt Register.
+  gbyte ir = WizGet1(B + SK_IR);  // Socket Interrupt Register.
   if (ir & SK_IR_TOUT) {         // Timeout?
     return SK_IR_TOUT;
   }
@@ -167,7 +167,7 @@ errnum WizRecvGetBytesWaiting(word* bytes_waiting_out) {
   return OKAY;
 }
 
-errnum WizRecvChunkTry( byte* buf, word n) {
+errnum WizRecvChunkTry( gbyte* buf, word n) {
   word bytes_waiting = 0;
   errnum e = WizRecvGetBytesWaiting(& bytes_waiting);
   if (e) return e;
@@ -191,7 +191,7 @@ errnum WizRecvChunkTry( byte* buf, word n) {
   return OKAY;
 }
 
-errnum WizRecvChunk( byte* buf, word n) {
+errnum WizRecvChunk( gbyte* buf, word n) {
   // PrintH("WizRecvChunk %d...", n);
   errnum e;
   do {
@@ -201,7 +201,7 @@ errnum WizRecvChunk( byte* buf, word n) {
   // buf[4]);
   return e;
 }
-errnum WizRecvChunkBytes( byte* buf, word n) {
+errnum WizRecvChunkBytes( gbyte* buf, word n) {
   return WizRecvChunk(buf, n);
 }
 
@@ -209,7 +209,7 @@ errnum WizRecvChunkBytes( byte* buf, word n) {
 ////////////////////////////////////////
 
 void Wiznet_Init() {
-    volatile byte* p = Cons + WIZNET_BAR_LOCATION;
+    volatile gbyte* p = Cons + WIZNET_BAR_LOCATION;
     p[-1] = 'W';
     FindWizPort();
     if ((word)Wiznet.wiz_port == 0xFF68u) {

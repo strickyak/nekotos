@@ -3,7 +3,7 @@
 // kern.c
 
 void FatalSpin(const char *why) {
-    volatile byte* p = (volatile byte*) Cons;
+    volatile gbyte* p = (volatile gbyte*) Cons;
 
     // Work around GCC infinite loop bug.
     while (Kern.always_true) {
@@ -59,8 +59,8 @@ void StartTask(word entry) {
     // Never returns.
 }
 
-byte gIrqSaveAndDisable() {
-    byte cc_value;
+gbyte gIrqSaveAndDisable() {
+    gbyte cc_value;
     asm volatile("\n"
         "  tfr cc,b  \n"
         "  stb %0  \n"
@@ -73,7 +73,7 @@ byte gIrqSaveAndDisable() {
     return cc_value;
 }
 
-void gIrqRestore(byte cc_value) {
+void gIrqRestore(gbyte cc_value) {
     //PutChar(65 + (cc_value & 0x10));
     asm volatile("\n"
         "  ldb %0  \n"

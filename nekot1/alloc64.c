@@ -9,9 +9,9 @@ typedef struct header64 {
 
 H64* root64;
 
-byte* gAlloc64() {
+gbyte* gAlloc64() {
     H64* z = NULL;
-    byte cc_value = gIrqSaveAndDisable();
+    gbyte cc_value = gIrqSaveAndDisable();
 
     if (root64) {
         assert(root64->magic == MAGIC64);
@@ -21,14 +21,14 @@ byte* gAlloc64() {
     }
 
     gIrqRestore(cc_value);
-    return (byte*)z;
+    return (gbyte*)z;
 }
 
-void gFree64(byte* p) {
+void gFree64(gbyte* p) {
     if (!p) return;
     H64* h = (H64*) p;
 
-    byte cc_value = gIrqSaveAndDisable();
+    gbyte cc_value = gIrqSaveAndDisable();
 
     h->next = root64;
     h->magic = MAGIC64;

@@ -18,7 +18,7 @@ void Console_Init(void);
 void PutChar(char c);
 void PutStr(const char* s);
 void PutDec(word x);
-byte DivMod10(word x, word* out_div);  // returns mod
+gbyte DivMod10(word x, word* out_div);  // returns mod
 // void Console_Printf(const char* format, ...);
 
 #endif // _NEKOT1_CONSOLE_H_

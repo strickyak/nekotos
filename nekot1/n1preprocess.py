@@ -26,7 +26,7 @@ def DefineScreen(ds):
 def DefineRegion(dr):
     global screens
     name, ctype = dr[1], dr[2]
-    regions.append((ctype, name))
+    regions.append((name, ctype))
 
 lines = [x.rstrip() for x in r]
 for line in lines:
@@ -45,7 +45,7 @@ out(f'#define g_DEFINE_REGION(Name)')
 out(f'')
 
 for scr in screens:
-    out(f'#define  {scr["name"]}  ((byte*)0x{scr["addr"]:04x})  // {scr["pages"]} pages')
+    out(f'#define  {scr["name"]}  ((gbyte*)0x{scr["addr"]:04x})  // {scr["pages"]} pages')
 out(f'#define  _gPRE_SCREENS   0x{ceiling:04x}')
 
 addr = '_gPRE_SCREENS'

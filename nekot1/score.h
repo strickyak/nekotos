@@ -2,8 +2,8 @@
 #define _NEKOT1_SCORE_H_
 
 // public:
-extern byte gNumberOfPlayers;
-extern byte gThisPlayerNumber;
+extern gbyte gNumberOfPlayers;
+extern gbyte gThisPlayerNumber;
 extern int gPartialScores[gMAX_PLAYERS];
 extern int gTotalScores[gMAX_PLAYERS];
 

@@ -1,6 +1,6 @@
 #include "nekot1/private.h"
 
-byte logbuf[30];
+gbyte logbuf[30];
 
 word strlen(const char* s) {
     const char* p = s;
@@ -8,8 +8,8 @@ word strlen(const char* s) {
     return p-s;
 }
 
-void WizSend(byte* addr, word size) {
-    byte cc_value = gIrqSaveAndDisable();
+void WizSend(gbyte* addr, word size) {
+    gbyte cc_value = gIrqSaveAndDisable();
 
     tx_ptr_t t = WizReserveToSend(size);
     t = WizBytesToSend(t, addr, size);
@@ -19,7 +19,7 @@ void WizSend(byte* addr, word size) {
 }
 
 void gSendClientPacket(word p, char* pay, word size) {
-    byte cc_value = gIrqSaveAndDisable();
+    gbyte cc_value = gIrqSaveAndDisable();
 
     logbuf[0] = NEKOT_CLIENT;
     Poke2(logbuf+1, size);
@@ -32,28 +32,28 @@ void gSendClientPacket(word p, char* pay, word size) {
 }
 
 void gNetworkLog(const char* s) {
-    byte cc_value = gIrqSaveAndDisable();
+    gbyte cc_value = gIrqSaveAndDisable();
     // Still uses CMD_LOG=200.  TODO convert to CLIENT=70.
     word n = strlen(s);
     logbuf[0] = CMD_LOG;
     Poke2(logbuf+1, n);
     Poke2(logbuf+3, 0);
-    MemCopy(logbuf+5, (byte*)s, n);
+    MemCopy(logbuf+5, (gbyte*)s, n);
 
     WizSend(logbuf, n+5);
     gIrqRestore(cc_value);
 }
 
-MORE_DATA byte recv_head[5];
-MORE_DATA byte recv_buf[64];
+MORE_DATA gbyte recv_head[5];
+MORE_DATA gbyte recv_buf[64];
 
-bool need_recv_payload;
-bool need_to_start_task;
+gbool need_recv_payload;
+gbool need_to_start_task;
 word task_to_start;
 
 void ExecuteReceivedCommand() {
-    byte* h = recv_head;
-    byte* b = recv_buf;
+    gbyte* h = recv_head;
+    gbyte* b = recv_buf;
 
     word n = Peek2(h+1);
     word p = Peek2(h+3);
@@ -61,13 +61,13 @@ void ExecuteReceivedCommand() {
     if (h[0] == CMD_DATA) {
         // If we ever send CMD_ECHO, expect CMD_DATA.
     } else if (h[0] == NEKOT_MEMCPY) { // 65
-        errnum e2 = WizRecvChunkTry((byte*)b, n);
+        errnum e2 = WizRecvChunkTry((gbyte*)b, n);
         if (e2==NOTYET) return;
         if (e2) Fatal("E-M",e2);
 
-        MemCopy((byte*)Peek2(b), (byte*)Peek2(b+2), Peek2(b+4));
+        MemCopy((gbyte*)Peek2(b), (gbyte*)Peek2(b+2), Peek2(b+4));
     } else if (h[0] == NEKOT_POKE) { // 66
-        errnum e2 = WizRecvChunkTry((byte*)p, n);
+        errnum e2 = WizRecvChunkTry((gbyte*)p, n);
         if (e2==NOTYET) return;
         if (e2) Fatal("E-P",e2);
     } else if (h[0] == NEKOT_CALL) { // 67
@@ -84,10 +84,10 @@ void ExecuteReceivedCommand() {
 }
 
 void CheckReceived() {
-    byte cc_value = gIrqSaveAndDisable();
+    gbyte cc_value = gIrqSaveAndDisable();
 
     if (!need_recv_payload) {
-        byte err = WizRecvChunkTry(recv_head, 5);
+        gbyte err = WizRecvChunkTry(recv_head, 5);
         if (err==NOTYET) goto RESTORE;
         if (err) Fatal("RECV", err);
         need_recv_payload = true;
@@ -115,7 +115,7 @@ RESTORE:
 
 void HelloMCP() {
     struct quint q = {CMD_HELLO_NEKOT, 0, 0};
-    WizSend((byte*)&q, 5);
+    WizSend((gbyte*)&q, 5);
 }
 
 void Network_Init() {

@@ -8,12 +8,12 @@
 // The "mark" is a letter just to the left of the spinor
 // on the bar, to mnemonically identify the spinor.
 
-inline void Spin(char c, byte b) {
+inline void Spin(char c, gbyte b) {
     Cons[b]++;
-    volatile byte* p = (volatile byte*)0x3FE0;  // last graphics line
+    volatile gbyte* p = (volatile gbyte*)0x3FE0;  // last graphics line
     p[b]++;
 }   
-inline void Spin_Mark(char c, byte b) {
+inline void Spin_Mark(char c, gbyte b) {
     Cons[b-1] = c;
 }
 

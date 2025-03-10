@@ -19,14 +19,14 @@ static void AdvanceCursor() {
     Poke1(Console.cursor, 0xFF);
 }
 
-void PutRawByte(byte x) {
+void PutRawByte(gbyte x) {
     Poke1(Console.cursor, x);
     AdvanceCursor();
 }
 void PutChar(char c) {
     Poke1(Console.cursor, 0x20);
 
-    byte x = (byte)c; // Unsigned!
+    gbyte x = (gbyte)c; // Unsigned!
     if (x == '\n') {
             while (Console.cursor < PANE_LIMIT-1) {
                 PutChar(' ');
@@ -59,14 +59,14 @@ void PutHex(word x) {
   PutChar(HexAlphabet[15u & x]);
 }
 #endif
-byte DivMod10(word x, word* out_div) {  // returns mod
+gbyte DivMod10(word x, word* out_div) {  // returns mod
   word div = 0;
   while (x >= 10000) x -= 10000, div += 1000;
   while (x >= 1000) x -= 1000, div += 100;
   while (x >= 100) x -= 100, div += 10;
   while (x >= 10) x -= 10, div++;
   *out_div = div;
-  return (byte)x;
+  return (gbyte)x;
 }
 void PutDec(word x) {
   word div;
@@ -75,7 +75,7 @@ void PutDec(word x) {
     DivMod10(x, &div);
     PutDec(div);
   }
-  // eschew mod // PutChar('0' + (byte)(x % 10u));
+  // eschew mod // PutChar('0' + (gbyte)(x % 10u));
   PutChar('0' + DivMod10(x, &div));
 }
 #if 0
@@ -89,7 +89,7 @@ void PutSigned(int x) {
 #endif
 #if 0
 void Console_Printf(const char* format, ...) {
-    byte cc_value = gIrqSaveAndDisable();
+    gbyte cc_value = gIrqSaveAndDisable();
 
     va_list ap;
     va_start(ap, format);

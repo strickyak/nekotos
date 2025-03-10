@@ -22,7 +22,7 @@ void CWait(void) {
 #endif
 
 // pia_reset table traced from coco3 startup.
-struct pia_reset { word addr; byte value; } pia_reset[] STARTUP_DATA = {
+struct pia_reset { word addr; gbyte value; } pia_reset[] STARTUP_DATA = {
      { 0xff21, 0x00 },  // choose data direction
      { 0xff23, 0x00 },  // choose data direction
      { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
@@ -42,8 +42,8 @@ struct pia_reset { word addr; byte value; } pia_reset[] STARTUP_DATA = {
 
 void after_main() {
     // Wipe out the startup code, to prove it is never needed again.
-    for (byte* p = sizeof(word) + (byte*)&_Final;
-         p < (byte*)_Final_Startup;
+    for (gbyte* p = sizeof(word) + (gbyte*)&_Final;
+         p < (gbyte*)_Final_Startup;
          p++) {
         *p = 0;
     }
@@ -95,7 +95,7 @@ word PinDown[] STARTUP_DATA = {
 };
 
 #if 0
-void TestByte(byte a) {
+void TestByte(gbyte a) {
     asm volatile("  LDA %0" : : "m" (a));
 }
 
@@ -117,15 +117,15 @@ int main() {
     // ClearPage256(0x0100); // stack
     ClearPage256(0x0200); // vdg console p1
     ClearPage256(0x0300); // vdg console p2
-    ClearPage256(0x0400); // chunks of 64-byte
+    ClearPage256(0x0400); // chunks of 64-gbyte
 
     // Coco3 in Compatibility Mode.
     Poke1(0xFF90, 0x80);
     Poke1(0xFF91, 0x00);
 
-    // Install 4 initial 64-byte chunks.
+    // Install 4 initial 64-gbyte chunks.
     Reset64();
-    for (byte* p = (byte*)0x0400; p < (byte*)0x0500; p += 64) {
+    for (gbyte* p = (gbyte*)0x0400; p < (gbyte*)0x0500; p += 64) {
         gFree64(p);
     }
 

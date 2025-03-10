@@ -10,17 +10,17 @@
 //
 //  Fundamental Types and Definitions.
 
-typedef unsigned char bool;
-typedef unsigned char byte;  // Best type for a 8-bit machine byte.
+typedef unsigned char gbool;
+typedef unsigned char gbyte;  // Best type for a 8-bit machine gbyte.
 typedef unsigned int word;  // Best type for a 16-bit machine word.
 typedef void (*func)(void);
 typedef union wordorbytes {
     word w;
-    byte b[2];
+    gbyte b[2];
 } wob;
 
-#define true ((bool)1)
-#define false ((bool)0)
+#define true ((gbool)1)
+#define false ((gbool)0)
 #define NULL ((void*)0)
 
 #ifndef gCONST
@@ -31,16 +31,16 @@ typedef union wordorbytes {
 // they are required for some "nekot1/public.h" macros to work.
 #include "nekot1/friend.h"
 
-#define Peek1(ADDR) (*(volatile byte*)(word)(ADDR))
-#define Poke1(ADDR,VALUE) (*(volatile byte*)(word)(ADDR) = (byte)(VALUE))
+#define Peek1(ADDR) (*(volatile gbyte*)(word)(ADDR))
+#define Poke1(ADDR,VALUE) (*(volatile gbyte*)(word)(ADDR) = (gbyte)(VALUE))
 
 #define Peek2(ADDR) (*(volatile word*)(word)(ADDR))
 #define Poke2(ADDR,VALUE) (*(volatile word*)(word)(ADDR) = (word)(VALUE))
 
 // These do a Peek1, some bit manipulaton, and a Poke1.
-#define PAND(ADDR, X) ((*(volatile byte*)(word)(ADDR)) &= (byte)(X))
-#define POR(ADDR, X) ((*(volatile byte*)(word)(ADDR)) |= (byte)(X))
-#define PXOR(ADDR, X) ((*(volatile byte*)(word)(ADDR)) ^= (byte)(X))
+#define PAND(ADDR, X) ((*(volatile gbyte*)(word)(ADDR)) &= (gbyte)(X))
+#define POR(ADDR, X) ((*(volatile gbyte*)(word)(ADDR)) |= (gbyte)(X))
+#define PXOR(ADDR, X) ((*(volatile gbyte*)(word)(ADDR)) ^= (gbyte)(X))
 
 // If your ".bss" allocation of 128 bytes in Page 0 (the direct page)
 // fills up, you can mark some of the global variable definitions with
@@ -53,8 +53,8 @@ void Fatal(const char* s, word value);
 
 #define INHIBIT_IRQ() asm volatile("  orcc #$10")
 #define ALLOW_IRQ()   asm volatile("  andcc #^$10")
-byte gIrqSaveAndDisable();
-void gIrqRestore(byte cc_value);
+gbyte gIrqSaveAndDisable();
+void gIrqRestore(gbyte cc_value);
 
 ////////////////////////
 //  Pre-allocation
@@ -71,47 +71,47 @@ void gIrqRestore(byte cc_value);
 // to the other, for as many as are specified the same.
 
 #ifndef gSCREEN
-#define gSCREEN(Name,NumPages)       extern byte Name[NumPages*256];
+#define gSCREEN(Name,NumPages)       extern gbyte Name[NumPages*256];
 #endif
 
 #ifndef gREGION
-#define gREGION(Type,Name)    extern Type Name;
+#define gREGION(Name,Type)    extern Type Name;
 #endif
 
 // Example:
 //
 // gSCREEN(T, 2);   // T for Text, needs 2 pages (512 bytes).
 // gSCREEN(G, 12);  // G for PMode1 Graphics, needs 12 pages (3K bytes).
-// gREGION(struct common, Common);  // Common to all levels.
-// gREGION(struct maze, Maze);     // Common to maze levels.
+// gREGION(Common, struct common);  // Common to all levels.
+// gREGION(Maze, struct maze);     // Common to maze levels.
 
 ////////////////////////
 //
-//  64-byte Chunks
+//  64-gbyte Chunks
 
-// gAlloc64 allocate a 64 byte Chunk of memory.
+// gAlloc64 allocate a 64 gbyte Chunk of memory.
 // Succeeds or returns NULL.
-byte* gAlloc64();
+gbyte* gAlloc64();
 
-// gFree64 frees a 64 byte Chunk that was allocated with gAlloc64().
+// gFree64 frees a 64 gbyte Chunk that was allocated with gAlloc64().
 // If ptr is NULL, this function returns without doing anything.
-void gFree64(byte* ptr);
+void gFree64(gbyte* ptr);
 
 /////////////////////
 //
 //  Networking
 
 // In the following, messages can be 1 to 64 bytes long.
-// The very first byte is reserved by the OS, and all the rest
+// The very first gbyte is reserved by the OS, and all the rest
 // are available to the game.  The OS fills in the
-// player number of the sender in the first byte.
+// player number of the sender in the first gbyte.
 // The operating system will call gFree64 when it
 // has been sent.
 
 // gSend64 attempts to send a "multicast" message of 1 to 64 bytes
 // to every active player in your game shard.
 // It succeeds or it calls Fatal().
-void gSend64(byte* ptr, byte size);
+void gSend64(gbyte* ptr, gbyte size);
 
 // gReceive64 attempts to receive a "multicast" message sent by
 // anyone in your game shard, including your own,
@@ -120,9 +120,9 @@ void gSend64(byte* ptr, byte size);
 // If you need to know the length of the received
 // message, that needs to be sent in the "fixed"
 // portion at the front of the message, perhaps as
-// the second byte.  You should call gFree() on the
+// the second gbyte.  You should call gFree() on the
 // chunk when you are done with it.
-byte* gReceive64();
+gbyte* gReceive64();
 
 // If you can view the MCP logs, you can log to them.
 // Don't log much!
@@ -133,14 +133,14 @@ void gNetworkLog(const char* s);
 //  Video Mode
 
 // gGameShowsTextScreen sets the VDG screen mode for game play to a Text Mode.
-void gGameShowsTextScreen(byte* screen_addr, byte colorset);
+void gGameShowsTextScreen(gbyte* screen_addr, gbyte colorset);
 
 // gGameShowsPMode1Screen sets the VDG screen mode for game play to PMode1 graphics.
-void gGameShowsPMode1Screen(byte* screen_addr, byte colorset);
+void gGameShowsPMode1Screen(gbyte* screen_addr, gbyte colorset);
 
 // gModeForGame sets the VDG screen mode for game play to the given mode_code.
 // TODO: document mode_code.
-void gModeForGame(byte* screen_addr, word mode_code);
+void gModeForGame(gbyte* screen_addr, word mode_code);
 
 /////////////////////
 //
@@ -154,13 +154,13 @@ extern struct score {
 
 // gScore.number_of_players is the current number of
 // active players in the game.
-       gCONST byte number_of_players;
+       gCONST gbyte number_of_players;
 
 // gScore.player tells you your player number
 // (from 0 to gMAX_PLAYERS-1) if you are active in the game.
 // If you are just a viewer, you are not an active player,
 // and this variable will be 255.
-       gCONST byte player;
+       gCONST gbyte player;
 
 // gScore.partials are contributions to scores from this coco.
 // You change these to add or deduct points to a player.
@@ -178,21 +178,21 @@ extern struct score {
 
 // Normal end of game.  Scores are valid and may be published
 // by the kernel.
-#define gGameOver(WHY)  gSendClientPacket('o', (byte*)(WHY), 64)
+#define gGameOver(WHY)  gSendClientPacket('o', (gbyte*)(WHY), 64)
 
 // Abnormal end of game.  Scores are invalid and will be ignored
 // by the kernel.
 // This is less drastic than calling Fatal(),
 // because the kernel keeps running, but it also
 // indicates something went wrong that should be fixed.
-#define gGameAbort(WHY)  gSendClientPacket('a', (byte*)(WHY), 64)
+#define gGameAbort(WHY)  gSendClientPacket('a', (gbyte*)(WHY), 64)
 
 // Replace the current game with the named game.
 // This can be used to write different "levels" or
 // interstitial screens as a chain of games.
 // Carry scores forward to the new game.
 // Common pre-allocated regions are also kept in memory.
-#define gGameChain(NEXT_GAME_NAME)  gSendClientPacket('c', (byte*)(NEXT_GAME_NAME), 64)
+#define gGameChain(NEXT_GAME_NAME)  gSendClientPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
 
 // gBeginMain must be called at the beginning of your main()
 // function.
@@ -253,20 +253,20 @@ struct kern {
     // focus_game is false, the game must ignore the
     // keyboard (not scan it!) and the game's screen is
     // not visible -- the Chat screen is shown, instead.
-    bool volatile focus_game;
+    gbool volatile focus_game;
 
     // gKern.always_true must always be true.
-    bool volatile gCONST always_true;
+    gbool volatile gCONST always_true;
 
     // The following fields are not needed by games.
 
     // A game is active.
     // From a game, this should always be seen as true.
-    bool volatile gCONST in_game;
+    gbool volatile gCONST in_game;
 
     // We are currently handling a 60Hz Clock IRQ.
     // From a game, this should always be seen as false.
-    bool volatile gCONST in_irq;
+    gbool volatile gCONST in_irq;
 
 };
 extern struct kern gKern;
@@ -284,8 +284,8 @@ extern struct kern gKern;
 // seconds wraps back to zero.
 
 struct real {
-    byte volatile ticks;  // Changes at 60Hz:  0 to 5
-    byte volatile decis;  // Tenths of a second: 0 to 9
+    gbyte volatile ticks;  // Changes at 60Hz:  0 to 5
+    gbyte volatile decis;  // Tenths of a second: 0 to 9
     word volatile seconds;  // 0 to 65535
 };
 extern gCONST struct real gReal;
@@ -302,25 +302,25 @@ extern gCONST struct real gReal;
 // trying to solve.
 
 struct wall {
-    byte volatile second; // 0 to 59
-    byte volatile minute; // 0 to 59
-    byte volatile hour;  // 0 to 23
+    gbyte volatile second; // 0 to 59
+    gbyte volatile minute; // 0 to 59
+    gbyte volatile hour;  // 0 to 23
 
-    byte volatile day;   // 1 to 31
-    byte volatile month; // 1 to 12
-    byte volatile year2000;  // e.g. 25 means 2025
-    byte volatile dow[4];  // e.g. Mon\0
-    byte volatile moy[4];  // e.g. Jan\0
+    gbyte volatile day;   // 1 to 31
+    gbyte volatile month; // 1 to 12
+    gbyte volatile year2000;  // e.g. 25 means 2025
+    gbyte volatile dow[4];  // e.g. Mon\0
+    gbyte volatile moy[4];  // e.g. Jan\0
 
     // If hour rolls over from 23 to 0,
     // these values are copied to day, month, etc.
     // These are preset by the server, so the kernel does not
     // need to understand the Gregorian Calendar.
-    byte next_day;
-    byte next_month;
-    byte next_year2000;
-    byte next_dow[4];
-    byte next_moy[4];
+    gbyte next_day;
+    gbyte next_month;
+    gbyte next_year2000;
+    gbyte next_dow[4];
+    gbyte next_moy[4];
 };
 extern gCONST struct wall gWall;
 

@@ -85,33 +85,33 @@ void FONT_Wrapper() {
 
 /////////////////////////////////////////////////////
 
-typedef void (*SpotDrawer)(vptr fb, byte x, byte y, byte color);
+typedef void (*SpotDrawer)(vptr fb, gbyte x, gbyte y, gbyte color);
 
-void DrawSpot(vptr fb, byte x, byte y, byte color) {
-  byte xshift = x & 3;  // mod 4
-  byte xdist = x >> 2;  // div 4
+void DrawSpot(vptr fb, gbyte x, gbyte y, gbyte color) {
+  gbyte xshift = x & 3;  // mod 4
+  gbyte xdist = x >> 2;  // div 4
   word addr = (word)fb + xdist + ((word)y << 5);
-  byte b = Peek1(addr);
-  byte bitshift = (3 - xshift) << 1;
-  byte mask = ~(3 << bitshift);
+  gbyte b = Peek1(addr);
+  gbyte bitshift = (3 - xshift) << 1;
+  gbyte mask = ~(3 << bitshift);
   b = (b & mask) | (color << bitshift);
   Poke1(addr, b);
 }
-void DrawSpotXor(vptr fb, byte x, byte y, byte color) {
-  byte xshift = x & 3;  // mod 4
-  byte xdist = x >> 2;  // div 4
+void DrawSpotXor(vptr fb, gbyte x, gbyte y, gbyte color) {
+  gbyte xshift = x & 3;  // mod 4
+  gbyte xdist = x >> 2;  // div 4
   word addr = (word)fb + xdist + ((word)y << 5);
   PXOR(addr, (color << ((3 - xshift) << 1)));
 }
-void DrawHorz(vptr fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {
-    byte last = x + len;
-    for (byte i = x; i <= last; i++) {
+void DrawHorz(vptr fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot) {
+    gbyte last = x + len;
+    for (gbyte i = x; i <= last; i++) {
         spot(fb, i, y, color);
     }
 }
-void DrawVirt(vptr fb, byte x, byte y, byte color, byte len, SpotDrawer spot) {
-    byte last = y + len;
-    for (byte i = y; i <= last; i++) {
+void DrawVirt(vptr fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot) {
+    gbyte last = y + len;
+    for (gbyte i = y; i <= last; i++) {
         spot(fb, x, i, color);
     }
 }
@@ -120,9 +120,9 @@ wob ScanArrowsAnd0To7() {
     union wordorbytes z;
     z.w = 0;
     INHIBIT_IRQ();
-    for (byte bit=1; bit; bit<<=1) {
+    for (gbyte bit=1; bit; bit<<=1) {
         Poke1(Pia0PortB, ~bit);
-        byte sense = Peek1(Pia0PortA);
+        gbyte sense = Peek1(Pia0PortA);
         if ((sense & 0x08) == 0) z.b[0] |= bit;
         if ((sense & 0x10) == 0) z.b[1] |= bit;
     }
@@ -130,7 +130,7 @@ wob ScanArrowsAnd0To7() {
     return z;
 }
 
-void ClearGraf(byte color) {
+void ClearGraf(gbyte color) {
     color &= 3;
     wob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
@@ -140,7 +140,7 @@ void ClearGraf(byte color) {
 }
 
 void WaitFor60HzTick() {
-    byte t = Peek1(&Real.ticks);
+    gbyte t = Peek1(&Real.ticks);
     while (Peek1(&Real.ticks) == t) {}
 }
 void WaitForKeyPressArrowsAnd0To7() {
@@ -149,17 +149,17 @@ void WaitForKeyPressArrowsAnd0To7() {
    while (w.w == 0);
 }
 
-extern byte FONT[];
-void DrawChar(char ch, byte x, byte y, byte color) {
+extern gbyte FONT[];
+void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
     word c = ch - 32;
     // word p = FONT + 12*c;
     word p = (word)FONT + (c<<3) + (c<<2);
     Console_Printf("( %x %x %x);\n", ch, c, p);
     for (word i = 0; i < 8; i++) {
-        byte bits = Peek1(p++);
+        gbyte bits = Peek1(p++);
         Console_Printf("%x.", bits);
-        byte probe = 0x80u;
-        for (byte j = 0; j < 8; j++) {
+        gbyte probe = 0x80u;
+        for (gbyte j = 0; j < 8; j++) {
             if (bits & probe)
                 DrawSpotXor(Disp, x+j, y+i, Blue0);
             probe >>= 1;
@@ -182,16 +182,16 @@ int Spacewar_Main() {
         ClearGraf(Yellow0);
 
         {
-            byte x = 0;
+            gbyte x = 0;
             for (const char* s = "HELLO!"; *s; s++) {
                 DrawChar(*s, x, x, Blue0);
                 x += 8;
                 WaitFor60HzTick();
             }
         }
-        for (byte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
+        for (gbyte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
         Vdg_GameText(Cons, 0);
-        for (byte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
+        for (gbyte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
         Vdg_GamePMode1(Disp, 1);
     }
     Vdg_GameText(Disp, 0);
