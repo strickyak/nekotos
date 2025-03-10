@@ -1,6 +1,6 @@
 #include "nekot1/public.h"
 
-N1_DEFINE_SCREEN(D, 2);  // D for Semigraphics Display
+g_DEFINE_SCREEN(D, 2);  // D for Semigraphics Display
 
 volatile byte TRUE = 1;
 
@@ -61,9 +61,9 @@ void after_main() {
 }
 
 int main() {
-    N1BeginMain();
-    N1GameShowsTextScreen(D, 1);
-    N1NetworkLog("hello life");
+    gBeginMain();
+    gGameShowsTextScreen(D, 1);
+    gNetworkLog("hello life");
 
     for (word y = 0; y < H; y++) {
         for (word x = 0; x < W; x++) {
@@ -74,7 +74,7 @@ int main() {
     for (word y = 2; y < H*3/4; y++) {
         for (word x = 2; x < W*3/4; x++) {
             byte z = (byte)x & (byte)y;
-            byte c = N1Real.ticks + N1Real.decis + N1Real.seconds;
+            byte c = gReal.ticks + gReal.decis + gReal.seconds;
             byte b = 1;
             for (word i = 0; i<8; i++) {
                 if ((b&z) != 0) c++;
@@ -84,6 +84,6 @@ int main() {
         }
     }
 
-    N1AfterMain(after_main);
+    gAfterMain(after_main);
     // NOT REACHED.
 }

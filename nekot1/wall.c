@@ -1,8 +1,8 @@
 #include "nekot1/private.h"
 
-struct wall N1Wall;
+struct wall gWall;
 
-#define  W  N1Wall
+#define  W  gWall
 
 static void Wall_IncrementDay() {
     // Rather than do Gregorian Date calculations,

@@ -2,8 +2,8 @@
 // copied from github.com/n6il/cocoio-dw/tests/w5100s.h
 // Just the `#define`s.
 
-#ifndef _N1_W5100S_DEFS_H_
-#define _N1_W5100S_DEFS_H_
+#ifndef _g_W5100S_DEFS_H_
+#define _g_W5100S_DEFS_H_
 
 /*********************************************************************
 ;* Title: W5100SEQU.asm
@@ -262,4 +262,4 @@
 
                                 /* End of Equates */
 
-#endif // _N1_W5100S_DEFS_H_
+#endif // _g_W5100S_DEFS_H_

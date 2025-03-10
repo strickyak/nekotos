@@ -10,10 +10,10 @@ struct bogus {
     byte b, o, g, u, s;
 };
 
-N1_DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
-N1_DEFINE_SCREEN(T, 2);   // T for Text (512 bytes == 2 pages)
-N1_DEFINE_REGION(Demo);
-N1_DEFINE_REGION(Bogus);
+g_DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
+g_DEFINE_SCREEN(T, 2);   // T for Text (512 bytes == 2 pages)
+g_DEFINE_REGION(Demo);
+g_DEFINE_REGION(Bogus);
 
 // ColorSet 0 for PMode 1
 #define Green0  0
@@ -145,13 +145,13 @@ void DrawChar(char ch, byte x, byte y, byte color) {
 }
 
 void WaitForATick() {
-    int now = N1Real.ticks;
-    while (now == N1Real.ticks) {}
+    int now = gReal.ticks;
+    while (now == gReal.ticks) {}
 }
 
 void WaitForASecond() {
-    int now = N1Real.seconds;
-    while (now == N1Real.seconds) {}
+    int now = gReal.seconds;
+    while (now == gReal.seconds) {}
 }
 
 volatile byte TRUE = 1;
@@ -169,10 +169,10 @@ void after_main() {
 }
 
 int main() {
-    N1BeginMain();
-    N1Pin(FONT_Wrapper);
-    N1GameShowsPMode1Screen(G, 0);
-    N1NetworkLog("hello BLUE");
+    gBeginMain();
+    gPin(FONT_Wrapper);
+    gGameShowsPMode1Screen(G, 0);
+    gNetworkLog("hello BLUE");
 
     word c0 = 0x0000;
     word c1 = 0x5555;
@@ -202,6 +202,6 @@ int main() {
         Poke2(0x0202, x);
     }
 
-    N1AfterMain(after_main);
+    gAfterMain(after_main);
     // NOT REACHED.
 }

@@ -49,15 +49,15 @@ void Irq_Handler() {
     Real_IncrementTicks();
     Breakkey_Handler();
 
-    assert(N1Real.ticks < 6);
+    assert(gReal.ticks < 6);
     if (Kern.focus_game) {
 // Console_Printf("F");
-        Irq_FocusGameSchedule[N1Real.ticks]();
+        Irq_FocusGameSchedule[gReal.ticks]();
     } else if (Kern.in_game) {
-        Irq_PassiveGameSchedule[N1Real.ticks]();
+        Irq_PassiveGameSchedule[gReal.ticks]();
     } else {
 // Console_Printf("$");
-        Irq_FocusShellSchedule[N1Real.ticks]();
+        Irq_FocusShellSchedule[gReal.ticks]();
     }
 
     Kern.in_irq = false;

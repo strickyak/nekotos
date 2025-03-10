@@ -1,5 +1,5 @@
-#ifndef _N1_VDG_H_
-#define _N1_VDG_H_
+#ifndef _g_VDG_H_
+#define _g_VDG_H_
 
 struct vdg {
     word  game_mode;
@@ -9,11 +9,11 @@ struct vdg {
 
 // These are for setting the Game Mode.
 // public
-void N1GameShowsTextScreen(byte* screen_addr, byte colorset);
+void gGameShowsTextScreen(byte* screen_addr, byte colorset);
 // public
-void N1GameShowsPMode1Screen(byte* screen_addr, byte colorset);
+void gGameShowsPMode1Screen(byte* screen_addr, byte colorset);
 
-// N1GameShowsOtherScreen requests game modes other
+// gGameShowsOtherScreen requests game modes other
 // Text and PMode1.  You must know the high bits
 // written to the VDG via the top five bits 
 // of $FF22, and the three V2, V1, V0
@@ -24,7 +24,7 @@ void N1GameShowsPMode1Screen(byte* screen_addr, byte colorset);
 // The V2, V1, V0 bits are the low three bits
 // (in the low byte) of mode_code.
 // public
-void N1GameShowsOtherScreen(byte* screen_addr, word mode_code);
+void gGameShowsOtherScreen(byte* screen_addr, word mode_code);
 
 #define COLORSET_GREEN  0
 #define COLORSET_ORANGE 1
@@ -34,4 +34,4 @@ void SwitchToChatScreen();
 void SwitchToGameScreen();
 void Vdg_Init(void);
 
-#endif // _N1_VDG_H_
+#endif // _g_VDG_H_

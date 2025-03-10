@@ -89,7 +89,7 @@ void PutSigned(int x) {
 #endif
 #if 0
 void Console_Printf(const char* format, ...) {
-    byte cc_value = N1IrqSaveAndDisable();
+    byte cc_value = gIrqSaveAndDisable();
 
     va_list ap;
     va_start(ap, format);
@@ -137,7 +137,7 @@ void Console_Printf(const char* format, ...) {
             }; // end switch
        }  // end if
     }
-    N1IrqRestore(cc_value);
+    gIrqRestore(cc_value);
 }
 #endif
 

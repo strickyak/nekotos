@@ -1,14 +1,14 @@
-#ifndef _N1_KERN_H_
-#define _N1_KERN_H_
+#ifndef _g_KERN_H_
+#define _g_KERN_H_
 
 // kern.h
 
 struct kern Kern;
 
-//public//void N1GameOver(char *why);
-//public//void N1GameAbort(char *why);
-//public//void N1GameChain(char* next_game_name);
-//public//void N1AfterMain(func f);
+//public//void gGameOver(char *why);
+//public//void gGameAbort(char *why);
+//public//void gGameChain(char* next_game_name);
+//public//void gAfterMain(func f);
 
 void Kern_Init();
 void ChatTask();
@@ -48,4 +48,4 @@ So Game starts at the same place as Kernel's ".text.startup":
 
 */
 
-#endif // _N1_KERN_H_
+#endif // _g_KERN_H_

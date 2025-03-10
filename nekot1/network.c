@@ -9,17 +9,17 @@ word strlen(const char* s) {
 }
 
 void WizSend(byte* addr, word size) {
-    byte cc_value = N1IrqSaveAndDisable();
+    byte cc_value = gIrqSaveAndDisable();
 
     tx_ptr_t t = WizReserveToSend(size);
     t = WizBytesToSend(t, addr, size);
     WizFinalizeSend(size);
 
-    N1IrqRestore(cc_value);
+    gIrqRestore(cc_value);
 }
 
-void N1SendClientPacket(word p, char* pay, word size) {
-    byte cc_value = N1IrqSaveAndDisable();
+void gSendClientPacket(word p, char* pay, word size) {
+    byte cc_value = gIrqSaveAndDisable();
 
     logbuf[0] = NEKOT_CLIENT;
     Poke2(logbuf+1, size);
@@ -28,11 +28,11 @@ void N1SendClientPacket(word p, char* pay, word size) {
     WizSend(logbuf, 5);
     WizSend(pay, size);
 
-    N1IrqRestore(cc_value);
+    gIrqRestore(cc_value);
 }
 
-void N1NetworkLog(const char* s) {
-    byte cc_value = N1IrqSaveAndDisable();
+void gNetworkLog(const char* s) {
+    byte cc_value = gIrqSaveAndDisable();
     // Still uses CMD_LOG=200.  TODO convert to CLIENT=70.
     word n = strlen(s);
     logbuf[0] = CMD_LOG;
@@ -41,7 +41,7 @@ void N1NetworkLog(const char* s) {
     MemCopy(logbuf+5, (byte*)s, n);
 
     WizSend(logbuf, n+5);
-    N1IrqRestore(cc_value);
+    gIrqRestore(cc_value);
 }
 
 MORE_DATA byte recv_head[5];
@@ -84,7 +84,7 @@ void ExecuteReceivedCommand() {
 }
 
 void CheckReceived() {
-    byte cc_value = N1IrqSaveAndDisable();
+    byte cc_value = gIrqSaveAndDisable();
 
     if (!need_recv_payload) {
         byte err = WizRecvChunkTry(recv_head, 5);
@@ -110,7 +110,7 @@ void CheckReceived() {
     }
 
 RESTORE:
-    N1IrqRestore(cc_value);
+    gIrqRestore(cc_value);
 }
 
 void HelloMCP() {

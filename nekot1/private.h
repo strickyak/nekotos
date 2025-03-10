@@ -1,5 +1,5 @@
-#ifndef _N1_PRIVATE_H_
-#define _N1_PRIVATE_H_
+#ifndef _g_PRIVATE_H_
+#define _g_PRIVATE_H_
 
 #define CONST  // For the kernel, CONST means mutable.
 
@@ -19,4 +19,4 @@
 #include "nekot1/irq.h"
 
 
-#endif // _N1_PRIVATE_H_
+#endif // _g_PRIVATE_H_

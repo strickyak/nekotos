@@ -77,11 +77,11 @@ word PinDown[] STARTUP_DATA = {
     (word) Irq_Handler_Wrapper,
     (word) Network_Handler,
 
-    (word) N1GameShowsTextScreen,
-    (word) N1GameShowsPMode1Screen,
-    (word) N1GameShowsOtherScreen,
-    (word) N1AfterMain3,
-    (word) N1NetworkLog,
+    (word) gGameShowsTextScreen,
+    (word) gGameShowsPMode1Screen,
+    (word) gGameShowsOtherScreen,
+    (word) gAfterMain3,
+    (word) gNetworkLog,
     (word) Fatal,
     // (word) Console_Printf,
     (word) PutStr,
@@ -108,8 +108,8 @@ void TestWord(word foo) {
 
 int main() {
 #if 0
-    N1Pin(TestByte);
-    N1Pin(TestWord);
+    gPin(TestByte);
+    gPin(TestWord);
     TestWord(0x1234);
     TestWord(0x5678);
 #endif
@@ -126,7 +126,7 @@ int main() {
     // Install 4 initial 64-byte chunks.
     Reset64();
     for (byte* p = (byte*)0x0400; p < (byte*)0x0500; p += 64) {
-        N1Free64(p);
+        gFree64(p);
     }
 
     Kern_Init();
@@ -160,6 +160,6 @@ int main() {
 
     // ================================
     after_main();
-    N1Pin(PinDown);
+    gPin(PinDown);
     Fatal("EXIT", 0);
 }

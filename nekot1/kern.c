@@ -44,7 +44,7 @@ void StartTask(word entry) {
         Kern.focus_game = true;
         // Until the game changes the display,
         // you get an Orange Console.
-        N1GameShowsTextScreen(Cons, COLORSET_ORANGE);
+        gGameShowsTextScreen(Cons, COLORSET_ORANGE);
     }
 
     Kern.in_irq = false;
@@ -59,7 +59,7 @@ void StartTask(word entry) {
     // Never returns.
 }
 
-byte N1IrqSaveAndDisable() {
+byte gIrqSaveAndDisable() {
     byte cc_value;
     asm volatile("\n"
         "  tfr cc,b  \n"
@@ -73,7 +73,7 @@ byte N1IrqSaveAndDisable() {
     return cc_value;
 }
 
-void N1IrqRestore(byte cc_value) {
+void gIrqRestore(byte cc_value) {
     //PutChar(65 + (cc_value & 0x10));
     asm volatile("\n"
         "  ldb %0  \n"
@@ -84,7 +84,7 @@ void N1IrqRestore(byte cc_value) {
     );
 }
 
-void N1AfterMain3(func after_main, word* final, word* final_startup) {
+void gAfterMain3(func after_main, word* final, word* final_startup) {
     // Prove that startup is no longer used.
     for (word w = (word)final; w < (word)final_startup; w++) {
         Poke1(w, 0x3F);

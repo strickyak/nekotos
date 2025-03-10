@@ -1,5 +1,5 @@
-#ifndef _N1_PRELUDE_H_
-#define _N1_PRELUDE_H_
+#ifndef _g_PRELUDE_H_
+#define _g_PRELUDE_H_
 
 #define Cons ((byte*)0x0200)
 
@@ -21,4 +21,4 @@ void* memset(void* dest, int value, word count);
 
 void Fatal(const char* s, word arg);
 
-#endif // _N1_PRELUDE_H_
+#endif // _g_PRELUDE_H_

@@ -14,7 +14,7 @@
 static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits) {
     vdg_op_mode &= 0xF8;  // only top 5 bits matter.
 
-    byte cc_value = N1IrqSaveAndDisable();
+    byte cc_value = gIrqSaveAndDisable();
 
     Vdg.shadow_pia1portb = vdg_op_mode;
     Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
@@ -41,7 +41,7 @@ static void SwitchDisplayMode(byte* fb, byte vdg_op_mode, byte sam_control_bits)
         }
     }
 
-    N1IrqRestore(cc_value);
+    gIrqRestore(cc_value);
 }
 // Effective immediately.
 static void SwitchToDisplayText(byte* fb, byte colorset) {
@@ -60,17 +60,17 @@ void SwitchToGameScreen() {
 
 // These are for Game Mode.
 // They remember what to change back to, after Chat mode.
-void N1GameShowsTextScreen(byte* fb, byte colorset) {
+void gGameShowsTextScreen(byte* fb, byte colorset) {
     Vdg.game_mode = (colorset? 0x0800: 0x0000);
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();
 }
-void N1GameShowsPMode1Screen(byte* fb, byte colorset) {
+void gGameShowsPMode1Screen(byte* fb, byte colorset) {
     Vdg.game_mode = (colorset? 0xC804: 0xC004);
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();
 }
-void N1GameShowsOtherScreen(byte* fb, word mode_code) {
+void gGameShowsOtherScreen(byte* fb, word mode_code) {
     Vdg.game_mode = mode_code;
     Vdg.game_framebuffer = fb;
     if (Kern.focus_game) SwitchToGameScreen();

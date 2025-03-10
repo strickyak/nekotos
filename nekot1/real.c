@@ -1,8 +1,8 @@
 #include "nekot1/private.h"
 
-struct real N1Real;
+struct real gReal;
 
-#define  R  N1Real
+#define  R  gReal
 
 static void IncrementSeconds() {
     SpinRealSeconds();

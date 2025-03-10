@@ -1,5 +1,5 @@
-#ifndef _N1_NETWORK_H_
-#define _N1_NETWORK_H_
+#ifndef _g_NETWORK_H_
+#define _g_NETWORK_H_
 
 // Make noise on incoming packets.
 #define NETWORK_CLICK 1
@@ -15,11 +15,11 @@ struct quint {
     word p;
 };
 
-void N1NetworkLog(const char* s);
+void gNetworkLog(const char* s);
 
 void CheckReceived(void);
 void WizSend(byte* addr, word size);
-void N1SendClientPacket(word p, char* pay, word size);
+void gSendClientPacket(word p, char* pay, word size);
 
 void HelloMCP();
 void Network_Init(void);
@@ -40,4 +40,4 @@ void Network_Init(void);
 #define CMD_DATA 204
 #define CMD_ECHO 217
 
-#endif // _N1_NETWORK_H_
+#endif // _g_NETWORK_H_

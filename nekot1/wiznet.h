@@ -1,5 +1,5 @@
-#ifndef _N1_WIZNET_H_
-#define _N1_WIZNET_H_
+#ifndef _g_WIZNET_H_
+#define _g_WIZNET_H_
 
 typedef word tx_ptr_t;
 typedef byte errnum;
@@ -24,4 +24,4 @@ errnum WizRecvChunkTry( byte* buf, word n);
 #define OKAY ((errnum)0)
 #define NOTYET ((errnum)1)
 
-#endif // _N1_WIZNET_H_
+#endif // _g_WIZNET_H_

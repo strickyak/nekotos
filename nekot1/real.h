@@ -1,8 +1,8 @@
-#ifndef _N1_REAL_H_
-#define _N1_REAL_H_
+#ifndef _g_REAL_H_
+#define _g_REAL_H_
 
 // Real time 
 
 void Real_IncrementTicks(void);
 
-#endif // _N1_REAL_H_
+#endif // _g_REAL_H_
