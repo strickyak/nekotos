@@ -3,11 +3,11 @@
 // public:
 byte gNumberOfPlayers;
 byte gThisPlayerNumber;
-int gPartialScores[g_MAX_PLAYERS] MORE_DATA;
-int gTotalScores[g_MAX_PLAYERS] MORE_DATA;
+int gPartialScores[gMAX_PLAYERS] MORE_DATA;
+int gTotalScores[gMAX_PLAYERS] MORE_DATA;
 
 // private:
-int OldPartialScores[g_MAX_PLAYERS] MORE_DATA;
+int OldPartialScores[gMAX_PLAYERS] MORE_DATA;
 
 void DoPartialScores() {
     assert(Kern.in_game);

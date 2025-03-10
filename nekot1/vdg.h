@@ -1,5 +1,5 @@
-#ifndef _g_VDG_H_
-#define _g_VDG_H_
+#ifndef _NEKOT1_VDG_H_
+#define _NEKOT1_VDG_H_
 
 struct vdg {
     word  game_mode;
@@ -34,4 +34,4 @@ void SwitchToChatScreen();
 void SwitchToGameScreen();
 void Vdg_Init(void);
 
-#endif // _g_VDG_H_
+#endif // _NEKOT1_VDG_H_

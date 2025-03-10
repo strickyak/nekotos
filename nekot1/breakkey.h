@@ -1,5 +1,5 @@
-#ifndef _g_BREAKKEY_H_
-#define _g_BREAKKEY_H_
+#ifndef _NEKOT1_BREAKKEY_H_
+#define _NEKOT1_BREAKKEY_H_
 
 struct breakkey {
     bool volatile break_key_was_down;
@@ -8,4 +8,4 @@ struct breakkey {
 // Break_Handler is called on interrupt.
 void Breakkey_Handler(void);
 
-#endif // _g_BREAKKEY_H_
+#endif // _NEKOT1_BREAKKEY_H_

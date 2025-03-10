@@ -1,5 +1,5 @@
-#ifndef _g_KEYBOARD_H_
-#define _g_KEYBOARD_H_
+#ifndef _NEKOT1_KEYBOARD_H_
+#define _NEKOT1_KEYBOARD_H_
 
 struct keyboard {
     byte matrix[2][8];
@@ -8,4 +8,4 @@ struct keyboard {
 
 void KeyboardHandler(void);
 
-#endif // _g_KEYBOARD_H_
+#endif // _NEKOT1_KEYBOARD_H_

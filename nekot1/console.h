@@ -1,5 +1,5 @@
-#ifndef _g_CONSOLE_H_
-#define _g_CONSOLE_H_
+#ifndef _NEKOT1_CONSOLE_H_
+#define _NEKOT1_CONSOLE_H_
 
 struct console {
     word cursor;
@@ -21,4 +21,4 @@ void PutDec(word x);
 byte DivMod10(word x, word* out_div);  // returns mod
 // void Console_Printf(const char* format, ...);
 
-#endif // _g_CONSOLE_H_
+#endif // _NEKOT1_CONSOLE_H_

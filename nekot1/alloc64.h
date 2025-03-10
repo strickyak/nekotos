@@ -1,5 +1,5 @@
-#ifndef _g_ALLOC64_H_
-#define _g_ALLOC64_H_
+#ifndef _NEKOT1_ALLOC64_H_
+#define _NEKOT1_ALLOC64_H_
 
 // gAlloc64 returns a pointer to a 64-byte
 // chunk of memory, or it returns NULL
@@ -17,4 +17,4 @@ void Reset64();
 
 void Alloc64_Init();
 
-#endif // _g_ALLOC64_H_
+#endif // _NEKOT1_ALLOC64_H_

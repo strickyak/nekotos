@@ -1,5 +1,5 @@
-#ifndef _g_SPIN_H_
-#define _g_SPIN_H_
+#ifndef _NEKOT1_SPIN_H_
+#define _NEKOT1_SPIN_H_
 
 // Spinors are just for visualization and debugging.
 // They create a "spinning" character on the Console top bar.
@@ -35,4 +35,4 @@ inline void Spin_Init() {
 
 #define WIZNET_BAR_LOCATION 10
 
-#endif // _g_SPIN_H_
+#endif // _NEKOT1_SPIN_H_

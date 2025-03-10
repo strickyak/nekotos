@@ -1,5 +1,5 @@
-#ifndef _g_NETWORK_H_
-#define _g_NETWORK_H_
+#ifndef _NEKOT1_NETWORK_H_
+#define _NEKOT1_NETWORK_H_
 
 // Make noise on incoming packets.
 #define NETWORK_CLICK 1
@@ -40,4 +40,4 @@ void Network_Init(void);
 #define CMD_DATA 204
 #define CMD_ECHO 217
 
-#endif // _g_NETWORK_H_
+#endif // _NEKOT1_NETWORK_H_

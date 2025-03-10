@@ -1,5 +1,5 @@
-#ifndef _g_PUBLIC_H_
-#define _g_PUBLIC_H_
+#ifndef _NEKOT1_PUBLIC_H_
+#define _NEKOT1_PUBLIC_H_
 
 // Proposed "g" API for Nekot Gaming OS.
 
@@ -23,9 +23,13 @@ typedef union wordorbytes {
 #define false ((bool)0)
 #define NULL ((void*)0)
 
-#ifndef CONST
-#define CONST const   // For variables the Kernel changes, but Games must not.
+#ifndef gCONST
+#define gCONST const   // For variables the Kernel changes, but Games must not.
 #endif
+
+// You should not use things directly from "nekot1/friend.h";
+// they are required for some "nekot1/public.h" macros to work.
+#include "nekot1/friend.h"
 
 #define Peek1(ADDR) (*(volatile byte*)(word)(ADDR))
 #define Poke1(ADDR,VALUE) (*(volatile byte*)(word)(ADDR) = (byte)(VALUE))
@@ -66,20 +70,20 @@ void gIrqRestore(byte cc_value);
 // in common may chain values in memory from one
 // to the other, for as many as are specified the same.
 
-#ifndef g_DEFINE_SCREEN
-#define g_DEFINE_SCREEN(Name,NumPages)       extern byte Name[NumPages*256];
+#ifndef gSCREEN
+#define gSCREEN(Name,NumPages)       extern byte Name[NumPages*256];
 #endif
 
-#ifndef g_DEFINE_REGION
-#define g_DEFINE_REGION(Type,Name)    extern Type Name;
+#ifndef gREGION
+#define gREGION(Type,Name)    extern Type Name;
 #endif
 
 // Example:
 //
-// g_DEFINE_SCREEN(T, 2);   // T for Text, needs 2 pages (512 bytes).
-// g_DEFINE_SCREEN(G, 12);  // G for PMode1 Graphics, needs 12 pages (3K bytes).
-// g_DEFINE_REGION(struct common, Common, 44);  // Common to all levels.
-// g_DEFINE_REGION(struct maze, Maze, 106);     // Common to maze levels.
+// gSCREEN(T, 2);   // T for Text, needs 2 pages (512 bytes).
+// gSCREEN(G, 12);  // G for PMode1 Graphics, needs 12 pages (3K bytes).
+// gREGION(struct common, Common);  // Common to all levels.
+// gREGION(struct maze, Maze);     // Common to maze levels.
 
 ////////////////////////
 //
@@ -138,47 +142,39 @@ void gGameShowsPMode1Screen(byte* screen_addr, byte colorset);
 // TODO: document mode_code.
 void gModeForGame(byte* screen_addr, word mode_code);
 
-// GetConsoleTextModeAddress return the starting address
-// of the kernel's Text Console, which is always 512 bytes,
-// in the ordinary VDG Text mode.  The first 32 bytes
-// are the "top bar" that can might be useful for
-// realtime debugging markings.  Production games
-// shouldn't need this.
-inline byte* GetConsoleTextModeAddress() {
-    return (byte*)0x0200;
-}
-
 /////////////////////
 //
 //  Scoring
 
-// g_MAX_PLAYERS is the maximum number of active players
+// gMAX_PLAYERS is the maximum number of active players
 // in a single game shard.
-#define g_MAX_PLAYERS 8
+#define gMAX_PLAYERS 8
 
-// gNumberOfPlayers is the current number of
+extern struct score {
+
+// gScore.number_of_players is the current number of
 // active players in the game.
-extern CONST byte gNumberOfPlayers;
+       gCONST byte number_of_players;
 
-// YgThisPlayerNumber tells you your player number
-// (from 0 to g_MAX_PLAYERS-1) if you are active in the game.
+// gScore.player tells you your player number
+// (from 0 to gMAX_PLAYERS-1) if you are active in the game.
 // If you are just a viewer, you are not an active player,
 // and this variable will be 255.
-extern CONST byte gThisPlayerNumber;
+       gCONST byte player;
 
+// gScore.partials are contributions to scores from this coco.
 // You change these to add or deduct points to a player.
-extern int gPartialScores[g_MAX_PLAYERS];
+       int partials[gMAX_PLAYERS];
 
-// Read Only, set by the OS, the sum of all Partial Scores.
-extern CONST int gTotalScores[g_MAX_PLAYERS];
+// gScore.totals is the total score, calculated in the MCP.
+// Read Only, set by the OS, the sum of all partial scores.
+       gCONST int totals[gMAX_PLAYERS];
+
+} gScore;
 
 /////////////////////
 //
 //  Kern Module
-
-// Do not call gSendClientPacket directly.
-// It is used by the next few calls.
-void gSendClientPacket(word p, char* pay, word size);
 
 // Normal end of game.  Scores are valid and may be published
 // by the kernel.
@@ -204,10 +200,11 @@ void gSendClientPacket(word p, char* pay, word size);
         { asm volatile(".globl __n1pre_entry");   \
         Poke2(0, &_n1pre_entry); }
 
+// gPin(f) will pin down function f, so GCC doesn't erase it.
 // Sometimes if you are using inline assembly language
-// inside a function, you need to tell GCC that the function
-// is needed even if it isn't explicitly called.
-// gPin(f) will pin down function f, so GCC doesn't ignore it.
+// inside a bogus wrapper function, you need to tell GCC
+// that the function is needed even if it isn't ever
+// explicitly called.
 #define gPin(THING)  Poke2(0, &(THING))
 
 // gAfterMain does not end the game -- it just ends the startup code,
@@ -219,8 +216,8 @@ void gSendClientPacket(word p, char* pay, word size);
 // code in main, and the memory for the startup code is
 // freed up when the startup is done.  f points to the
 // function where the non-startup code continues.
-#define gAfterMain(after_main) gAfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
-void gAfterMain3(func after_main, word* final, word* final_startup);
+#define gAfterMain(after_main)    \
+      gAfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
 
 // Global variables or data tables that are only used
 // by startup code can be marked with the attribute
@@ -249,16 +246,7 @@ void gAfterMain3(func after_main, word* final, word* final_startup);
 //
 // due to bugs in GCC.
 
-extern CONST struct kern {
-    // For GCC bug workaround.  Must always be true.
-    bool volatile always_true;
-
-    // A game is active and has the foreground task.
-    bool volatile in_game;
-
-    // We are currently handling a 60Hz Clock IRQ.
-    bool volatile in_irq;
-
+struct kern {
     // The active game also owns and can scan the keyboard
     // (except for the BREAK key), and the game's screen
     // is being shown.   If a game is active but
@@ -266,7 +254,22 @@ extern CONST struct kern {
     // keyboard (not scan it!) and the game's screen is
     // not visible -- the Chat screen is shown, instead.
     bool volatile focus_game;
-} Kern;
+
+    // gKern.always_true must always be true.
+    bool volatile gCONST always_true;
+
+    // The following fields are not needed by games.
+
+    // A game is active.
+    // From a game, this should always be seen as true.
+    bool volatile gCONST in_game;
+
+    // We are currently handling a 60Hz Clock IRQ.
+    // From a game, this should always be seen as false.
+    bool volatile gCONST in_irq;
+
+};
+extern struct kern gKern;
 
 /////////////////////
 // Real Time
@@ -280,11 +283,12 @@ extern CONST struct kern {
 // reliably increment.  After about 18.2 hours,
 // seconds wraps back to zero.
 
-extern CONST struct real {
+struct real {
     byte volatile ticks;  // Changes at 60Hz:  0 to 5
     byte volatile decis;  // Tenths of a second: 0 to 9
     word volatile seconds;  // 0 to 65535
-} gReal;  // Instance is named Real.
+};
+extern gCONST struct real gReal;
 
 ////////////////////////////
 //
@@ -297,7 +301,7 @@ extern CONST struct real {
 // no indication of daylight/summer time.  These are not problems we're
 // trying to solve.
 
-extern CONST struct wall {
+struct wall {
     byte volatile second; // 0 to 59
     byte volatile minute; // 0 to 59
     byte volatile hour;  // 0 to 23
@@ -317,6 +321,7 @@ extern CONST struct wall {
     byte next_year2000;
     byte next_dow[4];
     byte next_moy[4];
-} gWall; // Instance is named Wall.
+};
+extern gCONST struct wall gWall;
 
-#endif // _g_PUBLIC_H_
+#endif // _NEKOT1_PUBLIC_H_
