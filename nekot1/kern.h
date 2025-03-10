@@ -3,7 +3,7 @@
 
 // kern.h
 
-struct kern Kern;
+struct kern gKern;
 
 void Kern_Init();
 void ChatTask();

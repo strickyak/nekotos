@@ -171,7 +171,7 @@ void after_main() {
 int main() {
     gBeginMain();
     gPin(FONT_Wrapper);
-    gGameShowsPMode1Screen(G, 0);
+    gPMode1Screen(G, 0);
     gNetworkLog("hello BLUE");
 
     gword c0 = 0x0000;

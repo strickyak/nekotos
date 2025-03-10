@@ -9,9 +9,9 @@ struct vdg {
 
 // These are for setting the Game Mode.
 // public
-void gGameShowsTextScreen(gbyte* screen_addr, gbyte colorset);
+void gTextScreen(gbyte* screen_addr, gbyte colorset);
 // public
-void gGameShowsPMode1Screen(gbyte* screen_addr, gbyte colorset);
+void gPMode1Screen(gbyte* screen_addr, gbyte colorset);
 
 // gGameShowsOtherScreen requests game modes other
 // Text and PMode1.  You must know the high bits

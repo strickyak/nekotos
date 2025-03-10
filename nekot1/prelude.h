@@ -19,6 +19,6 @@ void MemCopy(gbyte *dest, const gbyte *src, gword count);
 void MemSet(gbyte* dest, gbyte value, gword count);
 void* memset(void* dest, int value, gword count);
 
-void Fatal(const char* s, gword arg);
+void gFatal(const char* s, gword arg);
 
 #endif // _NEKOT1_PRELUDE_H_

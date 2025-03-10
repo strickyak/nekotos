@@ -1,20 +1,20 @@
 #include "nekot1/private.h"
 
 static void DoBreak(void) {
-    if (Kern.focus_game) {
+    if (gKern.focus_game) {
         // FOCUS IS IN GAME.
         // Switch focus to chat.
-        Kern.focus_game = gFALSE;
+        gKern.focus_game = gFALSE;
         SwitchToChatScreen();
     } else {
         // FOCUS IS IN CHAT.
-        if (Kern.in_game) {
+        if (gKern.in_game) {
             // Switch focus to game.
-            Kern.focus_game = gTRUE;
+            gKern.focus_game = gTRUE;
             SwitchToGameScreen();
         } else {
             // Probaby already in chat, but force it again.
-            Kern.focus_game = gFALSE;
+            gKern.focus_game = gFALSE;
             SwitchToChatScreen();
         }
     }

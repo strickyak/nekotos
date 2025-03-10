@@ -10,8 +10,8 @@ int gTotalScores[gMAX_PLAYERS] gZEROED;
 int OldPartialScores[gMAX_PLAYERS] gZEROED;
 
 void DoPartialScores() {
-    gAssert(Kern.in_game);
-    gAssert(Kern.in_irq);
+    gAssert(gKern.in_game);
+    gAssert(gKern.in_irq);
     gbyte dirty = gFALSE;
     gbyte np = gNumberOfPlayers;
     {
@@ -27,7 +27,7 @@ void DoPartialScores() {
     }
 
     if (dirty) {
-        gSendClientPacket('S', (gbyte*) gPartialScores, np);
+        xSendClientPacket('S', (gbyte*) gPartialScores, np);
         memcpy(OldPartialScores, gPartialScores, sizeof gPartialScores);
     }
 }

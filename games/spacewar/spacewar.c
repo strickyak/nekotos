@@ -119,14 +119,14 @@ void DrawVirt(vptr fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot
 gwob ScanArrowsAnd0To7() {
     union wordorbytes z;
     z.w = 0;
-    INHIBIT_IRQ();
+    gDisableIrq();
     for (gbyte bit=1; bit; bit<<=1) {
         gPoke1(Pia0PortB, ~bit);
         gbyte sense = gPeek1(Pia0PortA);
         if ((sense & 0x08) == 0) z.b[0] |= bit;
         if ((sense & 0x10) == 0) z.b[1] |= bit;
     }
-    ALLOW_IRQ();
+    gEnableIrq();
     return z;
 }
 
@@ -174,7 +174,7 @@ int Spacewar_Main() {
     gPoke2(0, DrawSpotXor);
 
     Vdg_GamePMode1(Disp, 1);
-    ALLOW_IRQ();
+    gEnableIrq();
 
     while (gTRUE) {
         Network_Log("once nekot");

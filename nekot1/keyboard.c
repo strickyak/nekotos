@@ -25,8 +25,8 @@ static void SendKeyboardPacket(gbyte* p) {
 }
 
 void KeyboardHandler() {
-    if (Kern.focus_game) return;
-    gAssert(Kern.in_irq);
+    if (gKern.focus_game) return;
+    gAssert(gKern.in_irq);
 
     gbyte current = Keyboard.current_matrix;
     gbyte other = !current;

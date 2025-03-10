@@ -60,26 +60,26 @@ void SwitchToGameScreen() {
 
 // These are for Game Mode.
 // They remember what to change back to, after Chat mode.
-void gGameShowsTextScreen(gbyte* fb, gbyte colorset) {
+void gTextScreen(gbyte* fb, gbyte colorset) {
     Vdg.game_mode = (colorset? 0x0800: 0x0000);
     Vdg.game_framebuffer = fb;
-    if (Kern.focus_game) SwitchToGameScreen();
+    if (gKern.focus_game) SwitchToGameScreen();
 }
-void gGameShowsPMode1Screen(gbyte* fb, gbyte colorset) {
+void gPMode1Screen(gbyte* fb, gbyte colorset) {
     Vdg.game_mode = (colorset? 0xC804: 0xC004);
     Vdg.game_framebuffer = fb;
-    if (Kern.focus_game) SwitchToGameScreen();
+    if (gKern.focus_game) SwitchToGameScreen();
 }
 void gGameShowsOtherScreen(gbyte* fb, gword mode_code) {
     Vdg.game_mode = mode_code;
     Vdg.game_framebuffer = fb;
-    if (Kern.focus_game) SwitchToGameScreen();
+    if (gKern.focus_game) SwitchToGameScreen();
 }
 
 void SwitchToChatScreen() {
     SwitchToDisplayText(
         Cons,
-        Kern.in_game ? COLORSET_ORANGE : COLORSET_GREEN
+        gKern.in_game ? COLORSET_ORANGE : COLORSET_GREEN
     );
 }
 

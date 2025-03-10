@@ -18,7 +18,7 @@ void WizSend(gbyte* addr, gword size) {
     gIrqRestore(cc_value);
 }
 
-void gSendClientPacket(gword p, char* pay, gword size) {
+void xSendClientPacket(gword p, char* pay, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
 
     logbuf[0] = NEKOT_CLIENT;
@@ -63,13 +63,13 @@ void ExecuteReceivedCommand() {
     } else if (h[0] == NEKOT_MEMCPY) { // 65
         errnum e2 = WizRecvChunkTry((gbyte*)b, n);
         if (e2==NOTYET) return;
-        if (e2) Fatal("E-M",e2);
+        if (e2) gFatal("E-M",e2);
 
         MemCopy((gbyte*)gPeek2(b), (gbyte*)gPeek2(b+2), gPeek2(b+4));
     } else if (h[0] == NEKOT_POKE) { // 66
         errnum e2 = WizRecvChunkTry((gbyte*)p, n);
         if (e2==NOTYET) return;
-        if (e2) Fatal("E-P",e2);
+        if (e2) gFatal("E-P",e2);
     } else if (h[0] == NEKOT_CALL) { // 67
         gfunc fn = (gfunc)p;
         fn();
@@ -77,7 +77,7 @@ void ExecuteReceivedCommand() {
         task_to_start = p;
         need_to_start_task = gTRUE;
     } else {
-        Fatal("XRC", h[0]);
+        gFatal("XRC", h[0]);
     }
 
     need_recv_payload = gFALSE;
@@ -89,7 +89,7 @@ void CheckReceived() {
     if (!need_recv_payload) {
         gbyte err = WizRecvChunkTry(recv_head, 5);
         if (err==NOTYET) goto RESTORE;
-        if (err) Fatal("RECV", err);
+        if (err) gFatal("RECV", err);
         need_recv_payload = gTRUE;
     }
 

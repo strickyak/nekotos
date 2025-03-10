@@ -47,12 +47,12 @@ typedef union wordorbytes {
 // this attribute, to move those variables into a larger section.
 #define gZEROED      __attribute__ ((section (".data.more")))
 
-#define gAssert(COND) if (!(COND)) Fatal(__FILE__, __LINE__)
+#define gAssert(COND) if (!(COND)) gFatal(__FILE__, __LINE__)
 
-void Fatal(const char* s, gword value);
+void gFatal(const char* s, gword value);
 
-#define INHIBIT_IRQ() asm volatile("  orcc #$10")
-#define ALLOW_IRQ()   asm volatile("  andcc #^$10")
+#define gDisableIrq() asm volatile("  orcc #$10")
+#define gEnableIrq()   asm volatile("  andcc #^$10")
 gbyte gIrqSaveAndDisable();
 void gIrqRestore(gbyte cc_value);
 
@@ -110,7 +110,7 @@ void gFree64(gbyte* ptr);
 
 // gSend64 attempts to send a "multicast" message of 1 to 64 bytes
 // to every active player in your game shard.
-// It succeeds or it calls Fatal().
+// It succeeds or it calls gFatal().
 void gSend64(gbyte* ptr, gbyte size);
 
 // gReceive64 attempts to receive a "multicast" message sent by
@@ -132,15 +132,15 @@ void gNetworkLog(const char* s);
 //
 //  Video Mode
 
-// gGameShowsTextScreen sets the VDG screen mode for game play to a Text Mode.
-void gGameShowsTextScreen(gbyte* screen_addr, gbyte colorset);
+// gTextScreen sets the VDG screen mode for game play to a Text Mode.
+void gTextScreen(gbyte* screen_addr, gbyte colorset);
 
-// gGameShowsPMode1Screen sets the VDG screen mode for game play to PMode1 graphics.
-void gGameShowsPMode1Screen(gbyte* screen_addr, gbyte colorset);
+// gPMode1Screen sets the VDG screen mode for game play to PMode1 graphics.
+void gPMode1Screen(gbyte* screen_addr, gbyte colorset);
 
-// gModeForGame sets the VDG screen mode for game play to the given mode_code.
+// gModeScreen sets the VDG screen mode for game play to the given mode_code.
 // TODO: document mode_code.
-void gModeForGame(gbyte* screen_addr, gword mode_code);
+void gModeScreen(gbyte* screen_addr, gword mode_code);
 
 /////////////////////
 //
@@ -174,25 +174,25 @@ extern struct score {
 
 /////////////////////
 //
-//  Kern Module
+//  gKern Module
 
 // Normal end of game.  Scores are valid and may be published
 // by the kernel.
-#define gGameOver(WHY)  gSendClientPacket('o', (gbyte*)(WHY), 64)
+#define gGameOver(WHY)  xSendClientPacket('o', (gbyte*)(WHY), 64)
 
 // Abnormal end of game.  Scores are invalid and will be ignored
 // by the kernel.
-// This is less drastic than calling Fatal(),
+// This is less drastic than calling gFatal(),
 // because the kernel keeps running, but it also
 // indicates something went wrong that should be fixed.
-#define gGameAbort(WHY)  gSendClientPacket('a', (gbyte*)(WHY), 64)
+#define gGameAbort(WHY)  xSendClientPacket('a', (gbyte*)(WHY), 64)
 
 // Replace the current game with the named game.
 // This can be used to write different "levels" or
 // interstitial screens as a chain of games.
 // Carry scores forward to the new game.
 // Common pre-allocated regions are also kept in memory.
-#define gGameChain(NEXT_GAME_NAME)  gSendClientPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
+#define gGameChain(NEXT_GAME_NAME)  xSendClientPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
 
 // gBeginMain must be called at the beginning of your main()
 // function.
@@ -217,7 +217,7 @@ extern struct score {
 // freed up when the startup is done.  f points to the
 // function where the non-startup code continues.
 #define gAfterMain(after_main)    \
-      gAfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
+      xAfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
 
 // Global variables or data tables that are only used
 // by startup code can be marked with the attribute
@@ -225,7 +225,7 @@ extern struct score {
 // gAfterMain().
 #define STARTUP_DATA   __attribute__ ((section (".data.startup")))
 
-// The following Kern variables can be read by the game
+// The following gKern variables can be read by the game
 // to find out what state the Kernel is in.
 //
 // A game should always see `in_game` is gTRUE!
@@ -238,7 +238,7 @@ extern struct score {
 // If the game has an infinite loop (say, as the
 // outer game loop) it is better to use
 //
-//     while (Kern.always_true) { ... }
+//     while (gKern.always_true) { ... }
 //
 // rather than
 //

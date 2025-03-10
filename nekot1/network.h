@@ -19,7 +19,7 @@ void gNetworkLog(const char* s);
 
 void CheckReceived(void);
 void WizSend(gbyte* addr, gword size);
-void gSendClientPacket(gword p, char* pay, gword size);
+void xSendClientPacket(gword p, char* pay, gword size);
 
 void HelloMCP();
 void Network_Init(void);

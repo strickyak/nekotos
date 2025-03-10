@@ -87,7 +87,7 @@ void WizWaitStatus(gbyte want) {
   gbyte stuck = 200;
   do {
     status = WizGet1(B + SK_SR);
-    if (!--stuck) Fatal("W", status);
+    if (!--stuck) gFatal("W", status);
   } while (status != want);
 }
 

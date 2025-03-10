@@ -62,7 +62,7 @@ void after_main() {
 
 int main() {
     gBeginMain();
-    gGameShowsTextScreen(D, 1);
+    gTextScreen(D, 1);
     gNetworkLog("hello life");
 
     for (gword y = 0; y < H; y++) {

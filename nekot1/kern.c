@@ -6,13 +6,13 @@ void FatalSpin(const char *why) {
     volatile gbyte* p = (volatile gbyte*) Cons;
 
     // Work around GCC infinite loop bug.
-    while (Kern.always_true) {
+    while (gKern.always_true) {
         gPoke2(p, gPeek2(p) + 1);
     }
 }
 
-void Fatal(const char* why, gword arg) {
-    INHIBIT_IRQ();
+void gFatal(const char* why, gword arg) {
+    gDisableIrq();
 
     SwitchToChatScreen();
     // Console_Printf("\nFATAL (%s, %d)", why, arg);
@@ -37,17 +37,17 @@ void StartTask(gword entry) {
     }
 
     if (entry == (gword)ChatTask) {
-        Kern.in_game = gFALSE;
-        Kern.focus_game = gFALSE;
+        gKern.in_game = gFALSE;
+        gKern.focus_game = gFALSE;
     } else {
-        Kern.in_game = gTRUE;
-        Kern.focus_game = gTRUE;
+        gKern.in_game = gTRUE;
+        gKern.focus_game = gTRUE;
         // Until the game changes the display,
         // you get an Orange Console.
-        gGameShowsTextScreen(Cons, COLORSET_ORANGE);
+        gTextScreen(Cons, COLORSET_ORANGE);
     }
 
-    Kern.in_irq = gFALSE;
+    gKern.in_irq = gFALSE;
     asm volatile("\n"
         "  ldx   %0      \n"  // entry point
         "  lds   #$01FE  \n"  // Reset the stack
@@ -84,7 +84,7 @@ void gIrqRestore(gbyte cc_value) {
     );
 }
 
-void gAfterMain3(gfunc after_main, gword* final, gword* final_startup) {
+void xAfterMain3(gfunc after_main, gword* final, gword* final_startup) {
     // Prove that startup is no longer used.
     for (gword w = (gword)final; w < (gword)final_startup; w++) {
         gPoke1(w, 0x3F);
@@ -105,9 +105,9 @@ void gAfterMain3(gfunc after_main, gword* final, gword* final_startup) {
 void ChatTask() {
     SwitchToChatScreen();
 
-    while (Kern.always_true) {
-        gAssert(!Kern.in_game);
-        gAssert(!Kern.in_irq);
+    while (gKern.always_true) {
+        gAssert(!gKern.in_game);
+        gAssert(!gKern.in_irq);
 
         CheckReceived();
         SpinChatTask();
@@ -116,13 +116,13 @@ void ChatTask() {
 
 // Only in Game Mode
 void Network_Handler() {
-    gAssert(Kern.in_game);
+    gAssert(gKern.in_game);
     CheckReceived();
 }
 
 void Kern_Init() {
-    Kern.in_game = gFALSE;
-    Kern.focus_game = gFALSE;
-    Kern.in_irq = gFALSE;
-    Kern.always_true = gTRUE;
+    gKern.in_game = gFALSE;
+    gKern.focus_game = gFALSE;
+    gKern.in_irq = gFALSE;
+    gKern.always_true = gTRUE;
 }

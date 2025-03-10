@@ -11,7 +11,7 @@ gword _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
 #if 0
 // This is a "Null Game" that does nothing.
 void CWait(void) {
-    ALLOW_IRQ();
+    gEnableIrq();
 
     while (1) {
         // wait for any interrupt.
@@ -48,7 +48,7 @@ void after_main() {
         *p = 0;
     }
 
-    ALLOW_IRQ();
+    gEnableIrq();
     StartTask((gword)ChatTask); // Start the no-game task.
 }
 
@@ -77,12 +77,12 @@ gword PinDown[] STARTUP_DATA = {
     (gword) Irq_Handler_Wrapper,
     (gword) Network_Handler,
 
-    (gword) gGameShowsTextScreen,
-    (gword) gGameShowsPMode1Screen,
+    (gword) gTextScreen,
+    (gword) gPMode1Screen,
     (gword) gGameShowsOtherScreen,
-    (gword) gAfterMain3,
+    (gword) xAfterMain3,
     (gword) gNetworkLog,
-    (gword) Fatal,
+    (gword) gFatal,
     // (gword) Console_Printf,
     (gword) PutStr,
     (gword) PutChar,
@@ -161,5 +161,5 @@ int main() {
     // ================================
     after_main();
     gPin(PinDown);
-    Fatal("EXIT", 0);
+    gFatal("EXIT", 0);
 }
