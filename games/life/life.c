@@ -9,7 +9,7 @@ volatile gbyte TRUE = 1;
 #define MODH(A) ((H-1)&(A))
 #define MODW(A) ((W-1)&(A))
 
-gbyte board[2][W][H] MORE_DATA;
+gbyte board[2][W][H] gZEROED;
 
 void ComputeLife(gbyte in[W][H], gbyte out[W][H]) {
     for (gword y = 0; y < H; y++) {

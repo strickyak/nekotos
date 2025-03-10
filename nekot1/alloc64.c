@@ -14,7 +14,7 @@ gbyte* gAlloc64() {
     gbyte cc_value = gIrqSaveAndDisable();
 
     if (root64) {
-        assert(root64->magic == MAGIC64);
+        gAssert(root64->magic == MAGIC64);
         z = root64;
         root64 = root64->next;
         z->magic = 0;

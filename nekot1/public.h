@@ -31,23 +31,23 @@ typedef union wordorbytes {
 // they are required for some "nekot1/public.h" macros to work.
 #include "nekot1/friend.h"
 
-#define Peek1(ADDR) (*(volatile gbyte*)(gword)(ADDR))
-#define Poke1(ADDR,VALUE) (*(volatile gbyte*)(gword)(ADDR) = (gbyte)(VALUE))
+#define gPeek1(ADDR) (*(volatile gbyte*)(gword)(ADDR))
+#define gPoke1(ADDR,VALUE) (*(volatile gbyte*)(gword)(ADDR) = (gbyte)(VALUE))
 
-#define Peek2(ADDR) (*(volatile gword*)(gword)(ADDR))
-#define Poke2(ADDR,VALUE) (*(volatile gword*)(gword)(ADDR) = (gword)(VALUE))
+#define gPeek2(ADDR) (*(volatile gword*)(gword)(ADDR))
+#define gPoke2(ADDR,VALUE) (*(volatile gword*)(gword)(ADDR) = (gword)(VALUE))
 
-// These do a Peek1, some bit manipulaton, and a Poke1.
-#define PAND(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) &= (gbyte)(X))
-#define POR(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) |= (gbyte)(X))
-#define PXOR(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) ^= (gbyte)(X))
+// These do a gPeek1, some bit manipulaton, and a gPoke1.
+#define gPAND(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) &= (gbyte)(X))
+#define gPOR(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) |= (gbyte)(X))
+#define gPXOR(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) ^= (gbyte)(X))
 
 // If your ".bss" allocation of 128 bytes in Page 0 (the direct page)
 // fills up, you can mark some of the global variable definitions with
 // this attribute, to move those variables into a larger section.
-#define MORE_DATA      __attribute__ ((section (".data.more")))
+#define gZEROED      __attribute__ ((section (".data.more")))
 
-#define assert(COND) if (!(COND)) Fatal(__FILE__, __LINE__)
+#define gAssert(COND) if (!(COND)) Fatal(__FILE__, __LINE__)
 
 void Fatal(const char* s, gword value);
 
@@ -198,14 +198,14 @@ extern struct score {
 // function.
 #define gBeginMain()                           \
         { asm volatile(".globl __n1pre_entry");   \
-        Poke2(0, &_n1pre_entry); }
+        gPoke2(0, &_n1pre_entry); }
 
 // gPin(f) will pin down function f, so GCC doesn't erase it.
 // Sometimes if you are using inline assembly language
 // inside a bogus wrapper function, you need to tell GCC
 // that the function is needed even if it isn't ever
 // explicitly called.
-#define gPin(THING)  Poke2(0, &(THING))
+#define gPin(THING)  gPoke2(0, &(THING))
 
 // gAfterMain does not end the game -- it just ends the startup code,
 // and frees the startup code in memory, making that memory available.

@@ -4,7 +4,7 @@
 struct keyboard {
     gbyte matrix[2][8];
     gbyte current_matrix;
-} Keyboard MORE_DATA;
+} Keyboard gZEROED;
 
 void KeyboardHandler(void);
 

@@ -7,7 +7,7 @@ void FatalSpin(const char *why) {
 
     // Work around GCC infinite loop bug.
     while (Kern.always_true) {
-        Poke2(p, Peek2(p) + 1);
+        gPoke2(p, gPeek2(p) + 1);
     }
 }
 
@@ -87,7 +87,7 @@ void gIrqRestore(gbyte cc_value) {
 void gAfterMain3(gfunc after_main, gword* final, gword* final_startup) {
     // Prove that startup is no longer used.
     for (gword w = (gword)final; w < (gword)final_startup; w++) {
-        Poke1(w, 0x3F);
+        gPoke1(w, 0x3F);
     }
 
     asm volatile("\n"
@@ -106,8 +106,8 @@ void ChatTask() {
     SwitchToChatScreen();
 
     while (Kern.always_true) {
-        assert(!Kern.in_game);
-        assert(!Kern.in_irq);
+        gAssert(!Kern.in_game);
+        gAssert(!Kern.in_irq);
 
         CheckReceived();
         SpinChatTask();
@@ -116,7 +116,7 @@ void ChatTask() {
 
 // Only in Game Mode
 void Network_Handler() {
-    assert(Kern.in_game);
+    gAssert(Kern.in_game);
     CheckReceived();
 }
 

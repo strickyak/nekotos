@@ -3,8 +3,8 @@
 // main.c
 
 // Use our alternate data sections.
-gword _More0 MORE_DATA; // not .bss
-gword _More1 MORE_DATA = 0x9998; // not .data
+gword _More0 gZEROED; // not .bss
+gword _More1 gZEROED = 0x9998; // not .data
 gword _Final __attribute__ ((section (".final"))) = 0x9990;
 gword _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
 
@@ -54,7 +54,7 @@ void after_main() {
 
 void ClearPage256(gword p) {
     for (gword i = 0; i<256; i+=2) {
-        Poke2(p+i, 0);
+        gPoke2(p+i, 0);
     }
 }
 
@@ -120,8 +120,8 @@ int main() {
     ClearPage256(0x0400); // chunks of 64-gbyte
 
     // Coco3 in Compatibility Mode.
-    Poke1(0xFF90, 0x80);
-    Poke1(0xFF91, 0x00);
+    gPoke1(0xFF90, 0x80);
+    gPoke1(0xFF91, 0x00);
 
     // Install 4 initial 64-gbyte chunks.
     Reset64();
@@ -132,18 +132,18 @@ int main() {
     Kern_Init();
 
     // Set the IRQ vector code, for Coco 1 or 2.
-    Poke1(IRQVEC_COCO12, JMP_Extended);
-    //-- Poke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
-    Poke2(IRQVEC_COCO12+1, Irq_Handler_entry);
+    gPoke1(IRQVEC_COCO12, JMP_Extended);
+    //-- gPoke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
+    gPoke2(IRQVEC_COCO12+1, Irq_Handler_entry);
 
     // Set the IRQ vector code, for Coco 3.
-    Poke1(IRQVEC_COCO3, JMP_Extended);
-    //-- Poke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
-    Poke2(IRQVEC_COCO3+1, Irq_Handler_entry);
+    gPoke1(IRQVEC_COCO3, JMP_Extended);
+    //-- gPoke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
+    gPoke2(IRQVEC_COCO3+1, Irq_Handler_entry);
 
     Console_Init();
     for (struct pia_reset *p = pia_reset; p->addr; p++) {
-        Poke1(p->addr, p->value);
+        gPoke1(p->addr, p->value);
     }
     Vdg_Init();
 
@@ -151,9 +151,9 @@ int main() {
     PutStr("\nNEKOT MICROKERNEL\n");
     Spin_Init();
 
-    Peek1(0xFF02);        // Clear VSYNC IRQ
-    Poke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
-    Peek1(0xFF02);        // Clear VSYNC IRQ
+    gPeek1(0xFF02);        // Clear VSYNC IRQ
+    gPoke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
+    gPeek1(0xFF02);        // Clear VSYNC IRQ
 
     Network_Init();
     HelloMCP();

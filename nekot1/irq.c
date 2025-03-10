@@ -44,12 +44,12 @@ void Irq_Handler() {
 
     // Clear the VSYNC IRQ by reading PortB output register.
     gword const clear_irq = Pia0PortB;
-    (void) Peek1(clear_irq);
+    (void) gPeek1(clear_irq);
 
     Real_IncrementTicks();
     Breakkey_Handler();
 
-    assert(gReal.ticks < 6);
+    gAssert(gReal.ticks < 6);
     if (Kern.focus_game) {
 // Console_Printf("F");
         Irq_FocusGameSchedule[gReal.ticks]();
@@ -69,5 +69,5 @@ void Irq_Handler_Wrapper() {
         "_Irq_Handler_entry:  \n"
         "  JSR _Irq_Handler  \n"
         "  RTI  \n");
-    Poke2(0, Irq_Handler);
+    gPoke2(0, Irq_Handler);
 }

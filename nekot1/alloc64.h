@@ -3,10 +3,10 @@
 
 // gAlloc64 returns a pointer to a 64-gbyte
 // chunk of memory, or it returns gNULL
-// (the zero pointer).  You can assert the
-// result is not gNULL using assert():
+// (the zero pointer).  You can gAssert the
+// result is not gNULL using gAssert():
 //    gbyte* p = gAlloc64();
-//    assert(p);
+//    gAssert(p);
 gbyte* gAlloc64();
 
 // gFree64 frees a 64-gbyte chunk of memory

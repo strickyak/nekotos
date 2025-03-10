@@ -7,8 +7,8 @@ static gbool ScanReturnChanged(gbyte* p, gbyte* prev) {
 
     gbyte sense = 0x01;
     while (sense) {
-        Poke1(out_port, ~(gbyte)sense);
-        *p = 0x7F & ~Peek1(in_port);
+        gPoke1(out_port, ~(gbyte)sense);
+        *p = 0x7F & ~gPeek1(in_port);
         if (*p++ != *prev++) {
             z = gTRUE; // found a difference.
         }
@@ -26,7 +26,7 @@ static void SendKeyboardPacket(gbyte* p) {
 
 void KeyboardHandler() {
     if (Kern.focus_game) return;
-    assert(Kern.in_irq);
+    gAssert(Kern.in_irq);
 
     gbyte current = Keyboard.current_matrix;
     gbyte other = !current;

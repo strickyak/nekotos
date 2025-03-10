@@ -28,10 +28,10 @@ static void DoBreak(void) {
 void Breakkey_Handler(void) {
     // Place the keyboard probe signal for BREAK
     const gbyte probe = ~(gbyte)BREAKKEY_PROBE_BIT;
-    Poke1(Pia0PortB, probe);
+    gPoke1(Pia0PortB, probe);
 
     // Read the sense port and check the bit.
-    gbyte sense = Peek1(Pia0PortA);
+    gbyte sense = gPeek1(Pia0PortA);
 
     // Debounce.
     if ((sense & BREAKKEY_SENSE_BIT) == 0) {

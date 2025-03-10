@@ -22,8 +22,8 @@ void gSendClientPacket(gword p, char* pay, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
 
     logbuf[0] = NEKOT_CLIENT;
-    Poke2(logbuf+1, size);
-    Poke2(logbuf+3, p);
+    gPoke2(logbuf+1, size);
+    gPoke2(logbuf+3, p);
 
     WizSend(logbuf, 5);
     WizSend(pay, size);
@@ -36,16 +36,16 @@ void gNetworkLog(const char* s) {
     // Still uses CMD_LOG=200.  TODO convert to CLIENT=70.
     gword n = strlen(s);
     logbuf[0] = CMD_LOG;
-    Poke2(logbuf+1, n);
-    Poke2(logbuf+3, 0);
+    gPoke2(logbuf+1, n);
+    gPoke2(logbuf+3, 0);
     MemCopy(logbuf+5, (gbyte*)s, n);
 
     WizSend(logbuf, n+5);
     gIrqRestore(cc_value);
 }
 
-MORE_DATA gbyte recv_head[5];
-MORE_DATA gbyte recv_buf[64];
+gZEROED gbyte recv_head[5];
+gZEROED gbyte recv_buf[64];
 
 gbool need_recv_payload;
 gbool need_to_start_task;
@@ -55,8 +55,8 @@ void ExecuteReceivedCommand() {
     gbyte* h = recv_head;
     gbyte* b = recv_buf;
 
-    gword n = Peek2(h+1);
-    gword p = Peek2(h+3);
+    gword n = gPeek2(h+1);
+    gword p = gPeek2(h+3);
 
     if (h[0] == CMD_DATA) {
         // If we ever send CMD_ECHO, expect CMD_DATA.
@@ -65,7 +65,7 @@ void ExecuteReceivedCommand() {
         if (e2==NOTYET) return;
         if (e2) Fatal("E-M",e2);
 
-        MemCopy((gbyte*)Peek2(b), (gbyte*)Peek2(b+2), Peek2(b+4));
+        MemCopy((gbyte*)gPeek2(b), (gbyte*)gPeek2(b+2), gPeek2(b+4));
     } else if (h[0] == NEKOT_POKE) { // 66
         errnum e2 = WizRecvChunkTry((gbyte*)p, n);
         if (e2==NOTYET) return;
@@ -94,11 +94,11 @@ void CheckReceived() {
     }
 
 #if NETWORK_CLICK
-    Poke1(0xFF22, Vdg.shadow_pia1portb | 0x02);  // 1-bit click
+    gPoke1(0xFF22, Vdg.shadow_pia1portb | 0x02);  // 1-bit click
 #endif
     ExecuteReceivedCommand();
 #if NETWORK_CLICK
-    Poke1(0xFF22, Vdg.shadow_pia1portb | 0x00);  // 1-bit click
+    gPoke1(0xFF22, Vdg.shadow_pia1portb | 0x00);  // 1-bit click
 #endif
 
     if (need_to_start_task) {

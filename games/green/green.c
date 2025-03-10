@@ -108,24 +108,24 @@ void DrawSpot(gbyte* fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
   gword addr = (gword)fb + xdist + ((gword)y << 5);
-  gbyte b = Peek1(addr);
+  gbyte b = gPeek1(addr);
   gbyte bitshift = (3 - xshift) << 1;
   gbyte mask = ~(3 << bitshift);
   b = (b & mask) | (color << bitshift);
-  Poke1(addr, b);
+  gPoke1(addr, b);
 }
 void DrawSpotXor(gbyte* fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
   gword addr = (gword)fb + xdist + ((gword)y << 5);
-  PXOR(addr, (color << ((3 - xshift) << 1)));
+  gPXOR(addr, (color << ((3 - xshift) << 1)));
 }
 void ClearGraf(gbyte color) {
     color &= 3;
     gwob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
     for (gword i = 0; i < 3*1024; i+=2) {
-        Poke2(G+i, c.w);
+        gPoke2(G+i, c.w);
     }
 }
 
@@ -134,7 +134,7 @@ void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
     gword c = ch - 32;
     gword p = (gword)FONT + (c<<3) + (c<<2);
     for (gword i = 0; i < 8; i++) {
-        gbyte bits = Peek1(p++);
+        gbyte bits = gPeek1(p++);
         gbyte probe = 0x80u;
         for (gbyte j = 0; j < 8; j++) {
             if (bits & probe)
@@ -161,8 +161,8 @@ volatile gbyte TRUE = 1;
 void after_main() {
         while (TRUE) {
             for (gword w = 0; w < END; w+=2) {
-                Poke2(0x0202, w);
-                Poke2(G+w, ~Peek2(G+w));
+                gPoke2(0x0202, w);
+                gPoke2(G+w, ~gPeek2(G+w));
                 if ((w&3)==2) WaitForATick();
             }
         }
@@ -179,27 +179,27 @@ int main() {
     gword c2 = 0xFFFF;
     gword c3 = 0xAAAA;
     for (gbyte* w = G+0*END/4; w < G+1*END/4; w+=2) {
-        Poke2(w, c1);
-        Poke2(0x0202, w);
+        gPoke2(w, c1);
+        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+1*END/4; w < G+2*END/4; w+=2) {
-        Poke2(w, c2);
-        Poke2(0x0202, w);
+        gPoke2(w, c2);
+        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+2*END/4; w < G+3*END/4; w+=2) {
-        Poke2(w, c3);
-        Poke2(0x0202, w);
+        gPoke2(w, c3);
+        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+3*END/4; w < G+4*END/4; w+=2) {
-        Poke2(w, c0);
-        Poke2(0x0202, w);
+        gPoke2(w, c0);
+        gPoke2(0x0202, w);
     }
 
     gbyte x = 2;
     for (const char* s = "THIS IS GREEN"; *s; s++) {
         DrawChar(*s, x, 30, Blue0);
         x += 9;
-        Poke2(0x0202, x);
+        gPoke2(0x0202, x);
     }
 
     gAfterMain(after_main);

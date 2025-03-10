@@ -3,15 +3,15 @@
 // public:
 gbyte gNumberOfPlayers;
 gbyte gThisPlayerNumber;
-int gPartialScores[gMAX_PLAYERS] MORE_DATA;
-int gTotalScores[gMAX_PLAYERS] MORE_DATA;
+int gPartialScores[gMAX_PLAYERS] gZEROED;
+int gTotalScores[gMAX_PLAYERS] gZEROED;
 
 // private:
-int OldPartialScores[gMAX_PLAYERS] MORE_DATA;
+int OldPartialScores[gMAX_PLAYERS] gZEROED;
 
 void DoPartialScores() {
-    assert(Kern.in_game);
-    assert(Kern.in_irq);
+    gAssert(Kern.in_game);
+    gAssert(Kern.in_irq);
     gbyte dirty = gFALSE;
     gbyte np = gNumberOfPlayers;
     {

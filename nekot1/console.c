@@ -7,24 +7,24 @@ static void AdvanceCursor() {
     while (Console.cursor >= PANE_LIMIT) {
         // Scroll Pane upward
         for (gword p = PANE_BEGIN; p < PANE_LIMIT-32; p+=2) {
-            Poke2(p, Peek2(p+32));
+            gPoke2(p, gPeek2(p+32));
         }
         // Clear bottom Pane line
         for (gword p = PANE_LIMIT-32; p < PANE_LIMIT; p+=2) {
-            Poke2(p, 0x2020);
+            gPoke2(p, 0x2020);
         }
         // Move cursor back into bottom Pane line.
         Console.cursor -= 32;
     }
-    Poke1(Console.cursor, 0xFF);
+    gPoke1(Console.cursor, 0xFF);
 }
 
 void PutRawByte(gbyte x) {
-    Poke1(Console.cursor, x);
+    gPoke1(Console.cursor, x);
     AdvanceCursor();
 }
 void PutChar(char c) {
-    Poke1(Console.cursor, 0x20);
+    gPoke1(Console.cursor, 0x20);
 
     gbyte x = (gbyte)c; // Unsigned!
     if (x == '\n') {
@@ -142,20 +142,20 @@ void Console_Printf(const char* format, ...) {
 #endif
 
 void Console_Init() {
-    // Poke2(0, AdvanceCursor);
+    // gPoke2(0, AdvanceCursor);
 
     // Draw a greenish bar across the top of the Console.
     for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
-        Poke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
+        gPoke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
     // Fill the body of the screen with spaces.
     for (gword p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
-        Poke2(p, 0x2020);
+        gPoke2(p, 0x2020);
     }
     // Draw a blueish bar across the bottom of the Console.
     for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
-        Poke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
+        gPoke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
     }
     Console.cursor = PANE_LIMIT - 32;
-    Poke1(Console.cursor, 0xFF);
+    gPoke1(Console.cursor, 0xFF);
 }

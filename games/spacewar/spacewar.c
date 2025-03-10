@@ -91,17 +91,17 @@ void DrawSpot(vptr fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
   gword addr = (gword)fb + xdist + ((gword)y << 5);
-  gbyte b = Peek1(addr);
+  gbyte b = gPeek1(addr);
   gbyte bitshift = (3 - xshift) << 1;
   gbyte mask = ~(3 << bitshift);
   b = (b & mask) | (color << bitshift);
-  Poke1(addr, b);
+  gPoke1(addr, b);
 }
 void DrawSpotXor(vptr fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
   gword addr = (gword)fb + xdist + ((gword)y << 5);
-  PXOR(addr, (color << ((3 - xshift) << 1)));
+  gPXOR(addr, (color << ((3 - xshift) << 1)));
 }
 void DrawHorz(vptr fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot) {
     gbyte last = x + len;
@@ -121,8 +121,8 @@ gwob ScanArrowsAnd0To7() {
     z.w = 0;
     INHIBIT_IRQ();
     for (gbyte bit=1; bit; bit<<=1) {
-        Poke1(Pia0PortB, ~bit);
-        gbyte sense = Peek1(Pia0PortA);
+        gPoke1(Pia0PortB, ~bit);
+        gbyte sense = gPeek1(Pia0PortA);
         if ((sense & 0x08) == 0) z.b[0] |= bit;
         if ((sense & 0x10) == 0) z.b[1] |= bit;
     }
@@ -135,13 +135,13 @@ void ClearGraf(gbyte color) {
     gwob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
     for (gword i = (gword)Disp; i < (gword)Disp + 3*1024; i+=2) {
-        Poke2(i, c.w);
+        gPoke2(i, c.w);
     }
 }
 
 void WaitFor60HzTick() {
-    gbyte t = Peek1(&Real.ticks);
-    while (Peek1(&Real.ticks) == t) {}
+    gbyte t = gPeek1(&Real.ticks);
+    while (gPeek1(&Real.ticks) == t) {}
 }
 void WaitForKeyPressArrowsAnd0To7() {
    gwob w;
@@ -156,7 +156,7 @@ void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
     gword p = (gword)FONT + (c<<3) + (c<<2);
     Console_Printf("( %x %x %x);\n", ch, c, p);
     for (gword i = 0; i < 8; i++) {
-        gbyte bits = Peek1(p++);
+        gbyte bits = gPeek1(p++);
         Console_Printf("%x.", bits);
         gbyte probe = 0x80u;
         for (gbyte j = 0; j < 8; j++) {
@@ -169,9 +169,9 @@ void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
 
 #define Spacewar_Main main
 int Spacewar_Main() {
-    Poke2(0, FONT_Wrapper);
-    Poke2(0, DrawChar);
-    Poke2(0, DrawSpotXor);
+    gPoke2(0, FONT_Wrapper);
+    gPoke2(0, DrawChar);
+    gPoke2(0, DrawSpotXor);
 
     Vdg_GamePMode1(Disp, 1);
     ALLOW_IRQ();

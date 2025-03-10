@@ -17,7 +17,7 @@ static void SwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bi
     gbyte cc_value = gIrqSaveAndDisable();
 
     Vdg.shadow_pia1portb = vdg_op_mode;
-    Poke1(0xFF22, vdg_op_mode);  // Set VDG bits.
+    gPoke1(0xFF22, vdg_op_mode);  // Set VDG bits.
 
 // Console_Printf(" D[%d,%d,%d] ", fb, vdg_op_mode, sam_control_bits);
 
@@ -26,7 +26,7 @@ static void SwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bi
         gword bit = 0x0200;  // Start with bit F0 (CoCo Hardware Reference.pdf)
         for (gbyte i=0; i<14; i+=2) {  // 7 iterations.
             gbool b = (((gword)fb & bit) != 0); 
-            Poke1(0xFFC6 + i + b, 0); // 0xFFC6 is F0.
+            gPoke1(0xFFC6 + i + b, 0); // 0xFFC6 is F0.
             bit <<= 1;
         }
     }
@@ -36,7 +36,7 @@ static void SwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bi
         gbyte bit = 0x01;
         for (gbyte i=0; i<6; i+=2) {  // 3 iterations.
             gbool b = ((sam_control_bits & bit) != 0); 
-            Poke1(0xFFC0 + i + b, 0); // 0xFFC0 is V0.
+            gPoke1(0xFFC0 + i + b, 0); // 0xFFC0 is V0.
             bit <<= 1;
         }
     }
