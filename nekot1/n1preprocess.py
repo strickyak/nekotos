@@ -55,8 +55,8 @@ for rgn in regions:
 out(f'#define  _nPRE_REGIONS   ({addr})')
 
 out('')
-out('int _n1pre_final           __attribute__ ((section (".final"))) = 0xAEEE;')
-out('int _n1pre_final_startup   __attribute__ ((section (".final.startup"))) = 0xAEEF;')
+out('unsigned int _n1pre_final           __attribute__ ((section (".final"))) = 0xAEEE;')
+out('unsigned int _n1pre_final_startup   __attribute__ ((section (".final.startup"))) = 0xAEEF;')
 out('extern struct _n1pre_entry {char e; int m;} const _n1pre_entry;')
 out('')
 out('')

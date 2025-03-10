@@ -10,13 +10,15 @@
 //
 //  Fundamental Types and Definitions.
 
-typedef unsigned char gbool;
-typedef unsigned char gbyte;  // Best type for a 8-bit machine gbyte.
-typedef unsigned int gword;  // Best type for a 16-bit machine gword.
-typedef void (*gfunc)(void);
-typedef union wordorbytes {
-    gword w;
-    gbyte b[2];
+typedef unsigned char gbool;  // Recommended for true/false 1/0 values.
+typedef unsigned char gbyte;  // Recommended for a 8-bit machine gbyte.
+typedef unsigned int gword;   // Recommended for a 16-bit machine gword.
+
+// We hope this union is both an efficient and an expressive word joiner/splitter.
+typedef union gWordOrBytes {
+    gword w;        // Access as a 2-Byte word, or
+    gbyte b[2];     // access as two bytes (b[0] & b[1]).
+    struct gHL { gbyte h, l; } hl;  // access as two bytes (hl.h & hl.l).
 } gwob;
 
 #define gTRUE ((gbool)1)
@@ -323,5 +325,21 @@ struct wall {
     gbyte next_moy[4];
 };
 extern gCONST struct wall gWall;
+
+///////////////////////////////////////////////////////
+// 
+//  Standard Library Support
+
+typedef unsigned int size_t;
+void *memcpy(void* dest, const void* src, size_t n);
+void *memset(void* s, int c, size_t n);
+size_t strlen(const char* s);
+
+// Nekot varients:
+// Optimized for larger blocks.
+void gMemcpy(void *dest, const void *src, gword count);
+void gMemset(void* dest, gbyte value, gword count);
+
+
 
 #endif // _NEKOT1_PUBLIC_H_

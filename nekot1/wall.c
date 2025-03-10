@@ -10,8 +10,8 @@ static void Wall_IncrementDay() {
     W.day = W.next_day;  
     W.month = W.next_month;  
     W.year2000 = W.next_year2000;  
-    MemCopy((gbyte*)W.dow, W.next_dow, 3);
-    MemCopy((gbyte*)W.moy, W.next_moy, 3);
+    gMemcpy((gbyte*)W.dow, W.next_dow, 3);
+    gMemcpy((gbyte*)W.moy, W.next_moy, 3);
 }
 
 static void Wall_IncrementHour() {

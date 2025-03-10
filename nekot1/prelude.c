@@ -1,23 +1,26 @@
 #include "nekot1/private.h"
 
-void MemCopy(gbyte *dest, const gbyte *src, gword count) {
-    // If count is odd, copy an initial gbyte.
+void gMemcpy(void *dest, const void *src, gword count) {
+    gbyte* d1 = (gbyte*)dest;
+    gbyte* s1 = (gbyte*)src;
+    // If count is odd, copy one initial byte.
     if (count & 1) {
-        *dest++ = *src++;
+        *d1++ = *s1++;
     }
-    // Now use a stride of 2.
+    // Now use a stride of 2 bytes.
     count >>= 1;  // Divide count by 2.
-    gword* d = (gword*)dest;
-    gword* s = (gword*)src;
+    gword* d2 = (gword*)d1;
+    gword* s2 = (gword*)s1;
     for (gword i = 0; i < count; i++) {
-        *d++ = *s++;
+        *d2++ = *s2++;
     }
 }
 
-void MemSet(gbyte* dest, gbyte value, gword count) {
-    // If count is odd, set an initial gbyte.
+void gMemset(void* dest, gbyte value, gword count) {
+    gbyte* d1 = (gbyte*)dest;
+    // If count is odd, set one initial byte.
     if (count & 1) {
-        *dest++ = value;
+        *d1++ = value;
     }
     // Now use a stride of 2.
     count >>= 1;  // Divide count by 2.
@@ -25,24 +28,32 @@ void MemSet(gbyte* dest, gbyte value, gword count) {
     gwob w;
     w.b[0] = w.b[1] = value;
 
-    gword* d = (gword*)dest;
+    gword* d2 = (gword*)d1;
     for (gword i = 0; i < count; i++) {
-        *d++ = w.w;
+        *d2++ = w.w;
     }
 }
 
-void* memset(void* dest, int value, gword count) {
+void* memset(void* dest, int value, size_t count) {
     gbyte* p = dest;
     gbyte v = (gbyte)value;
     for (gword i = 0; i < count; i++) {
         *p++ = v;
     }
+    return dest;
 }
 
-void* memcpy(void* dest, void* src, gword count) {
-    gbyte* s = src;
+void* memcpy(void* dest, const void* src, size_t count) {
+    const gbyte* s = src;
     gbyte* p = dest;
     for (gword i = 0; i < count; i++) {
         *p++ = *s++;
     }
+    return dest;
+}
+
+size_t strlen(const char* s) {
+    const char* p = s;
+    while (*p) ++p;
+    return p-s;
 }

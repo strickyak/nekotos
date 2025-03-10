@@ -1,12 +1,7 @@
 #include "nekot1/private.h"
 
+// TODO -- get rid of this awful buffer.
 gbyte logbuf[30];
-
-gword strlen(const char* s) {
-    const char* p = s;
-    while (*p) ++p;
-    return p-s;
-}
 
 void WizSend(gbyte* addr, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
@@ -38,7 +33,8 @@ void gNetworkLog(const char* s) {
     logbuf[0] = CMD_LOG;
     gPoke2(logbuf+1, n);
     gPoke2(logbuf+3, 0);
-    MemCopy(logbuf+5, (gbyte*)s, n);
+// TODO -- get rid of this awful buffer.
+    gMemcpy(logbuf+5, (gbyte*)s, n);
 
     WizSend(logbuf, n+5);
     gIrqRestore(cc_value);
@@ -65,7 +61,7 @@ void ExecuteReceivedCommand() {
         if (e2==NOTYET) return;
         if (e2) gFatal("E-M",e2);
 
-        MemCopy((gbyte*)gPeek2(b), (gbyte*)gPeek2(b+2), gPeek2(b+4));
+        gMemcpy((gbyte*)gPeek2(b), (gbyte*)gPeek2(b+2), gPeek2(b+4));
     } else if (h[0] == NEKOT_POKE) { // 66
         errnum e2 = WizRecvChunkTry((gbyte*)p, n);
         if (e2==NOTYET) return;

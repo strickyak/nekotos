@@ -7,8 +7,7 @@ all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb red green blue life
 
 
 GCC = ../../bin/gcc6809
-GCFLAGS = -Os -std=gnu99 -I.. -f'omit-frame-pointer'
-GCFLAGS_GRAB = -std=gnu99 -I..
+GCFLAGS = -Os -std=gnu99 -I.. -f'omit-frame-pointer' -Wall
 
 LWASM = ../../bin/lwasm.orig
 LWLINK = ../../bin/lwlink -L'../../lib/gcc/m6809-unknown/4.6.4/'
@@ -31,15 +30,13 @@ _nekot1.o: _nekot1.s
 	$(LWASM) $< $(ASM_PRAGMATA) --obj -o'$@' --list='$@.list' --map='$@.map' --symbol-dump='$@.sym'
 _nekot1.decb: _nekot1.o
 	$(LWLINK) --format=decb $< -o'$@' --map='$@.map' --script=kernel.script --entry=entry -lgcc
+	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _([gx][A-Z]|mem|str)/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
 	grep '^Section:' $@.map
 	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
 
 red:
-	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _[gx][A-Z]/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/red/red.c _pre_red.c
-	$(GCC) -S $(GCFLAGS_GRAB) _pre_red.c
-	awk -f n1grab.awk < _pre_red.s > _grab_red.txt
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_red.c
 	cat _nekot1_sym.s >> _pre_red.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_red.o' _pre_red.s --list='_red.list' --map='_red.o.map' --symbol-dump='_red.o.sym'
@@ -48,11 +45,8 @@ red:
 	cp -vf _red.decb /tmp/_red.decb
 
 green:
-	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _[gx][A-Z]/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/green/green.c _pre_green.c
-	$(GCC) -S $(GCFLAGS_GRAB) _pre_green.c
-	awk -f n1grab.awk < _pre_green.s > _grab_green.txt
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_green.c
 	cat _nekot1_sym.s >> _pre_green.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_green.o' _pre_green.s --list='_green.list' --map='_green.o.map' --symbol-dump='_green.o.sym'
@@ -61,11 +55,8 @@ green:
 	cp -vf _green.decb /tmp/_green.decb
 
 blue:
-	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _[gx][A-Z]/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/blue/blue.c _pre_blue.c
-	$(GCC) -S $(GCFLAGS_GRAB) _pre_blue.c
-	awk -f n1grab.awk < _pre_blue.s > _grab_blue.txt
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_blue.c
 	cat _nekot1_sym.s >> _pre_blue.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_blue.o' _pre_blue.s --list='_blue.list' --map='_blue.o.map' --symbol-dump='_blue.o.sym'
@@ -74,19 +65,14 @@ blue:
 	cp -vf _blue.decb /tmp/_blue.decb
 
 life:
-	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _[gx][A-Z]/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/life/life.c _pre_life.c
-	$(GCC) -S $(GCFLAGS_GRAB) _pre_life.c
-	awk -f n1grab.awk < _pre_life.s > _grab_life.txt
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_life.c
 	cat _nekot1_sym.s >> _pre_life.s
 	$(LWASM) $(ASM_PRAGMATA) --obj -o'_life.o' _pre_life.s --list='_life.list' --map='_life.o.map' --symbol-dump='_life.o.sym'
 	$(LWLINK) --decb --output='_life.decb' _life.o -lgcc --entry='__n1pre_entry' --script='life.script' --map='_life.map'
 	grep '^Section:' _life.map
 	cp -vf _life.decb /tmp/_life.decb
-
-
 
 clean:
 	rm -f *.s *.o *.list *.sym *.map *.decb _* ,*
