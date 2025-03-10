@@ -1,4 +1,4 @@
-#include "n1/private.h"
+#include "nekot1/private.h"
 
 static void DoBreak(void) {
     if (Kern.focus_game) {

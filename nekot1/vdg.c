@@ -1,4 +1,4 @@
-#include "n1/private.h"
+#include "nekot1/private.h"
 
 // See page 248 in
 // "Assembly Language Programming for the Color Computer (1985)(Laurence A Tepolt)(pdf)".

@@ -1,6 +1,6 @@
-#include "n1/private.h"
+#include "nekot1/private.h"
 
-#include "n1/w5100s_defs.h"
+#include "nekot1/w5100s_defs.h"
 
 // How to talk to the four hardware ports.
 struct wiz_port {

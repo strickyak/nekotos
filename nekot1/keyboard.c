@@ -1,4 +1,4 @@
-#include "n1/private.h"
+#include "nekot1/private.h"
 
 static bool ScanReturnChanged(byte* p, byte* prev) {
     const word out_port = Pia0PortB;

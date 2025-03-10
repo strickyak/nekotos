@@ -1,4 +1,4 @@
-#include "n1/private.h"
+#include "nekot1/private.h"
 
 #define MAGIC64 0x1EE1
 

@@ -1,4 +1,4 @@
-#include "n1/private.h"
+#include "nekot1/private.h"
 
 void MemCopy(byte *dest, const byte *src, word count) {
     // If count is odd, copy an initial byte.

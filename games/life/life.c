@@ -1,4 +1,4 @@
-#include "n1/public.h"
+#include "nekot1/public.h"
 
 N1_DEFINE_SCREEN(D, 2);  // D for Semigraphics Display
 
