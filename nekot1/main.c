@@ -79,7 +79,7 @@ gword PinDown[] STARTUP_DATA = {
 
     (gword) gTextScreen,
     (gword) gPMode1Screen,
-    (gword) gGameShowsOtherScreen,
+    (gword) gModeScreen,
     (gword) xAfterMain3,
     (gword) gNetworkLog,
     (gword) gFatal,
