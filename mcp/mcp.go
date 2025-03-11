@@ -298,6 +298,10 @@ func (g *Gamer) ExecuteLine() {
 		decb := Value(os.ReadFile("/tmp/_life.decb"))
 		log.Printf("=> LIFE <=\n")
 		g.SendGameAndLaunch(decb)
+	} else if s == "8" {
+		decb := Value(os.ReadFile("/tmp/_lib8.decb"))
+		log.Printf("=> LIB8 <=\n")
+		g.SendGameAndLaunch(decb)
 	}
 }
 

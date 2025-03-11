@@ -1,7 +1,8 @@
 CFILES = prelude.c alloc64.c score.c wall.c real.c irq.c breakkey.c kern.c vdg.c network.c wiznet.c console.c keyboard.c main.c
 SFILES = prelude.s alloc64.s score.s wall.s real.s irq.s breakkey.s kern.s vdg.s network.s wiznet.s console.s keyboard.s main.s
 OFILES = prelude.o alloc64.o score.o wall.o real.o irq.o breakkey.o kern.o vdg.o network.o wiznet.o console.o keyboard.o main.o
-all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb red green blue life
+
+all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb red green blue life lib8
 
 .SUFFIXES:
 
@@ -73,6 +74,16 @@ life:
 	$(LWLINK) --decb --output='_life.decb' _life.o -lgcc --entry='__n1pre_entry' --script='life.script' --map='_life.map'
 	grep '^Section:' _life.map
 	cp -vf _life.decb /tmp/_life.decb
+
+lib8:
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
+	python3 n1preprocess.py ../games/lib8/lib8.c _pre_lib8.c
+	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_lib8.c
+	cat _nekot1_sym.s >> _pre_lib8.s
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_lib8.o' _pre_lib8.s --list='_lib8.list' --map='_lib8.o.map' --symbol-dump='_lib8.o.sym'
+	$(LWLINK) --decb --output='_lib8.decb' _lib8.o -lgcc --entry='__n1pre_entry' --script='lib8.script' --map='_lib8.map'
+	grep '^Section:' _lib8.map
+	cp -vf _lib8.decb /tmp/_lib8.decb
 
 clean:
 	rm -f *.s *.o *.list *.sym *.map *.decb _* ,*

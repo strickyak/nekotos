@@ -333,13 +333,11 @@ extern gCONST struct wall gWall;
 typedef unsigned int size_t;
 void *memcpy(void* dest, const void* src, size_t n);
 void *memset(void* s, int c, size_t n);
-size_t strlen(const char* s);
+int strlen(const char* s);
 
 // Nekot varients:
 // Optimized for larger blocks.
 void gMemcpy(void *dest, const void *src, gword count);
 void gMemset(void* dest, gbyte value, gword count);
-
-
 
 #endif // _NEKOT1_PUBLIC_H_
