@@ -9,7 +9,7 @@ static void IncrementSeconds() {
 
     ++R.seconds;
 
-    if (gKern.in_game) DoPartialScores();
+    if (gKern.in_game) SendPartialScores();
 
     // Now go increment the Wall Time.
     Wall_IncrementSecond();

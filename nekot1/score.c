@@ -2,7 +2,7 @@
 
 struct score gScore gZEROED;
 
-void DoPartialScores() {
+void SendPartialScores() {
     gAssert(gKern.in_game);
     gAssert(gKern.in_irq);
     gbyte dirty = gFALSE;
@@ -20,7 +20,7 @@ void DoPartialScores() {
     }
 
     if (dirty) {
-        xSendControlPacket('S', (gbyte*) gScore.partials, np);
+        xSendControlPacket('S', (gbyte*) gScore.partials, np<<1);
         memcpy(gScore.old_partials, gScore.partials, sizeof gScore.partials);
     }
 }

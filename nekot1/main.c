@@ -134,7 +134,6 @@ gfunc handlers[] gSTARTUP_DATA = {
 
 int main() {
     ClearPage256(0x0000); // .bss
-    // ClearPage256(0x00F0); // Almost page 2 -- avoid tail end of page with current stack.
     ClearPage256(0x0200); // vdg console p1
     ClearPage256(0x0300); // vdg console p2
     ClearPage256(0x0400); // chunks of 64-gbyte
@@ -151,21 +150,12 @@ int main() {
 
     Kern_Init();
 
+    // Redirect the 6 Interrupt Relays to our handlers.
     for (gbyte i = 0; i < 6; i++) {
         PlaceJMP(coco2_relays[i], handlers[i]);
         PlaceJMP(coco3_relays[i], handlers[i]);
     }
-#if 0
-    // Set the IRQ vector code, for Coco 1 or 2.
-    gPoke1(IRQVEC_COCO12, JMP_Extended);
-    //-- gPoke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
-    gPoke2(IRQVEC_COCO12+1, Irq_Handler_entry);
 
-    // Set the IRQ vector code, for Coco 3.
-    gPoke1(IRQVEC_COCO3, JMP_Extended);
-    //-- gPoke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
-    gPoke2(IRQVEC_COCO3+1, Irq_Handler_entry);
-#endif
     Console_Init();
     for (struct pia_reset *p = pia_reset; p->addr; p++) {
         gPoke1(p->addr, p->value);
