@@ -70,6 +70,9 @@ gbyte ComputeKeycode(gbyte sense, gbyte got) {
 // Return keycode with the property that only the high bit
 // is changed by shift.  Return 127 if no key is down.
 int ScanKeyboard() {
+    // Ignore the keyboard if not focus on game.
+    if (!gKern.focus_game) return SK_NO_KEY_DOWN;
+
     const gword out_port = Pia0PortB;
     const gword in_port = Pia0PortA;
 
