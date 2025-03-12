@@ -152,7 +152,7 @@ void gModeScreen(gbyte* screen_addr, gword mode_code);
 // in a single game shard.
 #define gMAX_PLAYERS 8
 
-extern struct score {
+struct score {
 
 // gScore.number_of_players is the current number of
 // active players in the game.
@@ -175,7 +175,8 @@ extern struct score {
 // Ignore these.  They are for internal use,
 // to determine if the partials have changed.
        gCONST int old_partials[gMAX_PLAYERS];
-} gScore;
+};
+extern struct score gScore;
 
 /////////////////////
 //

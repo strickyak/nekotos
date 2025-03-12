@@ -178,7 +178,6 @@ func (g *Gamer) SendPokeMemory(p uint, bb []byte) {
 }
 
 func (g *Gamer) PollInput(inchan chan Packet) (p Packet, ok bool) {
-	// log.Printf("Polling")
 	select {
 	case p, ok = <-inchan:
 		log.Printf("PI got %v %v", p, ok)
@@ -187,7 +186,6 @@ func (g *Gamer) PollInput(inchan chan Packet) (p Packet, ok bool) {
 		}
 		return p, true
 	default:
-		// log.Printf("PI nope")
 		return p, false
 	}
 }
@@ -395,41 +393,17 @@ func (g *Gamer) PrintLine(s string) {
 	// }
 }
 
-func (g *Gamer) Step(inchan chan Packet) {
-
-	g.PollPendingInput(inchan)
-
-	if false {
-		// blue
-		blue := Value(os.ReadFile("/tmp/_blue.decb"))
-		log.Printf("=> BLUE <=\n")
-		g.SendGameAndLaunch(blue)
-
-		time.Sleep(5 * time.Second)
-		g.PollPendingInput(inchan)
-		g.SendPacket(N_START, 0, nil)
-		time.Sleep(3 * time.Second)
-		g.PollPendingInput(inchan)
-
-		// green
-		log.Printf("=> GREEN <=\n")
-		green := Value(os.ReadFile("/tmp/_green.decb"))
-		g.SendGameAndLaunch(green)
-
-		time.Sleep(5 * time.Second)
-		g.PollPendingInput(inchan)
-		g.SendPacket(N_START, 0, nil)
-		time.Sleep(3 * time.Second)
-		g.PollPendingInput(inchan)
-	}
+func (gamer *Gamer) Step(inchan chan Packet) {
+	gamer.PollPendingInput(inchan)
 }
 
 // SendGameAndLaunch takes the contents of a DECB binary,
 // and pokes it into the Coco.
-func (g *Gamer) SendGameAndLaunch(bb []byte) {
+func (gamer *Gamer) SendGameAndLaunch(bb []byte) {
 	// Flip back to Shell mode, so you're not executing the old game
 	// while loading the new game.
-	g.SendPacket(N_START, 0, nil)
+	gamer.SendPacket(N_START, 0, nil)
+    gamer.SendInitializedScores();
 
 	for len(bb) >= 5 {
 		c := bb[0]
@@ -440,11 +414,11 @@ func (g *Gamer) SendGameAndLaunch(bb []byte) {
 
 		switch c {
 		case 0:
-			g.SendPokeMemory(p, bb[:n])
+			gamer.SendPokeMemory(p, bb[:n])
 			bb = bb[n:]
 
 		case 255:
-			g.SendPacket(N_START, p, nil)
+			gamer.SendPacket(N_START, p, nil)
 
 		default:
 			panic(bb[0])
@@ -479,7 +453,7 @@ func (gamer *Gamer) SendWallTime() {
     gamer.SendPacket(N_POKE, gamer.gWall, bb)
 }
 
-func (gamer *Gamer) SendInitializedScores(p uint, pay []byte) {
+func (gamer *Gamer) SendInitializedScores() {
     bb := []byte{
         1, 0, // One player, and you are player zero.  TODO: multiplayer
     }
