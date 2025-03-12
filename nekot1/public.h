@@ -172,6 +172,9 @@ extern struct score {
 // Read Only, set by the OS, the sum of all partial scores.
        gCONST int totals[gMAX_PLAYERS];
 
+// Ignore these.  They are for internal use,
+// to determine if the partials have changed.
+       gCONST int old_partials[gMAX_PLAYERS];
 } gScore;
 
 /////////////////////

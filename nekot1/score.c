@@ -1,22 +1,15 @@
 #include "nekot1/private.h"
 
-// public:
-gbyte gNumberOfPlayers;
-gbyte gThisPlayerNumber;
-int gPartialScores[gMAX_PLAYERS] gZEROED;
-int gTotalScores[gMAX_PLAYERS] gZEROED;
-
-// private:
-int OldPartialScores[gMAX_PLAYERS] gZEROED;
+struct score gScore gZEROED;
 
 void DoPartialScores() {
     gAssert(gKern.in_game);
     gAssert(gKern.in_irq);
     gbyte dirty = gFALSE;
-    gbyte np = gNumberOfPlayers;
+    gbyte np = gScore.number_of_players;
     {
-        int* o = OldPartialScores;
-        int* p = gPartialScores;
+        int* o = gScore.old_partials;
+        int* p = gScore.partials;
 
         for (gbyte i = 0; i < np; i++) {
             if (*o++ != *p++) {
@@ -27,7 +20,7 @@ void DoPartialScores() {
     }
 
     if (dirty) {
-        xSendControlPacket('S', (gbyte*) gPartialScores, np);
-        memcpy(OldPartialScores, gPartialScores, sizeof gPartialScores);
+        xSendControlPacket('S', (gbyte*) gScore.partials, np);
+        memcpy(gScore.old_partials, gScore.partials, sizeof gScore.partials);
     }
 }

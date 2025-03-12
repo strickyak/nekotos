@@ -163,8 +163,9 @@ void after_main() {
             for (gword w = 0; w < END; w+=2) {
                 gPoke2(0x0202, w);
                 gPoke2(G+w, ~gPeek2(G+w));
-                if ((w&3)==2) WaitForATick();
+                if ((w&7)==2) WaitForATick();
             }
+            gGameChain("/tmp/_green.decb");
         }
 }
 

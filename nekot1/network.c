@@ -98,20 +98,29 @@ void CheckReceived() {
 #endif
 
     if (need_to_start_task) {
-// Console_Printf("NEED(%d).", task_to_start);
         need_to_start_task = gFALSE;
         StartTask(task_to_start);
         // Note StartTask never returns.
-        // It will launch the task and allow IRQs.
+        // It will restart the stack, allow IRQs, and launch the task.
     }
 
 RESTORE:
     gIrqRestore(cc_value);
 }
 
+#define DOUBLE_BYTE(W)  (gbyte)((gword)(W) >> 8), (gbyte)(gword)(W)
+
 void HelloMCP() {
-    struct quint q = {CMD_HELLO_NEKOT, 0, 0};
+    gbyte hello[] = {
+        'n', 'e', 'k', 'o', 't', '1', '.', '0',
+        DOUBLE_BYTE(Cons),
+        DOUBLE_BYTE(gMAX_PLAYERS),
+        DOUBLE_BYTE(&gScore),
+        DOUBLE_BYTE(&gWall),
+    };
+    struct quint q = {CMD_HELLO_NEKOT, sizeof hello, 1};
     WizSend((gbyte*)&q, 5);
+    WizSend(hello, sizeof hello);
 }
 
 void Network_Init() {

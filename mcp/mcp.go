@@ -4,6 +4,7 @@
 package mcp
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -18,7 +19,7 @@ const (
 	N_POKE    = 66
 	N_START   = 68
 	N_KEYSCAN = 69
-	N_CLIENT  = 70
+	N_CONTROL = 70
 	CMD_LOG   = 200
 )
 
@@ -41,6 +42,13 @@ type Gamer struct {
 	line []byte
 
 	console [14][32]byte
+
+    level uint  // Original HELLO `p` parameter
+    hello []byte  // Original HELLO payload
+    consAddr uint
+    maxPlayers uint
+    gWall uint
+    gScore uint
 }
 
 func (o Gamer) String() string {
@@ -193,8 +201,8 @@ func (g *Gamer) PollPendingInput(inchan chan Packet) {
 				log.Printf("N1LOG: %q %q", g.handle, p.pay)
 			case N_KEYSCAN:
 				g.KeyScanHandler(p.pay)
-			case N_CLIENT:
-				g.ClientRequestHandler(p.p, p.pay)
+			case N_CONTROL:
+				g.ControlRequestHandler(p.p, p.pay)
 			}
 		} else {
 			break
@@ -202,13 +210,48 @@ func (g *Gamer) PollPendingInput(inchan chan Packet) {
 	}
 }
 
-func (g *Gamer) ClientRequestHandler(p uint, pay []byte) {
+func ExtractCString(bb []byte) string {
+	var z []byte
+	for i := 0; i < 64 && i < len(bb); i++ {
+		x := bb[i]
+		if x <= 32 || x > 126 {
+			return string(z)
+		}
+		z = append(z, x)
+	}
+	return string(z)
+}
+
+func (g *Gamer) ControlRequestHandler(p uint, pay []byte) {
 	switch p {
+	case 'a': // Game Abort
+		why := ExtractCString(pay)
+		log.Printf("%q Game Aborted: %q\n", g, why)
+		g.PrintLine(Format("*** GAME ABORTED: %s", why))
+		g.SendPacket(N_START, 0, nil)
+
+	case 'c': // Game Chain
+		filename := ExtractCString(pay)
+		log.Printf("%q CHAIN => %q <=\n", g, filename)
+		g.PrintLine(Format("*** GAME CHAIN TO %s", filename))
+		g.SendPacket(N_START, 0, nil)
+
+		decb := Value(os.ReadFile(filename))
+		g.SendGameAndLaunch(decb)
+
+	case 'o': // Game Over
+		why := ExtractCString(pay)
+		log.Printf("%q Game Over: %q\n", g, why)
+		g.PrintLine(Format("*** GAME OVER: %s", why))
+		g.SendPacket(N_START, 0, nil)
+
 	case 'L': // Logging
 		log.Printf("N1Log: %q logs %q", g.handle, pay)
+
 	case 'S': // Partial Scoring
 		// Handle Partial Scores
 		log.Printf("N1: %q scores % 3x", g.handle, pay)
+
 	default:
 		panic(p)
 	}
@@ -409,6 +452,45 @@ func (g *Gamer) SendGameAndLaunch(bb []byte) {
 	}
 }
 
+var Weekdays = []string{"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"}
+var Months = []string{"ZZZ", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"}
+var ZeroHours = Value(time.ParseDuration("0h"))
+var TwentyFourHours = Value(time.ParseDuration("24h"))
+
+func (gamer *Gamer) WallTimeBytes(addMe time.Duration) []byte {
+    location, _ := time.LoadLocation("America/New_York")
+    now := time.Now().Add(addMe).In(location)
+    y, m, d := now.Date()
+    hr, minute, sec := now.Hour(), now.Minute(), now.Second()
+    weekday := Weekdays[now.Weekday()]
+    month := Months[m]
+    wall := []byte{
+        byte(sec), byte(minute), byte(hr),
+        byte(d), byte(m), byte(y-2000),
+        weekday[0], weekday[1], weekday[2], 0,
+        month[0], month[1], month[2], 0,
+    }
+    return wall
+}
+func (gamer *Gamer) SendWallTime() {
+    bb := gamer.WallTimeBytes(ZeroHours)
+    bb = append(bb, gamer.WallTimeBytes(TwentyFourHours)[3:]...)  // omit tomorrow's h, m, s
+    log.Printf("SendWallTime $%04x: len=%d % 3x", gamer.gWall, len(bb), bb)
+    gamer.SendPacket(N_POKE, gamer.gWall, bb)
+}
+
+func (gamer *Gamer) SendInitializedScores(p uint, pay []byte) {
+    bb := []byte{
+        1, 0, // One player, and you are player zero.  TODO: multiplayer
+    }
+    bb = append(bb, make([]byte, gamer.maxPlayers)...) // partials
+    bb = append(bb, make([]byte, gamer.maxPlayers)...) // totals
+    bb = append(bb, make([]byte, gamer.maxPlayers)...) // old_partials
+    log.Printf("SendInitializedScores $%04x: len=%d % 3x", gamer.gScore, len(bb), bb)
+    gamer.SendPacket(N_POKE, gamer.gScore, bb)
+}
+
+
 func (gamer *Gamer) Run() {
 	inchan := make(chan Packet)
 	inpack := &InputPacketizer{
@@ -418,16 +500,27 @@ func (gamer *Gamer) Run() {
 	}
 	go inpack.Go()
 
+    gamer.SendWallTime()
 	for {
 		gamer.Step(inchan)
 	}
 }
 
-func MCP(conn net.Conn) {
+func wordFromBytes(bb []byte, offset uint) uint {
+    return (uint(bb[offset]) << 8) | uint(bb[offset+1])
+}
+
+func MCP(conn net.Conn, p uint, pay []byte) {
 	g := &Gamer{
-		conn:   conn,
-		handle: "YAK",
-		name:   "YAK",
+		conn:       conn,
+		handle:     "YAK",
+		name:       "YAK",
+		level:      p,
+		hello:      pay,
+		consAddr:   wordFromBytes(pay, 8),
+		maxPlayers: wordFromBytes(pay, 10),
+		gWall:      wordFromBytes(pay, 12),
+		gScore:     wordFromBytes(pay, 14),
 	}
 	for i := 0; i < 14; i++ {
 		for j := 0; j < 32; j++ {
@@ -442,4 +535,7 @@ func Value[T any](value T, err error) T {
 		log.Panicf("ERROR: %v", err)
 	}
 	return value
+}
+func Format(f string, args ...any) string {
+	return fmt.Sprintf(f, args...)
 }

@@ -32,12 +32,12 @@ _nekot1.o: _nekot1.s
 _nekot1.decb: _nekot1.o
 	$(LWLINK) --format=decb $< -o'$@' --map='$@.map' --script=kernel.script --entry=entry -lgcc
 	awk 'BEGIN {print "  .area .absolute"} /^Symbol: _([gx][A-Z]|mem|str)/ {printf "  .globl  %s\n%-20s EQU  $$%s\n", $$2, $$2, $$5}' < _nekot1.decb.map > _nekot1_sym.s
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	sh n1-create-game-script.sh < $@.map > _game.script
 	grep '^Section:' $@.map
 	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
 
 red: _nekot1.decb
-	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/red/red.c _pre_red.c
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_red.c
 	cat _nekot1_sym.s >> _pre_red.s
@@ -47,7 +47,6 @@ red: _nekot1.decb
 	cp -vf _red.decb /tmp/_red.decb
 
 green: _nekot1.decb
-	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/green/green.c _pre_green.c
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_green.c
 	cat _nekot1_sym.s >> _pre_green.s
@@ -57,7 +56,6 @@ green: _nekot1.decb
 	cp -vf _green.decb /tmp/_green.decb
 
 blue: _nekot1.decb
-	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/blue/blue.c _pre_blue.c
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_blue.c
 	cat _nekot1_sym.s >> _pre_blue.s
@@ -67,7 +65,6 @@ blue: _nekot1.decb
 	cp -vf _blue.decb /tmp/_blue.decb
 
 life: _nekot1.decb
-	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/life/life.c _pre_life.c
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_life.c
 	cat _nekot1_sym.s >> _pre_life.s
@@ -77,7 +74,6 @@ life: _nekot1.decb
 	cp -vf _life.decb /tmp/_life.decb
 
 lib8: _nekot1.decb
-	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/lib8/lib8.c _pre_lib8.c
 	$(GCC) -f'whole-program' -S $(GCFLAGS) _pre_lib8.c
 	cat _nekot1_sym.s >> _pre_lib8.s
@@ -87,7 +83,6 @@ lib8: _nekot1.decb
 	cp -vf _lib8.decb /tmp/_lib8.decb
 
 forth: _nekot1.decb
-	$(LWASM) $(ASM_PRAGMATA) --obj -o'_nekot1_sym.o' _nekot1_sym.s --list='_nekot1_sym.list' --map='_nekot1_sym.o.map' --symbol-dump='_nekot1_sym.o.sym'
 	python3 n1preprocess.py ../games/forth/forth.c _pre_forth.c
 	$(GCC) -f'whole-program' -S $(GCFLAGS) -I../games/forth _pre_forth.c
 	cat _nekot1_sym.s >> _pre_forth.s

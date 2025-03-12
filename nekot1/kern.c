@@ -64,7 +64,7 @@ void StartTask(gword entry) {
         // Zero the previous Game's memory.
         // TODO: Don't clear the screens & Common Regions.
         extern gword _Final;
-        for (gword p = &_Final; p < 0x4000; p+=2) {
+        for (gword p = 2+(gword)&_Final; p < 0x4000; p+=2) {
             gPoke2(p, 0);
         }
 
@@ -75,11 +75,14 @@ void StartTask(gword entry) {
         for (gword p = 0; p < 8; p+=2) {
             gPoke2(p, 0x3F3F);
         }
+#if 0
+        // Set SWI Traps in a lot more memory.
+        // TODO: we should not be clearing Common Regions.
         for (gword p = 0x3C00; p < 0xFEEE; p+=2) {
             gPoke2(p, 0x3F3F);
             if ((p & 0x07FF) == 0) PutChar('_');
         }
-
+#endif
         gKern.in_game = gTRUE;
         gKern.focus_game = gTRUE;
         // Until the game changes the display,

@@ -72,6 +72,7 @@ gword PinDown[] gSTARTUP_DATA = {
     (gword) gPMode1Screen,
     (gword) gModeScreen,
     (gword) xAfterMain3,
+    (gword) xSendControlPacket,
     (gword) gNetworkLog,
     (gword) gFatal,
     // (gword) Console_Printf,
@@ -83,6 +84,9 @@ gword PinDown[] gSTARTUP_DATA = {
     (gword) &_More1,
     (gword) &_Final,
     (gword) &_Final_Startup,
+    (gword) &gScore,
+    (gword) &gReal,
+    (gword) &gWall,
 };
 
 #if 0
@@ -129,14 +133,8 @@ gfunc handlers[] gSTARTUP_DATA = {
 };
 
 int main() {
-#if 0
-    gPin(TestByte);
-    gPin(TestWord);
-    TestWord(0x1234);
-    TestWord(0x5678);
-#endif
     ClearPage256(0x0000); // .bss
-    // ClearPage256(0x0100); // stack
+    // ClearPage256(0x00F0); // Almost page 2 -- avoid tail end of page with current stack.
     ClearPage256(0x0200); // vdg console p1
     ClearPage256(0x0300); // vdg console p2
     ClearPage256(0x0400); // chunks of 64-gbyte
