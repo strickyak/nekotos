@@ -45,37 +45,51 @@ const char CocoKeyMapShifted[] =
     "\000!\"#$%&'()*+<=>?"
     "\n";
 
-int LookupKeyboard(gbyte sense, gbyte got, gbyte shift) {
-    gbyte s = BitNum(sense);
-    gbyte g = BitNum(got);
-    gbyte i = s + (g<<3);
-    if (i < sizeof CocoKeyMap) {
-        const char* map = (shift ? CocoKeyMapShifted : CocoKeyMap);
-        return map[i];
+// Convert the keycode to ASCII.
+gbyte LookupKeyboard(gbyte code) {
+    gbyte shift = code & 0x80;
+    code &= 0x7F;
+    const char* map = (shift ? CocoKeyMapShifted : CocoKeyMap);
+
+    if (code < sizeof CocoKeyMap) {
+        return map[code];
     } else {
         return 0;
     }
 }
 
+gbyte ComputeKeycode(gbyte sense, gbyte got) {
+    gbyte s = BitNum(sense);
+    gbyte g = BitNum(got);
+    gbyte code = s + (g<<3);
+    return code;
+}
+
+#define  SK_NO_KEY_DOWN  127
+
+// Return keycode with the property that only the high bit
+// is changed by shift.  Return 127 if no key is down.
 int ScanKeyboard() {
     const gword out_port = Pia0PortB;
     const gword in_port = Pia0PortA;
 
     gbyte sense = 0x01;
+    gbyte shift = 0;
     while (sense) {
         gPoke1(out_port, ~(gbyte)sense);
         gbyte got = 0x7F & ~gPeek1(in_port);
         if (got) {
             // Check SHIFT.
             gPoke1(out_port, ~(gbyte)0x80);
-            gbyte shift = 0x40 & ~gPeek1(in_port);
+            shift = 0x40 & ~gPeek1(in_port);
 
-            int z= LookupKeyboard(sense, got, shift);
-            return z;
+            gbyte code = ComputeKeycode(sense, got);
+            if (shift) code |= 0x80;  // add high bit
+            return code;
         }
         sense <<= 1;
     }
-    return 0;
+    return SK_NO_KEY_DOWN;
 }
 
 void WaitForTick() {
@@ -83,16 +97,21 @@ void WaitForTick() {
     while (a == gReal.ticks) {}
 }
 
-int prevchar;
+int prev_code;
 int getchar() {
-    int c;
+    int code;
     do {
         do {
             WaitForTick();
-            c = ScanKeyboard();
-        } while (c == prevchar);
-        prevchar = c;
-    } while (c==0);
-    PutChar(c); // FOR KEYBOARD ECHO
+            code = ScanKeyboard();
+            // Compare the key held down without regard for the shift,
+            // so you can let go of shift before the key,
+            // without creating phantom unshifted keystrokes.
+        } while ((code & 0x7F) == (prev_code & 0x7F));
+        prev_code = code;
+    } while (code==SK_NO_KEY_DOWN);
+
+    gbyte c = LookupKeyboard(code);
+    if (c) PutChar(c); // FOR KEYBOARD ECHO
     return c;
 }
