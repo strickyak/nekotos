@@ -19,12 +19,13 @@ void gNetworkLog(const char* s);
 
 void CheckReceived(void);
 void WizSend(gbyte* addr, gword size);
-void xSendClientPacket(gword p, char* pay, gword size);
+void xSendControlPacket(gword p, gbyte* pay, gword size);
 
 void HelloMCP();
 void Network_Init(void);
 
 // Cmd bytes used by Nekot.
+#define CMD_HELLO_NEKOT 64
 #define NEKOT_MEMCPY 65
 #define NEKOT_POKE 66
 #define NEKOT_CALL 67
@@ -35,7 +36,6 @@ void Network_Init(void);
 #define NEKOT_CLIENT  70
 
 // Cmd bytes inherited from Lemma.
-#define CMD_HELLO_NEKOT 64
 #define CMD_LOG 200
 #define CMD_DATA 204
 #define CMD_ECHO 217

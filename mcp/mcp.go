@@ -302,6 +302,10 @@ func (g *Gamer) ExecuteLine() {
 		decb := Value(os.ReadFile("/tmp/_lib8.decb"))
 		log.Printf("=> LIB8 <=\n")
 		g.SendGameAndLaunch(decb)
+	} else if s == "4" {
+		decb := Value(os.ReadFile("/tmp/_forth.decb"))
+		log.Printf("=> FORTH <=\n")
+		g.SendGameAndLaunch(decb)
 	}
 }
 

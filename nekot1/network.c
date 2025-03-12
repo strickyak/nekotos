@@ -13,7 +13,7 @@ void WizSend(gbyte* addr, gword size) {
     gIrqRestore(cc_value);
 }
 
-void xSendClientPacket(gword p, char* pay, gword size) {
+void xSendControlPacket(gword p, gbyte* pay, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
 
     logbuf[0] = NEKOT_CLIENT;

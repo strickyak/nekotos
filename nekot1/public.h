@@ -180,27 +180,31 @@ extern struct score {
 
 // Normal end of game.  Scores are valid and may be published
 // by the kernel.
-#define gGameOver(WHY)  xSendClientPacket('o', (gbyte*)(WHY), 64)
+#define gGameOver(WHY)  xSendControlPacket('o', (gbyte*)(WHY), 64)
 
 // Abnormal end of game.  Scores are invalid and will be ignored
 // by the kernel.
 // This is less drastic than calling gFatal(),
 // because the kernel keeps running, but it also
 // indicates something went wrong that should be fixed.
-#define gGameAbort(WHY)  xSendClientPacket('a', (gbyte*)(WHY), 64)
+#define gGameAbort(WHY)  xSendControlPacket('a', (gbyte*)(WHY), 64)
 
 // Replace the current game with the named game.
 // This can be used to write different "levels" or
 // interstitial screens as a chain of games.
 // Carry scores forward to the new game.
 // Common pre-allocated regions are also kept in memory.
-#define gGameChain(NEXT_GAME_NAME)  xSendClientPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
+#define gGameChain(NEXT_GAME_NAME)  xSendControlPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
 
-// gBeginMain must be called at the beginning of your main()
-// function.
-#define gBeginMain()                           \
-        { asm volatile(".globl __n1pre_entry");   \
-        gPoke2(0, &_n1pre_entry); }
+// gBeginMain must be called at the beginning of your main() function.
+#define gBeginMain() {                                  \
+        asm volatile(".globl __n1pre_entry");           \
+        gPoke2(0, &_n1pre_entry);                       \
+        asm volatile(".globl __n1pre_final");           \
+        gPoke2(0, &_n1pre_final);                       \
+        asm volatile(".globl __n1pre_final_startup");   \
+        gPoke2(0, &_n1pre_final_startup);               \
+    }
 
 // gPin(f) will pin down function f, so GCC doesn't erase it.
 // Sometimes if you are using inline assembly language

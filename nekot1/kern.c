@@ -14,8 +14,7 @@ void FatalSpin(const char *why) {
 void gFatal(const char* why, gword arg) {
     gDisableIrq();
 
-    SwitchToChatScreen();
-    // Console_Printf("\nFATAL (%s, %d)", why, arg);
+    NowSwitchToChatScreen();
     PutStr("\nFATAL ");
     PutDec(arg);
     PutStr(": ");
@@ -23,6 +22,24 @@ void gFatal(const char* why, gword arg) {
     FatalSpin(why);
 }
 
+void gFatalSWI(gbyte n) {
+    gFatal("SWI", n);
+}
+void gFatalSWI1() {
+    gFatal("SWI", 1);
+}
+void gFatalSWI2() {
+    gFatal("SWI", 2);
+}
+void gFatalSWI3() {
+    gFatal("SWI", 3);
+}
+void gFatalNMI() {
+    gFatal("NMI", 0);
+}
+void gFatalFIRQ() {
+    gFatal("FIRQ", 0);
+}
 
 // StartTask begins the given function entry,
 // which must never return,
@@ -32,14 +49,37 @@ void gFatal(const char* why, gword arg) {
 // Unless the entry is ChatTask, it starts 
 // with in_game mode set to gTRUE.
 void StartTask(gword entry) {
+    gDisableIrq();
+
     if (!entry) {
         entry = (gword)ChatTask;
     }
 
+    // Zero the Game's BSS.
+    for (gword p = GAME_BSS_BEGIN; p < GAME_BSS_LIMIT; p+=2) {
+        gPoke2(p, 0);
+    }
+
     if (entry == (gword)ChatTask) {
+        // Zero the previous Game's memory.
+        // TODO: Don't clear the screens & Common Regions.
+        extern gword _Final;
+        for (gword p = &_Final; p < 0x4000; p+=2) {
+            gPoke2(p, 0);
+        }
+
         gKern.in_game = gFALSE;
         gKern.focus_game = gFALSE;
     } else {
+        // Set SWI Traps in likely places.
+        for (gword p = 0; p < 8; p+=2) {
+            gPoke2(p, 0x3F3F);
+        }
+        for (gword p = 0x3C00; p < 0xFEEE; p+=2) {
+            gPoke2(p, 0x3F3F);
+            if ((p & 0x07FF) == 0) PutChar('_');
+        }
+
         gKern.in_game = gTRUE;
         gKern.focus_game = gTRUE;
         // Until the game changes the display,
@@ -103,7 +143,7 @@ void xAfterMain3(gfunc after_main, gword* final, gword* final_startup) {
 }
 
 void ChatTask() {
-    SwitchToChatScreen();
+    NowSwitchToChatScreen();
 
     while (gKern.always_true) {
         gAssert(!gKern.in_game);

@@ -5,17 +5,17 @@ static void DoBreak(void) {
         // FOCUS IS IN GAME.
         // Switch focus to chat.
         gKern.focus_game = gFALSE;
-        SwitchToChatScreen();
+        NowSwitchToChatScreen();
     } else {
         // FOCUS IS IN CHAT.
         if (gKern.in_game) {
             // Switch focus to game.
             gKern.focus_game = gTRUE;
-            SwitchToGameScreen();
+            NowSwitchToGameScreen();
         } else {
             // Probaby already in chat, but force it again.
             gKern.focus_game = gFALSE;
-            SwitchToChatScreen();
+            NowSwitchToChatScreen();
         }
     }
 }

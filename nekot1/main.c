@@ -8,36 +8,26 @@ gword _More1 gZEROED = 0x9998; // not .data
 gword _Final __attribute__ ((section (".final"))) = 0x9990;
 gword _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
 
-#if 0
-// This is a "Null Game" that does nothing.
-void CWait(void) {
-    gEnableIrq();
-
-    while (1) {
-        // wait for any interrupt.
-        asm volatile ("cwai #$00");
-        SpinCWait();
-    }
-}
-#endif
-
 // pia_reset table traced from coco3 startup.
-struct pia_reset { gword addr; gbyte value; } pia_reset[] gSTARTUP_DATA = {
-     { 0xff21, 0x00 },  // choose data direction
-     { 0xff23, 0x00 },  // choose data direction
-     { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
-     { 0xff22, 0xfa },  // bit 1 and bits 3-7 are outputs.
-     { 0xff21, 0x34 },
-     { 0xff23, 0x34 },
-     { 0xff22, 0x00 },  // output all 0s on Pia1 PortB
-     { 0xff20, 0x02 },
-     { 0xff01, 0x00 },  // choose data direction
-     { 0xff03, 0x00 },  // choose data direction
-     { 0xff00, 0x00 },  // inputs
-     { 0xff02, 0xff },  // outputs
-     { 0xff01, 0x34 },
-     { 0xff03, 0x34 },
-     { 0 }
+struct pia_reset {
+    gword addr;
+    gbyte value;
+} pia_reset[] gSTARTUP_DATA = {
+    { 0xff21, 0x00 },  // choose data direction
+    { 0xff23, 0x00 },  // choose data direction
+    { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
+    { 0xff22, 0xfa },  // bit 1 and bits 3-7 are outputs.
+    { 0xff21, 0x34 },
+    { 0xff23, 0x34 },
+    { 0xff22, 0x00 },  // output all 0s on Pia1 PortB
+    { 0xff20, 0x02 },
+    { 0xff01, 0x00 },  // choose data direction
+    { 0xff03, 0x00 },  // choose data direction
+    { 0xff00, 0x00 },  // inputs
+    { 0xff02, 0xff },  // outputs
+    { 0xff01, 0x34 },
+    { 0xff03, 0x34 },
+    { 0 }
 };
 
 void after_main() {
@@ -45,10 +35,11 @@ void after_main() {
     for (gbyte* p = sizeof(gword) + (gbyte*)&_Final;
          p < (gbyte*)_Final_Startup;
          p++) {
-        *p = 0;
+        *p = 0x3F;
     }
 
     gEnableIrq();
+    PutStr("READY\n");
     StartTask((gword)ChatTask); // Start the no-game task.
 }
 
@@ -106,6 +97,37 @@ void TestWord(gword foo) {
 }
 #endif
 
+void PlaceJMP(gword at, gfunc to) {
+    gPoke1(at+0, JMP_Extended);
+    gPoke2(at+1, to);
+}
+
+// Interrupt Relays
+gword coco2_relays[] gSTARTUP_DATA = {
+    0x0100,
+    0x0103,
+    0x010F,
+    0x010C,
+    0x0106,
+    0x0109,
+};
+gword coco3_relays[] gSTARTUP_DATA = {
+    0xFFEE,
+    0xFFF1,
+    0xFFF4,
+    0xFFF7,
+    0xFFFA,
+    0xFFFD,
+};
+gfunc handlers[] gSTARTUP_DATA = {
+    gFatalSWI3,
+    gFatalSWI2,
+    gFatalFIRQ,
+    Irq_Handler_entry,
+    gFatalSWI1,
+    gFatalNMI,
+};
+
 int main() {
 #if 0
     gPin(TestByte);
@@ -131,6 +153,11 @@ int main() {
 
     Kern_Init();
 
+    for (gbyte i = 0; i < 6; i++) {
+        PlaceJMP(coco2_relays[i], handlers[i]);
+        PlaceJMP(coco3_relays[i], handlers[i]);
+    }
+#if 0
     // Set the IRQ vector code, for Coco 1 or 2.
     gPoke1(IRQVEC_COCO12, JMP_Extended);
     //-- gPoke2(IRQVEC_COCO12+1, Irq_Handler_Wrapper);
@@ -140,7 +167,7 @@ int main() {
     gPoke1(IRQVEC_COCO3, JMP_Extended);
     //-- gPoke2(IRQVEC_COCO3+1, Irq_Handler_Wrapper);
     gPoke2(IRQVEC_COCO3+1, Irq_Handler_entry);
-
+#endif
     Console_Init();
     for (struct pia_reset *p = pia_reset; p->addr; p++) {
         gPoke1(p->addr, p->value);
@@ -148,7 +175,7 @@ int main() {
     Vdg_Init();
 
 
-    PutStr("\nNEKOT MICROKERNEL\n");
+    PutStr("\nNEKOT MICROKERNEL... ");
     Spin_Init();
 
     gPeek1(0xFF02);        // Clear VSYNC IRQ

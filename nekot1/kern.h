@@ -3,11 +3,19 @@
 
 // kern.h
 
+#define GAME_BSS_BEGIN  0x0080
+#define GAME_BSS_LIMIT  0x0100
+
 struct kern gKern;
 
 void Kern_Init();
 void ChatTask();
 void Network_Handler();
+void gFatalSWI1();
+void gFatalSWI2();
+void gFatalSWI3();
+void gFatalNMI();
+void gFatalFIRQ();
 
 void StartTask(gword entry);
 

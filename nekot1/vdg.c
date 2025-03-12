@@ -12,7 +12,7 @@
 // See page 3 in "CoCo Hardware Reference.pdf".
 // The sam_control_bits are called "FFC0-FFC5 Video Display Mode".
 
-static void SwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bits) {
+static void NowSwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bits) {
     vdg_op_mode &= 0xF8;  // only top 5 bits matter.
 
     gbyte cc_value = gIrqSaveAndDisable();
@@ -45,18 +45,14 @@ static void SwitchDisplayMode(gbyte* fb, gbyte vdg_op_mode, gbyte sam_control_bi
     gIrqRestore(cc_value);
 }
 // Effective immediately.
-static void SwitchToDisplayText(gbyte* fb, gbyte colorset) {
-    SwitchDisplayMode(fb, (colorset?8:0), 0);
+static void NowSwitchToDisplayText(gbyte* fb, gbyte colorset) {
+    NowSwitchDisplayMode(fb, (colorset?8:0), 0);
 }
 // Effective immediately.
-static void SwitchToDisplayPMode1(gbyte* fb, gbyte colorset) {
-    SwitchDisplayMode(fb, 0xC0 + (colorset?8:0), 4);
-}
-// Effective immediately.
-void SwitchToGameScreen() {
+void NowSwitchToGameScreen() {
     gwob w;
     w.w = Vdg.game_mode;
-    SwitchDisplayMode(Vdg.game_framebuffer, w.b[0], w.b[1]);
+    NowSwitchDisplayMode(Vdg.game_framebuffer, w.b[0], w.b[1]);
 }
 
 // These are for Game Mode.
@@ -64,26 +60,26 @@ void SwitchToGameScreen() {
 void gTextScreen(gbyte* fb, gbyte colorset) {
     Vdg.game_mode = (colorset? 0x0800: 0x0000);
     Vdg.game_framebuffer = fb;
-    if (gKern.focus_game) SwitchToGameScreen();
+    if (gKern.focus_game) NowSwitchToGameScreen();
 }
 void gPMode1Screen(gbyte* fb, gbyte colorset) {
     Vdg.game_mode = (colorset? 0xC804: 0xC004);
     Vdg.game_framebuffer = fb;
-    if (gKern.focus_game) SwitchToGameScreen();
+    if (gKern.focus_game) NowSwitchToGameScreen();
 }
 void gModeScreen(gbyte* fb, gword mode_code) {
     Vdg.game_mode = mode_code;
     Vdg.game_framebuffer = fb;
-    if (gKern.focus_game) SwitchToGameScreen();
+    if (gKern.focus_game) NowSwitchToGameScreen();
 }
 
-void SwitchToChatScreen() {
-    SwitchToDisplayText(
+void NowSwitchToChatScreen() {
+    NowSwitchToDisplayText(
         Cons,
         gKern.in_game ? COLORSET_ORANGE : COLORSET_GREEN
     );
 }
 
 void Vdg_Init() {
-    SwitchToChatScreen();
+    NowSwitchToChatScreen();
 }

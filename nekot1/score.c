@@ -27,7 +27,7 @@ void DoPartialScores() {
     }
 
     if (dirty) {
-        xSendClientPacket('S', (gbyte*) gPartialScores, np);
+        xSendControlPacket('S', (gbyte*) gPartialScores, np);
         memcpy(OldPartialScores, gPartialScores, sizeof gPartialScores);
     }
 }

@@ -3,6 +3,8 @@
 
 #include <stdarg.h>
 
+#define TEXT_STR_MAX 30
+
 gword cursor;
 
 void AdvanceCursor() {
@@ -25,6 +27,9 @@ void AdvanceCursor() {
 void PutRawByte(gbyte x) {
     gPoke1(cursor, x);
     AdvanceCursor();
+    for (gword i = 0; i < 0x100; i++) {
+        gPoke2(0x3FFE, i);
+    }
 }
 void PutChar(char c) {
     gPoke1(cursor, 0x20);
@@ -36,7 +41,7 @@ void PutChar(char c) {
             }
             PutChar(' ');
     } else if (x < 32) {
-        // Ingore other control chars.
+            PutChar('_'); // back arrow for Control Chars
     } else if (x < 96) {
             PutRawByte(63&x);
     } else if (x < 128) {
@@ -47,8 +52,13 @@ void PutChar(char c) {
 }
 
 void PutStr(const char* s) {
+    int max = TEXT_STR_MAX;
     for (; *s; s++) {
         PutChar(*s);
+        if (max-- <= 0) {
+            PutChar('\\');
+            return;
+        }
     }
 }
 
@@ -90,10 +100,16 @@ void PutSigned(int x) {
 }
 
 void Printf(const char* format, ...) {
+    int max = TEXT_STR_MAX;
     va_list ap;
     va_start(ap, format);
 
     for (const char* s = format; *s; s++) {
+        if (max-- <= 0) {
+            PutChar('\\');
+            break;
+        }
+
         if (*s < ' ') {
             PutChar('\n');
         } else if (*s != '%') {
@@ -134,7 +150,7 @@ void Printf(const char* format, ...) {
 
 void Text_Init() {
     // Fill the body of the screen with spaces.
-    for (gword p = TEXT_BEGIN; p < TEXT_LIMIT; p+=2) {
+    for (gword p = TEXT_BEGIN; p < TEXT_BEGIN+512; p+=2) {
         gPoke2(p, 0x2F2F); // slashes.
     }
     cursor = TEXT_LIMIT - 32;

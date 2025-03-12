@@ -27,8 +27,8 @@ void gModeScreen(gbyte* screen_addr, gword mode_code);
 #define COLORSET_ORANGE 1
 
 // Used by the kernel:
-void SwitchToChatScreen();
-void SwitchToGameScreen();
+void NowSwitchToChatScreen();
+void NowSwitchToGameScreen();
 void Vdg_Init(void);
 
 #endif // _NEKOT1_VDG_H_
