@@ -11,8 +11,8 @@
 //  Fundamental Types and Definitions.
 
 typedef unsigned char gbool;  // Recommended for true/false 1/0 values.
-typedef unsigned char gbyte;  // Recommended for a 8-bit machine gbyte.
-typedef unsigned int gword;   // Recommended for a 16-bit machine gword.
+typedef unsigned char gbyte;  // Recommended for a 8-bit machine gbyte.  Unsigned!
+typedef unsigned int gword;   // Recommended for a 16-bit machine gword.  Unsigned!
 
 // We hope this union is both an efficient and an expressive word joiner/splitter.
 typedef union gWordOrBytes {
@@ -24,6 +24,7 @@ typedef union gWordOrBytes {
 #define gTRUE ((gbool)1)
 #define gFALSE ((gbool)0)
 #define gNULL ((void*)0)
+#define gALWAYS (gKern.always_true)  // For working around GCC infinite loop bugs.
 
 #ifndef gCONST
 #define gCONST const   // For variables the Kernel changes, but Games must not.
