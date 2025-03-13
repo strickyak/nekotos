@@ -1,9 +1,6 @@
 #include "nekot1/private.h"
 
-// TODO -- get rid of this awful buffer.
-gbyte logbuf[30];
-
-void WizSend(gbyte* addr, gword size) {
+void WizSend(const gbyte* addr, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
 
     tx_ptr_t t = WizReserveToSend(size);
@@ -13,67 +10,112 @@ void WizSend(gbyte* addr, gword size) {
     gIrqRestore(cc_value);
 }
 
-void xSendControlPacket(gword p, gbyte* pay, gword size) {
+void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
     gbyte cc_value = gIrqSaveAndDisable();
+    gbyte qbuf[5];
 
-    logbuf[0] = NEKOT_CLIENT;
-    gPoke2(logbuf+1, size);
-    gPoke2(logbuf+3, p);
+    qbuf[0] = cmd;
+    gPoke2(qbuf+1, size);
+    gPoke2(qbuf+3, p);
 
-    WizSend(logbuf, 5);
+    WizSend(qbuf, 5);
     WizSend(pay, size);
 
     gIrqRestore(cc_value);
 }
 
-void gNetworkLog(const char* s) {
-    gbyte cc_value = gIrqSaveAndDisable();
-    // Still uses CMD_LOG=200.  TODO convert to CLIENT=70.
-    gword n = strlen(s);
-    logbuf[0] = CMD_LOG;
-    gPoke2(logbuf+1, n);
-    gPoke2(logbuf+3, 0);
-// TODO -- get rid of this awful buffer.
-    gMemcpy(logbuf+5, (gbyte*)s, n);
-
-    WizSend(logbuf, n+5);
-    gIrqRestore(cc_value);
+void gSend(gbyte* pay, gbyte size) {
+    gAssert(size >= 1);
+    gAssert(size <= 62);
+    SendPacket(NEKOT_GAMECAST, 0, pay, size);
 }
 
-gZEROED gbyte recv_head[5];
-gZEROED gbyte recv_buf[64];
+void xSendControlPacket(gword p, const gbyte* pay, gword size) {
+    SendPacket(NEKOT_CONTROL, p, pay, size);
+}
+
+void gNetworkLog(const char* s) {
+    SendPacket(CMD_LOG, 0, (const gbyte*)s, strlen(s));
+}
 
 gbool need_recv_payload;
 gbool need_to_start_task;
 gword task_to_start;
 
-void ExecuteReceivedCommand() {
-    gbyte* h = recv_head;
-    gbyte* b = recv_buf;
+// Linked list of received GAMECAST packets.
+struct recvcast {
+    gbyte payload[62];
+    struct recvcast* next;
+};
+struct recvcast *recvcast_root;
 
-    gword n = gPeek2(h+1);
-    gword p = gPeek2(h+3);
+void ExecuteReceivedCommand(const gbyte* quint) {
+    gbyte cmd = quint[0];
+    gword n = gPeek2(quint+1);
+    gword p = gPeek2(quint+3);
 
-    if (h[0] == CMD_DATA) {
+    if (cmd == CMD_DATA) {
         // If we ever send CMD_ECHO, expect CMD_DATA.
-    } else if (h[0] == NEKOT_MEMCPY) { // 65
-        errnum e2 = WizRecvChunkTry((gbyte*)b, n);
-        if (e2==NOTYET) return;
+    } else if (cmd == NEKOT_MEMCPY) { // 65
+        gbyte six[6];
+        gAssert(n==6);
+        errnum e2 = WizRecvChunkTry((gbyte*)six, n);
+        if (e2==NOTYET) return;  // do not let need_recv_payload get falsified.
         if (e2) gFatal("E-M",e2);
 
-        gMemcpy((gbyte*)gPeek2(b), (gbyte*)gPeek2(b+2), gPeek2(b+4));
-    } else if (h[0] == NEKOT_POKE) { // 66
-        errnum e2 = WizRecvChunkTry((gbyte*)p, n);
-        if (e2==NOTYET) return;
-        if (e2) gFatal("E-P",e2);
-    } else if (h[0] == NEKOT_CALL) { // 67
+        gMemcpy((gbyte*)gPeek2(six), (gbyte*)gPeek2(six+2), gPeek2(six+4));
+
+    } else if (cmd == NEKOT_POKE) { // 66
+        errnum e3 = WizRecvChunkTry((gbyte*)p, n);
+        if (e3==NOTYET) return;  // do not let need_recv_payload get falsified.
+        if (e3) gFatal("E-P",e3);
+
+    } else if (cmd == NEKOT_CALL) { // 67
+        gAssert(n==0);
         gfunc fn = (gfunc)p;
         fn();
-    } else if (h[0] == NEKOT_LAUNCH) { // 68
+
+    } else if (cmd == NEKOT_LAUNCH) { // 68
+        gAssert(n==0);
         task_to_start = p;
         need_to_start_task = gTRUE;
+
+    } else if (cmd == NEKOT_GAMECAST) { // 71
+        gbyte cc_value = gIrqSaveAndDisable();
+
+        struct recvcast* chunk = (struct recvcast*) gAlloc64();
+        if (!chunk) {
+            gFatal("RECV CAST NOMEM", 0);
+        }
+        gAssert(1 <= n);
+        gAssert(n <= 62);
+
+        errnum e4 = WizRecvChunkTry(chunk->payload, n);
+        if (e4==NOTYET) {
+            gIrqRestore(cc_value);
+            return;  // do not let need_recv_payload get falsified.
+        }
+        if (e4) gFatal("E-C",e4);
+
+        // Need to append the chunk to the end of the chain!
+        chunk->next = gNULL;
+        if (recvcast_root) {
+            struct recvcast* ptr;
+            // Find the end of the chain, which has no ->next.
+            for (ptr = recvcast_root; ptr->next; ptr = ptr->next) {}
+            // The new chunk is now the ->next.
+            ptr->next = chunk;
+        } else {
+            // No chunks in the list yet, so we become the first.
+            recvcast_root = chunk;
+        }
+
+        chunk->next = recvcast_root;
+        recvcast_root = chunk;
+
+        gIrqRestore(cc_value);
     } else {
-        gFatal("XRC", h[0]);
+        gFatal("XRC", cmd);
     }
 
     need_recv_payload = gFALSE;
@@ -81,9 +123,10 @@ void ExecuteReceivedCommand() {
 
 void CheckReceived() {
     gbyte cc_value = gIrqSaveAndDisable();
+    gbyte quint[5];
 
     if (!need_recv_payload) {
-        gbyte err = WizRecvChunkTry(recv_head, 5);
+        gbyte err = WizRecvChunkTry(quint, 5);
         if (err==NOTYET) goto RESTORE;
         if (err) gFatal("RECV", err);
         need_recv_payload = gTRUE;
@@ -92,7 +135,7 @@ void CheckReceived() {
 #if NETWORK_CLICK
     gPoke1(0xFF22, Vdg.shadow_pia1portb | 0x02);  // 1-bit click
 #endif
-    ExecuteReceivedCommand();
+    ExecuteReceivedCommand(quint);
 #if NETWORK_CLICK
     gPoke1(0xFF22, Vdg.shadow_pia1portb | 0x00);  // 1-bit click
 #endif
@@ -111,6 +154,7 @@ RESTORE:
 #define DOUBLE_BYTE(W)  (gbyte)((gword)(W) >> 8), (gbyte)(gword)(W)
 
 void HelloMCP() {
+    gbyte rev = 1;
     gbyte hello[] = {
         'n', 'e', 'k', 'o', 't', '1', '.', '0',
         DOUBLE_BYTE(Cons),
@@ -118,9 +162,7 @@ void HelloMCP() {
         DOUBLE_BYTE(&gScore),
         DOUBLE_BYTE(&gWall),
     };
-    struct quint q = {CMD_HELLO_NEKOT, sizeof hello, 1};
-    WizSend((gbyte*)&q, 5);
-    WizSend(hello, sizeof hello);
+    SendPacket(CMD_HELLO_NEKOT, rev, hello, sizeof hello);
 }
 
 void Network_Init() {

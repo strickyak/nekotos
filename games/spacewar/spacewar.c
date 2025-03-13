@@ -1,3 +1,7 @@
+#include "nekot1/public.h"
+
+gSCREEN(Screen, 12);  // Screen for PMODE1
+
 // ColorSet 0 for PMode 1
 #define Green0  0
 #define Yellow0 1
@@ -10,84 +14,295 @@
 #define Magenta1 2
 #define Orange1 3
 
-/////////////////////////////////////////////////////
+#define Pia0PortA 0xFF00
+#define Pia0PortB 0xFF02
 
-void FONT_Wrapper() {
-	// ZX Times font by DamienG https://damieng.com
-    asm volatile(";;; \n"
-    "_FONT:            \n"
-	"  fcb $00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $38,$38,$38,$10,$10,$00,$38,$00,$00,$00,$00,$00 \n"
-	"  fcb $6c,$6c,$48,$00,$00,$00,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$14,$7e,$28,$28,$fc,$50,$00,$00,$00,$00,$00 \n"
-	"  fcb $3e,$6a,$78,$3c,$1e,$56,$7c,$10,$00,$00,$00,$00 \n"
-	"  fcb $72,$da,$74,$18,$2e,$5b,$4e,$00,$00,$00,$00,$00 \n"
-	"  fcb $30,$68,$68,$77,$da,$dc,$76,$00,$00,$00,$00,$00 \n"
-	"  fcb $18,$18,$10,$00,$00,$00,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $08,$10,$30,$30,$30,$30,$10,$08,$00,$00,$00,$00 \n"
-	"  fcb $20,$10,$18,$18,$18,$18,$10,$20,$00,$00,$00,$00 \n"
-	"  fcb $00,$10,$54,$38,$54,$10,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$18,$18,$7e,$18,$18,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$00,$00,$00,$00,$18,$18,$10,$00,$00,$00,$00 \n"
-	"  fcb $00,$00,$00,$7c,$00,$00,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$00,$00,$00,$00,$18,$18,$00,$00,$00,$00,$00 \n"
-	"  fcb $06,$0c,$0c,$18,$18,$30,$30,$60,$00,$00,$00,$00 \n"
-	"  fcb $18,$24,$66,$66,$66,$24,$18,$00,$00,$00,$00,$00 \n"
-	"  fcb $18,$38,$18,$18,$18,$18,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $3c,$66,$06,$0c,$18,$32,$7e,$00,$00,$00,$00,$00 \n"
-	"  fcb $3c,$66,$06,$1c,$06,$66,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $0c,$1c,$2c,$4c,$7e,$0c,$0c,$00,$00,$00,$00,$00 \n"
-	"  fcb $3e,$60,$70,$0c,$06,$46,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $1c,$30,$60,$7c,$66,$66,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $7e,$46,$06,$0c,$0c,$18,$18,$00,$00,$00,$00,$00 \n"
-	"  fcb $3c,$62,$72,$3c,$4e,$46,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $3c,$66,$66,$3e,$06,$0c,$38,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$00,$18,$18,$00,$18,$18,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$00,$18,$18,$00,$18,$18,$10,$00,$00,$00,$00 \n"
-	"  fcb $00,$06,$1c,$70,$1c,$06,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$00,$7c,$00,$7c,$00,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$60,$38,$0e,$38,$60,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $3c,$66,$06,$0c,$10,$00,$30,$00,$00,$00,$00,$00 \n"
-	"  fcb $38,$44,$de,$e6,$e6,$de,$40,$3c,$00,$00,$00,$00 \n"
-	"  fcb $18,$18,$2c,$2c,$7e,$46,$ef,$00,$00,$00,$00,$00 \n"
-	"  fcb $fc,$66,$66,$7c,$66,$66,$fc,$00,$00,$00,$00,$00 \n"
-	"  fcb $3a,$66,$c0,$c0,$c0,$62,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $f8,$6c,$66,$66,$66,$6c,$f8,$00,$00,$00,$00,$00 \n"
-	"  fcb $fe,$62,$68,$78,$68,$62,$fc,$00,$00,$00,$00,$00 \n"
-	"  fcb $fe,$62,$68,$78,$68,$60,$f0,$00,$00,$00,$00,$00 \n"
-	"  fcb $34,$6c,$c0,$ce,$c4,$64,$38,$00,$00,$00,$00,$00 \n"
-	"  fcb $f7,$66,$66,$7e,$66,$66,$ef,$00,$00,$00,$00,$00 \n"
-	"  fcb $3c,$18,$18,$18,$18,$18,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $1e,$0c,$0c,$0c,$6c,$68,$30,$00,$00,$00,$00,$00 \n"
-	"  fcb $ee,$64,$68,$70,$78,$6c,$ee,$00,$00,$00,$00,$00 \n"
-	"  fcb $f0,$60,$60,$60,$60,$62,$fc,$00,$00,$00,$00,$00 \n"
-	"  fcb $f7,$76,$76,$5a,$5a,$5a,$e7,$00,$00,$00,$00,$00 \n"
-	"  fcb $ce,$64,$74,$7c,$5c,$4c,$e4,$00,$00,$00,$00,$00 \n"
-	"  fcb $38,$6c,$c6,$c6,$c6,$6c,$38,$00,$00,$00,$00,$00 \n"
-	"  fcb $fc,$66,$66,$64,$78,$60,$f0,$00,$00,$00,$00,$00 \n"
-	"  fcb $38,$6c,$c6,$c6,$c6,$6c,$38,$0c,$00,$00,$00,$00 \n"
-	"  fcb $fc,$66,$66,$7c,$6c,$66,$f7,$00,$00,$00,$00,$00 \n"
-	"  fcb $3a,$66,$70,$3c,$0e,$66,$5c,$00,$00,$00,$00,$00 \n"
-	"  fcb $7e,$5a,$18,$18,$18,$18,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $e7,$62,$62,$62,$62,$62,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $e7,$62,$62,$34,$34,$18,$18,$00,$00,$00,$00,$00 \n"
-	"  fcb $f7,$6a,$6a,$7e,$7e,$76,$62,$00,$00,$00,$00,$00 \n"
-	"  fcb $e6,$64,$38,$38,$38,$4c,$ce,$00,$00,$00,$00,$00 \n"
-	"  fcb $f7,$62,$34,$34,$18,$18,$3c,$00,$00,$00,$00,$00 \n"
-	"  fcb $7e,$46,$0c,$18,$30,$62,$7e,$00,$00,$00,$00,$00 \n"
-	"  fcb $3c,$30,$30,$30,$30,$30,$30,$3c,$00,$00,$00,$00 \n"
-	"  fcb $60,$30,$30,$18,$18,$0c,$0c,$06,$00,$00,$00,$00 \n"
-	"  fcb $3c,$0c,$0c,$0c,$0c,$0c,$0c,$3c,$00,$00,$00,$00 \n"
-	"  fcb $10,$38,$6c,$44,$00,$00,$00,$00,$00,$00,$00,$00 \n"
-	"  fcb $00,$00,$00,$00,$00,$00,$00,$ff,$00,$00,$00,$00 \n"
-    );
+#define NUM_SHIPS 4
+
+void Debug(const char* fmt, ...) { }
+
+struct body {
+  gword x, y;
+  int r, s;
+  int score;
+  gbyte direction;
+  gbyte ttl;
+  gword dings[NUM_SHIPS];
+};
+
+gbyte mode;
+struct body ship[NUM_SHIPS] gZEROED;
+struct body missile[NUM_SHIPS] gZEROED;
+
+// Temporary
+int displayed_score[NUM_SHIPS] gZEROED;
+
+////////////////////////////////////////////////////////
+
+void Delay(gword n) {
+  // if (IsThisGomar()) return;  // delay not needed if Gomar.
+
+  while (n--) {
+#ifdef __GNUC__
+    asm volatile("mul" : : : "d", "b", "a");
+    asm volatile("mul" : : : "d", "b", "a");
+    asm volatile("mul" : : : "d", "b", "a");
+    asm volatile("mul" : : : "d", "b", "a");
+    asm volatile("mul" : : : "d", "b", "a");
+#else
+    asm {
+      mul
+      mul
+      mul
+      mul
+      mul
+    }
+#endif
+  }
 }
 
-/////////////////////////////////////////////////////
+void Pia1bOn(gbyte x) { *(volatile gbyte*)0xFF22 |= x; }
+void Pia1bOff(gbyte x) { *(volatile gbyte*)0xFF22 &= ~x; }
 
-typedef void (*SpotDrawer)(vptr fb, gbyte x, gbyte y, gbyte color);
+void Beep(gbyte n, gbyte f) {
+  for (gbyte i = 0; i < n; i++) {
+    Pia1bOn(0x02);
+    Delay(f);
+    Pia1bOff(0x02);
+    Delay(f);
+  }
+}
 
-void DrawSpot(vptr fb, gbyte x, gbyte y, gbyte color) {
+// gcc6809 -f'whole-program' doesn't like libgcc runtime library calls.
+// So here are ShiftRight and ArithShiftRight tht avoid library calls.
+gword ShiftLeft(gword x, gbyte count) {
+  for (gbyte i = 0; i < count; i++) {
+    x <<= 1;
+  }
+  return x;
+}
+
+gbyte ByteShiftLeft(gbyte x, gbyte count) {
+  for (gbyte i = 0; i < count; i++) {
+    x <<= 1;
+  }
+  return x;
+}
+
+int ShiftRight(int x, gbyte count) {
+  gword z = (gword)x;
+  for (gbyte i = 0; i < count; i++) {
+    z >>= 1;
+  }
+  return (int)z;
+}
+
+int ArithShiftRight(int x, gbyte count) {
+  gword z = (gword)x;
+  for (gbyte i = 0; i < count; i++) {
+    z >>= 1;
+    if (x & 0x8000) z |= 0x8000;
+  }
+  return (int)z;
+}
+
+////////////////////////////////////////////////////////
+
+char Digits[] =
+    " 0 "
+    "0 0"
+    "0 0"
+    "0 0"
+    " 0 "
+
+    " 1 "
+    " 1 "
+    " 1 "
+    " 1 "
+    " 1 "
+
+    "22 "
+    "  2"
+    " 2 "
+    "2  "
+    "222"
+
+    "33 "
+    "  3"
+    "33 "
+    "  3"
+    "33 "
+
+    "4 4"
+    "4 4"
+    "444"
+    "  4"
+    "  4"
+
+    "555"
+    "5  "
+    "55 "
+    "  5"
+    "55 "
+
+    " 66"
+    "6  "
+    "666"
+    "6 6"
+    "666"
+
+    "777"
+    "  7"
+    "  7"
+    "  7"
+    "  7"
+
+    "888"
+    "8 8"
+    "888"
+    "8 8"
+    "888"
+
+    "999"
+    "9 9"
+    "999"
+    "  9"
+    "  9";
+
+void AssertEQ(gword a, gword b) {
+  if (a != b) {
+    gFatal(":EQ", b);
+  }
+}
+
+void AssertLE(gword a, gword b) {
+  if (a > b) {
+    gFatal(":LE", b);
+  }
+}
+
+////////////////////////////////////////////////////////
+
+// We only scan this keyboard row 3:
+#define KEY_X (1 << 0)
+#define KEY_Y (1 << 1)
+#define KEY_Z (1 << 2)
+#define KEY_UP (1 << 3)
+#define KEY_DOWN (1 << 4)
+#define KEY_LEFT (1 << 5)
+#define KEY_RIGHT (1 << 6)
+#define KEY_SPACE (1 << 7)
+
+// Returns a bitmap of the above bits, 1 if key down, otherwise 0.
+gbyte RelevantKeysDown() {
+  const gbyte row3 = (1 << 3);
+  gbyte z = 0;
+  for (gbyte b = 0x80; b; b >>= 1) {
+    gPoke1(0xFF02, 0xFF ^ b);  // Key sense is active low.
+    gbyte c = gPeek1(0xFF00);
+    if ((c & row3) == 0) z |= b;
+  }
+  gPoke1(0xFF02, 0xFF);  // turn off the current.
+  return z;
+}
+
+struct broadcast_payload {
+  gbyte magic_aa;
+  gbyte ship_num;
+  struct body ship, missile;
+  gword dings[NUM_SHIPS];
+};
+
+void BroadcastShip(int ship_num) {
+  if (mode == 'S') return;
+
+  struct body* ptr_ship = ship + ship_num;
+  struct body* ptr_missile = missile + ship_num;
+
+  struct broadcast_payload pay = {
+      .magic_aa = 0xAA,
+      .ship_num = ship_num,
+      .ship = *ptr_ship,
+      .missile = *ptr_missile,
+  };
+
+  gSend64( (gbyte*) &pay, sizeof(pay) );
+}
+
+gbyte Ships[] = {
+#include "spacewar-ships.h"
+};
+
+gbyte Gravity[] = {
+#include "spacewar-gravity.h"
+};
+
+#define GRAF_LEN 0xC00  // (i.e. 3072 bytes) for G3CMode
+
+#define W 128u
+#define H 96u
+
+void ComputeGravity(gword x, gword y, int* gx_out, int* gy_out) {
+  *gx_out = *gy_out = 0;
+  x >>= 8;  // No fractional part.
+  y >>= 8;  // No fractional part.
+
+  // tx: table x, reduced to one quadrant, 0..W/2-1.
+  gword tx = (x > W / 2) ? W - 1 - x : x;
+  // ty: table y, reduced to one quadrant, 0..H/2-1.
+  gword ty = (y > H / 2) ? H - 1 - y : y;
+  Debug("G: x,y=%d,%d tx,ty=%d,%d\n", x, y, tx, ty);
+
+  int abs_gx, abs_gy;
+  if (tx >= W / 2 - W / 8 && ty >= H / 2 - H / 8) {
+    // High resolution
+    gword ix = (tx - (W / 2 - W / 8));  // index x
+    gword iy = (ty - (H / 2 - H / 8));  // index y
+    gword index = /* 2*(H/2)*(W/2) + */ (ix << 2) +
+                 (iy << (2 + 3));  // four-gbyte records.
+    abs_gx = (Gravity[index] << 8) + Gravity[index + 1];
+    abs_gy = (Gravity[index + 2] << 8) + Gravity[index + 3];
+    Debug("G:HI:    ix,iy=%d,%d index=%d  abs=%d,%d\n", ix, iy, index, abs_gx,
+          abs_gy);
+  } else {
+    // Low resolution
+#define ANTTI_GRAVITY 0  // 4
+#if 1
+    gbyte tiny_grav = 3;
+    if (tx + ty < H / 4)
+      tiny_grav = 1;
+    else if (tx + ty < H / 2)
+      tiny_grav = 2;
+
+    abs_gx = abs_gy = (tiny_grav << ANTTI_GRAVITY);
+#else
+    gword ix = (tx >> 1);                       // index x
+    gword iy = (ty >> 1);                       // index y
+    gword index = (ix << 1) + (iy << (1 + 5));  // two-gbyte records.
+    abs_gx = Gravity[index];
+    abs_gy = Gravity[index + 1];
+#endif
+    Debug("G:LO:    abs=%d,%d\n", abs_gx, abs_gy);
+  }
+
+#define GL 1000
+  abs_gx = (abs_gx > GL) ? GL : abs_gx;
+  abs_gy = (abs_gy > GL) ? GL : abs_gy;
+
+  abs_gx = ArithShiftRight(abs_gx, ANTTI_GRAVITY);
+  abs_gy = ArithShiftRight(abs_gy, ANTTI_GRAVITY);
+  *gx_out = (x < W / 2) ? abs_gx : -abs_gx;
+  *gy_out = (y < H / 2) ? abs_gy : -abs_gy;
+  Debug("G:RET    out = %d,%d\n", *gx_out, *gy_out);
+}
+
+
+
+/////////////////////////////////////////////////////////////
+
+typedef void (*SpotDrawer)(gbyte* fb, gbyte x, gbyte y, gbyte color);
+
+void DrawSpot(gbyte* fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
   gword addr = (gword)fb + xdist + ((gword)y << 5);
@@ -97,28 +312,184 @@ void DrawSpot(vptr fb, gbyte x, gbyte y, gbyte color) {
   b = (b & mask) | (color << bitshift);
   gPoke1(addr, b);
 }
-void DrawSpotXor(vptr fb, gbyte x, gbyte y, gbyte color) {
+void DrawSpotXor(gbyte* fb, gbyte x, gbyte y, gbyte color) {
   gbyte xshift = x & 3;  // mod 4
   gbyte xdist = x >> 2;  // div 4
   gword addr = (gword)fb + xdist + ((gword)y << 5);
   gPXOR(addr, (color << ((3 - xshift) << 1)));
 }
-void DrawHorz(vptr fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot) {
+void DrawHorz(gbyte* fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot) {
     gbyte last = x + len;
     for (gbyte i = x; i <= last; i++) {
         spot(fb, i, y, color);
     }
 }
-void DrawVirt(vptr fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot) {
+void DrawVirt(gbyte* fb, gbyte x, gbyte y, gbyte color, gbyte len, SpotDrawer spot) {
     gbyte last = y + len;
     for (gbyte i = y; i <= last; i++) {
         spot(fb, x, i, color);
     }
 }
 
+
+void DrawDigit(gbyte* fb, gbyte x, gbyte y, gbyte color, gbyte digit) {
+  char* pattern = Digits + (digit << 4) - digit;  // that is, 15*digit.
+  for (int i = 0; i < 5; i++) {
+    for (int j = 0; j < 3; j++) {
+      char spot = *pattern++;
+      if (spot != ' ') {
+        DrawSpot(fb, x + j, i + y, (color < 4) ? color : (i<2) ? 3 : (i<3) ? 2 : 1);
+      }
+    }
+  }
+}
+
+// Returns leftmost x position drawn (so a minus can be inserted in front).
+gbyte DrawDecimal(gbyte* fb, gbyte x, gbyte y, gbyte color, int val) {
+  gbyte a = 0, b = 0, c = 0, d = 0;
+  gbyte left_most = 255;
+  if (val < 0) {
+     gbyte left = DrawDecimal(fb, x, y, color, -val);
+     DrawSpot(fb, left-2, y+1, 2);
+     DrawSpot(fb, left-3, y+1, 2);
+     DrawSpot(fb, left-4, y+1, 2);
+     return left-4;
+  }
+  while (val >= 10000) {
+    a++;
+    val -= 10000;
+  }
+  while (val >= 1000) {
+    b++;
+    val -= 1000;
+  }
+  while (val >= 100) {
+    c++;
+    val -= 100;
+  }
+  while (val >= 10) {
+    d++;
+    val -= 10;
+  }
+  gbool show = gFALSE;
+  if (a) {
+    DrawDigit(fb, x, y, color, a);
+    show = gTRUE;
+    left_most = (x+0 < left_most? x+0 : left_most);
+  }
+  if (b || show) {
+    DrawDigit(fb, x + 4, y, color, b);
+    show = gTRUE;
+    left_most = (x+4 < left_most? x+4 : left_most);
+  }
+  if (c || show) {
+    DrawDigit(fb, x + 8, y, color, c);
+    show = gTRUE;
+    left_most = (x+8 < left_most? x+8 : left_most);
+  }
+  if (d || show) {
+    DrawDigit(fb, x + 12, y, color, d);
+    show = gTRUE;
+    left_most = (x+12 < left_most? x+12 : left_most);
+  }
+  DrawDigit(fb, x + 16, y, color, (gbyte)val);
+  left_most = (x+16 < left_most? x+16 : left_most);
+  return left_most;
+}
+
+void DrawSpot2(gbyte* fb, int x, int y, gbyte color) {
+	while (x<0) x += 128;
+	while (y<0) x += 96;
+	while (x>128) x -= 128;
+	while (y>96) x -= 96;
+	DrawSpot(fb, x, y, color);
+}
+
+void DrawShip(gbyte* fb, struct body* p, gword ship, gbool isaMissile) {
+  if (!p->ttl) return;
+
+  gbyte mask = 0xFF;  // four of color "11": 11111111
+  switch (ship) {
+    case 0:
+      mask = 0x55;  // four of color "01": 01010101
+      break;
+    case 1:
+      mask = 0xAA;  // four of color "10": 10101010
+      break;
+  }
+
+  int x = (p->x >> 8) - 2;
+  int y = (p->y >> 8) - 2;
+  gword xshift = x & 3;  // mod 4 // pixel offset within gbyte
+  gword xdist = x >> 2;  // div 4
+  gword index = (xshift * 5 * 2) + (p->direction * 5 * 4 * 2);
+  gword yval = y;
+
+  if (isaMissile) {
+    DrawSpot2(fb, x+2, y+2, 2);
+    // gword v = (gword)Screen + xdist + (yval << 5);
+    // gword c0 = 0xC0;
+    // gbyte spot = ShiftRight(c0 & mask, xshift);
+    // gPXOR(v + 2, spot);
+  } else {
+    for (gbyte row = 0; row < 5 * 32; row += 32) {
+      if (ship == 3) {
+      	if (row == 64)  mask=0xAA;  // change color
+        else if (row == 96)  mask=0x55;  // change color
+      }
+      gword v = (gword)Screen + xdist + (yval << 5) + row;
+      if (v < (gword)Screen + 3 * 1024) v += 3 * 1024;  // wrap
+      if (v >= (gword)Screen + 3 * 1024) v -= 3 * 1024;  // wrap
+      gPXOR(v + 0, mask & Ships[index++]);
+      gPXOR(v + 1, mask & Ships[index++]);
+    }
+  }
+
+  // debugging: box it
+#if 0
+  x = (p->x >> 8);
+  y = (p->y >> 8);
+  for (gbyte i = 0; i < 9; i++) {
+  	DrawSpot2(fb, x-4, y-4+i, 1);
+  	DrawSpot2(fb, x+4, y-4+i, 1);
+  	DrawSpot2(fb, x-4+i, y-4, 1);
+  	DrawSpot2(fb, x-4+i, y+4, 1);
+  }
+#endif
+}
+#define XWRAP (gword)(W * 256u)
+#define YWRAP (gword)(H * 256u)
+
+gword GraphicsAddr(gword x, gword y) {
+    return (gword)Screen + (x >> 2) + (y << 5);
+}
+
+void DrawSun(gbyte* fb, gword g) {
+	DrawSpot(fb, W/2, H/2, 3&(g>>2));
+/*
+  gbyte* p = (gbyte*)Screen + 1024 + 512;
+  p[17] += 64;
+*/
+}
+
+#define ACCEL 8  // 3
+int AccelR[16] = {
+    5 * ACCEL,  4 * ACCEL,  3 * ACCEL,  1 * ACCEL,  0 * ACCEL,  -1 * ACCEL,
+    -3 * ACCEL, -4 * ACCEL, -5 * ACCEL, -4 * ACCEL, -3 * ACCEL, -1 * ACCEL,
+    0 * ACCEL,  1 * ACCEL,  3 * ACCEL,  4 * ACCEL,
+};
+int AccelS[16] = {
+    0 * ACCEL,  1 * ACCEL,  3 * ACCEL,  4 * ACCEL,  5 * ACCEL,  4 * ACCEL,
+    3 * ACCEL,  1 * ACCEL,  0 * ACCEL,  -1 * ACCEL, -3 * ACCEL, -4 * ACCEL,
+    -5 * ACCEL, -4 * ACCEL, -3 * ACCEL, -1 * ACCEL,
+};
+
+
 gwob ScanArrowsAnd0To7() {
-    union wordorbytes z;
+    gwob z;
     z.w = 0;
+    if (!gKern.in_game) return z;
+
     gDisableIrq();
     for (gbyte bit=1; bit; bit<<=1) {
         gPoke1(Pia0PortB, ~bit);
@@ -130,18 +501,18 @@ gwob ScanArrowsAnd0To7() {
     return z;
 }
 
-void ClearGraf(gbyte color) {
+void ClearScreen(gbyte* fb, gbyte color) {
     color &= 3;
     gwob c;
     c.b[0] = c.b[1] = color | (color<<2) | (color<<4) | (color<<6);
-    for (gword i = (gword)Disp; i < (gword)Disp + 3*1024; i+=2) {
+    for (gword i = (gword)fb; i < (gword)fb + 3*1024; i+=2) {
         gPoke2(i, c.w);
     }
 }
 
 void WaitFor60HzTick() {
-    gbyte t = gPeek1(&Real.ticks);
-    while (gPeek1(&Real.ticks) == t) {}
+    gbyte t = gPeek1(&gReal.ticks);
+    while (gPeek1(&gReal.ticks) == t) {}
 }
 void WaitForKeyPressArrowsAnd0To7() {
    gwob w;
@@ -149,51 +520,277 @@ void WaitForKeyPressArrowsAnd0To7() {
    while (w.w == 0);
 }
 
-extern gbyte FONT[];
-void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
-    gword c = ch - 32;
-    // gword p = FONT + 12*c;
-    gword p = (gword)FONT + (c<<3) + (c<<2);
-    Console_Printf("( %x %x %x);\n", ch, c, p);
-    for (gword i = 0; i < 8; i++) {
-        gbyte bits = gPeek1(p++);
-        Console_Printf("%x.", bits);
-        gbyte probe = 0x80u;
-        for (gbyte j = 0; j < 8; j++) {
-            if (bits & probe)
-                DrawSpotXor(Disp, x+j, y+i, Blue0);
-            probe >>= 1;
-        }
-    }
+void FireMissile(gbyte who) {
+  struct body* s = ship + who;
+  struct body* m = missile + who;
+  *m = *s;  // copy ship's position and momentum
+#define M_SPEED 30
+  m->x += M_SPEED * AccelR[s->direction];
+  m->y -= M_SPEED * AccelS[s->direction];
+  m->r += M_SPEED * AccelR[s->direction];
+  m->s -= M_SPEED * AccelS[s->direction];
+  m->ttl = 148;
 }
 
-#define Spacewar_Main main
-int Spacewar_Main() {
-    gPoke2(0, FONT_Wrapper);
-    gPoke2(0, DrawChar);
-    gPoke2(0, DrawSpotXor);
-
-    Vdg_GamePMode1(Disp, 1);
-    gEnableIrq();
-
-    while (gTRUE) {
-        Network_Log("once nekot");
-
-        ClearGraf(Yellow0);
-
-        {
-            gbyte x = 0;
-            for (const char* s = "HELLO!"; *s; s++) {
-                DrawChar(*s, x, x, Blue0);
-                x += 8;
-                WaitFor60HzTick();
-            }
-        }
-        for (gbyte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
-        Vdg_GameText(Cons, 0);
-        for (gbyte i=0; i < 3*60; i++) { WaitFor60HzTick(); }
-        Vdg_GamePMode1(Disp, 1);
+gbool DetectHits(struct body* my_missile, gbyte my_num) {
+  gbool z = gFALSE;
+  for (gbyte i = 0; i < NUM_SHIPS; i++) {
+    if (i == my_num) continue;  // dont count self-hits
+    struct body* p = ship + i;
+    if (!p->ttl) continue;  // that ship does not exist
+    gword dx = (my_missile->x > p->x) ? (my_missile->x - p->x)
+                                     : (p->x - my_missile->x);
+    gword dy = (my_missile->y > p->y) ? (my_missile->y - p->y)
+                                     : (p->y - my_missile->y);
+    gword dist = dx + dy;
+#define NEARBY 0x0400
+    if (dist < NEARBY) {
+      ship[my_num].score+=3;  // Give me a point.
+      ship[my_num].dings[i]+=2;  // Ding the victim.
+      my_missile->ttl = 0;  // expire the missile.
+      z = gTRUE;
+      // continue to hit other ships simultaneously!
     }
-    Vdg_GameText(Disp, 0);
-    while (1) {}
+  }
+  return z;
+}
+
+void AdvanceBody(struct body* p, int ship, gbool useGravity) {
+#define SLOW 3
+  int new_x = (int)(p->x) + ArithShiftRight(p->r, SLOW);
+  int new_y = (int)(p->y) + ArithShiftRight(p->s, SLOW);
+  // Wrap to stay on torus.
+  while (new_x < 0) {
+    new_x += XWRAP;
+  }
+  while (new_y < 0) {
+    new_y += YWRAP;
+  }
+  while (new_x >= XWRAP) {
+    new_x -= XWRAP;
+  }
+  while (new_y >= YWRAP) {
+    new_y -= YWRAP;
+  }
+  Debug("xy=%d,%d  new=%d,%d  r,s=%d,%d\n", p->x, p->y, new_x, new_y, p->r,
+        p->s);
+
+  if (useGravity) {
+    int gx, gy;
+    ComputeGravity(new_x, new_y, &gx, &gy);
+    p->r += gx;
+    p->s += gy;
+    Debug("grav=%d,%d  r,s=%d,%d\n", gx, gy, p->r, p->s);
+  }
+
+#define SpeedLimit 6000
+
+  p->r = (p->r < -SpeedLimit)  ? -SpeedLimit
+         : (p->r > SpeedLimit) ? SpeedLimit
+                               : p->r;
+  p->s = (p->s < -SpeedLimit)  ? -SpeedLimit
+         : (p->s > SpeedLimit) ? SpeedLimit
+                               : p->s;
+  p->x = (gword)new_x;
+  p->y = (gword)new_y;
+}
+
+void DrawScores() {
+  for (gbyte i = 0; i < NUM_SHIPS; i++) {
+    struct body* p = ship + i;
+    int score = p->score;  // My claimed score.
+
+    for (gbyte j = 0; j < NUM_SHIPS; j++) {  // Deduct dings.
+      struct body* q = ship + j;
+      score -= q->dings[i];
+    }
+    // if (score<0) score=0;  // Be kind.
+
+    if (score != displayed_score[i]) {
+      DrawDecimal(Screen, /*x=*/100, /*y=*/i << 3, /*color=*/i + 1,
+                  displayed_score[i]);  // add new score
+      DrawDecimal(Screen, /*x=*/100, /*y=*/i << 3, /*color=*/i + 1, score);  // erase old score
+
+      displayed_score[i] = score;
+    }
+  }
+}
+
+void DrawAll(gbyte* fb) {
+  for (gbyte i = 0; i < NUM_SHIPS; i++) {
+    struct body* p = ship + i;
+    DrawShip(fb, p, i, gFALSE);
+    struct body* m = missile + i;
+    DrawShip(fb, m, i, gTRUE);
+  }
+}
+
+void after_main() {
+  gbyte my_num = mode == 0; // TODO: gScore.player (had problems)
+  struct body* my = ship + my_num;
+  struct body* my_missile = missile + my_num;
+
+  // Draw a constellation around the Strong Gravity Zone.
+  gPXOR(GraphicsAddr( W/2-W/8, H/2-H/8 ), 0x02); // 0x80);
+  gPXOR(GraphicsAddr( W/2-W/8, H/2+H/8 ), 0x02); // 0x80);
+  gPXOR(GraphicsAddr( W/2+W/8, H/2-H/8 ), 0x02);
+  gPXOR(GraphicsAddr( W/2+W/8, H/2+H/8 ), 0x02);
+
+  if (0) {  // background stars
+    gword x = 4, y = 7;
+    for (gword i = 0; i < 8; i++) {
+      gPXOR(GraphicsAddr(x, y), 0x02);
+      x += 47 + 64;
+      y += 33;
+      while (x > W) x -= W;
+      while (y > H) y -= H;
+    }
+  }
+
+  // Create Ships
+  gword g = 0;
+  gword embargo = 0;
+  for (gword i = 0; i < NUM_SHIPS; i++) {
+    volatile struct body* p = ship + i;
+    p->x = 0x0800;
+    p->y = ((i+1) << 12) + ((i+1) << 10);
+    p->r = 30;  // 31+7*i;
+    p->s = 0;  // 17+3*i;
+    p->ttl = (i == my_num) ? 255 : 0;
+
+    if (mode == 'S' || i == my_num) {
+    	FireMissile(i);
+    }
+
+    displayed_score[i] = p->score;
+    DrawDecimal(Screen, 100, i << 3, i + 1, p->score);
+  }
+LOOP:
+  while (gALWAYS) {
+    if (gTRUE || g & 1) {  // every time was to toucy.
+      // Check keyboard.
+      gbyte keys = RelevantKeysDown();
+
+      if (keys & KEY_Z) gPMode1Screen(Screen, 0);
+
+      if (keys & KEY_X) gPMode1Screen(Screen, 1);
+
+      if (keys & KEY_Y) {
+      	 my->direction = 8 ^ my->direction;
+	     my->x = W/2 - 1 - my->x;
+	     my->y = H/2 - 1 - my->y;
+	     my->r = - my->r;
+	     my->s = - my->s;
+	     my->score--;
+      }
+
+      if (keys & KEY_LEFT) my->direction = (my->direction + 1) & 15;
+
+      if (keys & KEY_RIGHT) my->direction = (my->direction - 1) & 15;
+
+      if (keys & KEY_UP) {
+#define THRUST 2  // was 3
+        my->r += THRUST * AccelR[my->direction];
+        my->s -= THRUST * AccelS[my->direction];
+      }
+
+      if (keys & KEY_SPACE && embargo < g) {
+        FireMissile(my_num);
+      }
+    }
+
+    // Advance the ships.
+    // gbyte modeship = mode-'1';
+    // if (modeship < NUM_SHIPS) {
+    // ship[modeship].direction = direction;
+    // }
+    for (gword i = 0; i < NUM_SHIPS; i++) {
+      AdvanceBody(ship + i, i, gTRUE);
+      AdvanceBody(missile + i, i, gFALSE);
+    }
+
+    for (gword who = 0; who < NUM_SHIPS; who++) {
+    	if (mode=='S' || who == my_num) {
+	    struct body* who_missile = missile + who;
+	    if (who_missile->ttl && (mode == 'S' || embargo < g)) {
+	      gbool hit = DetectHits(who_missile, who);
+	      if (hit) {
+	      	if (mode != 'S') embargo = g + 55;  // about 5 seconds.
+		Beep(30, 30);
+	      }
+	    }
+      }
+    }
+    if (g == embargo - 1) {
+      Beep(10, 90);
+    }
+  DRAW:
+    DrawAll(Screen);
+    DrawScores();
+
+  WORK : {
+    if ((mode != 'S') && ((g & 15) == 0)) {
+      BroadcastShip(mode - '1');
+    } else {
+      Delay(1000);
+    }
+
+    if ((g & 3) == 0) {
+      DrawSun(Screen, g);
+    }
+  }
+  UNDRAW:
+    DrawAll(Screen);
+
+  CHECK:
+    // Must UNDRAW before checking and depreciating.
+    // CheckIncomingPackets();
+    {
+        gbyte* chunk = gReceive64();
+        if (chunk) {
+            // TODO: interpret the chunk
+            gFree64(chunk);
+        }
+    }
+
+  DEPRECIATE:
+    if (mode == 'S') {
+      for (gbyte i = 0; i < NUM_SHIPS; i++) {
+        ship[i].ttl = 255;  // keep everyone alive!
+      }
+    } else {
+      for (gbyte i = 0; i < NUM_SHIPS; i++) {
+        if (mode - '1' == i) {
+          ship[i].ttl = 255;  // keep myself alive!
+        } else {
+          if (ship[i].ttl) ship[i].ttl--;  // depreciate others.
+        }
+      }
+    }
+    for (gbyte i = 0; i < NUM_SHIPS; i++) {
+      if (missile[i].ttl) missile[i].ttl--;
+    }
+
+    g++;
+    if (mode == 'S') {
+	    switch (g & 255) {
+	      case 20:	FireMissile(0); break;
+	      case 90:	FireMissile(2); break;
+	      case 140:	FireMissile(3); break;
+	      case 120:	ship[0].direction = (ship[0].direction + 1) & 15;
+	      case 190:	ship[3].direction = (ship[0].direction + 7) & 15;
+	      case 40:	ship[2].direction = (ship[0].direction + 13) & 15;
+	    }
+    }
+  }
+}
+
+int main() {
+    gBeginMain();
+
+    gPMode1Screen(Screen, 0);
+    ClearScreen(Screen, 0);
+    gNetworkLog("Spacewar Running");
+
+    gAfterMain(after_main);
 }

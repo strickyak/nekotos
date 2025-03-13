@@ -111,21 +111,23 @@ void gFree64(gbyte* ptr);
 // The operating system will call gFree64 when it
 // has been sent.
 
-// gSend64 attempts to send a "multicast" message of 1 to 64 bytes
+// gSendCast attempts to send a "multicast" message of 1 to 62 bytes
 // to every active player in your game shard.
 // It succeeds or it calls gFatal().
-void gSend64(gbyte* ptr, gbyte size);
+// The address you give does NOT have to be a Chunk allocated with gAlloc64.
+// You will still own the memory, after you call gSendCast.
+void gSendCast(gbyte* ptr, gbyte size); // size 1 to 62.
 
-// gReceive64 attempts to receive a "multicast" message sent by
+// gReceiveCast64 attempts to receive a "multicast" message sent by
 // anyone in your game shard, including your own,
-// that were set with gSend().  If no message has
+// that were set with gSendCast().  If no message has
 // been received, the gNULL pointer is returned.
 // If you need to know the length of the received
 // message, that needs to be sent in the "fixed"
 // portion at the front of the message, perhaps as
 // the second gbyte.  You should call gFree() on the
 // chunk when you are done with it.
-gbyte* gReceive64();
+gbyte* gReceiveCast64();
 
 // If you can view the MCP logs, you can log to them.
 // Don't log much!

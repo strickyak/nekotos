@@ -347,6 +347,10 @@ func (g *Gamer) ExecuteLine() {
 		decb := Value(os.ReadFile("/tmp/_forth.decb"))
 		log.Printf("=> FORTH <=\n")
 		g.SendGameAndLaunch(decb)
+	} else if s == "S" {
+		decb := Value(os.ReadFile("/tmp/_spacewar.decb"))
+		log.Printf("=> SPACEWAR <=\n")
+		g.SendGameAndLaunch(decb)
 	}
 }
 

@@ -3,7 +3,7 @@
 
 // Do not call xSendControlPacket directly.
 // It is used by some public macros.
-void xSendControlPacket(gword p, gbyte* pay, gword size);
+void xSendControlPacket(gword p, const gbyte* pay, gword size);
 
 // xAfterMain3 is the actual function called by
 // the macro gAfterMain(after_main).

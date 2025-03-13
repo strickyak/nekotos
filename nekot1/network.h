@@ -18,8 +18,8 @@ struct quint {
 void gNetworkLog(const char* s);
 
 void CheckReceived(void);
-void WizSend(gbyte* addr, gword size);
-void xSendControlPacket(gword p, gbyte* pay, gword size);
+void WizSend(const gbyte* addr, gword size);
+void xSendControlPacket(gword p, const gbyte* pay, gword size);
 
 void HelloMCP();
 void Network_Init(void);
@@ -33,7 +33,8 @@ void Network_Init(void);
 
 // Cmd bytes from coco to MCP.
 #define NEKOT_KEYSCAN  69
-#define NEKOT_CLIENT  70
+#define NEKOT_CONTROL  70
+#define NEKOT_GAMECAST  71
 
 // Cmd bytes inherited from Lemma.
 #define CMD_LOG 200

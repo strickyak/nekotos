@@ -40,3 +40,10 @@ void gFree64(gbyte* p) {
 void Reset64() {
     root64 = gNULL;
 }
+
+void Alloc64_Init() {
+    Reset64();
+     for (gword p = 0x0400; p < 0x0500; p+=64) {
+        gFree64((gbyte*)p);
+     }
+}

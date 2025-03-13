@@ -67,6 +67,9 @@ gword PinDown[] gSTARTUP_DATA = {
     (gword) Irq_Handler_entry,
     (gword) Irq_Handler_Wrapper,
     (gword) Network_Handler,
+    (gword) gAlloc64,
+    (gword) gFree64,
+    (gword) Reset64,
 
     (gword) gTextScreen,
     (gword) gPMode1Screen,
@@ -142,12 +145,7 @@ int main() {
     gPoke1(0xFF90, 0x80);
     gPoke1(0xFF91, 0x00);
 
-    // Install 4 initial 64-gbyte chunks.
-    Reset64();
-    for (gbyte* p = (gbyte*)0x0400; p < (gbyte*)0x0500; p += 64) {
-        gFree64(p);
-    }
-
+    Alloc64_Init();  // first 4 chunks in 0x04XX.
     Kern_Init();
 
     // Redirect the 6 Interrupt Relays to our handlers.

@@ -91,6 +91,15 @@ forth: _nekot1.decb
 	grep '^Section:' _forth.map
 	cp -vf _forth.decb /tmp/_forth.decb
 
+spacewar: _nekot1.decb
+	python3 n1preprocess.py ../games/spacewar/spacewar.c _pre_spacewar.c
+	$(GCC) -f'whole-program' -S $(GCFLAGS) -I../games/spacewar _pre_spacewar.c
+	cat _nekot1_sym.s >> _pre_spacewar.s
+	$(LWASM) $(ASM_PRAGMATA) --obj -o'_spacewar.o' _pre_spacewar.s --list='_spacewar.list' --map='_spacewar.o.map' --symbol-dump='_spacewar.o.sym'
+	$(LWLINK) --decb --output='_spacewar.decb' _spacewar.o -lgcc --entry='__n1pre_entry' --script='_game.script' --map='_spacewar.map'
+	grep '^Section:' _spacewar.map
+	cp -vf _spacewar.decb /tmp/_spacewar.decb
+
 clean:
 	rm -f *.s *.o *.list *.sym *.map *.decb _* ,*
 
