@@ -7,11 +7,11 @@
 // result is not gNULL using gAssert():
 //    gbyte* p = gAlloc64();
 //    gAssert(p);
-gbyte* gAlloc64();
+void* gAlloc64();
 
 // gFree64 frees a 64-gbyte chunk of memory
 // perviously allocated by gAlloc64.
-void gFree64(gbyte* ptr);
+void gFree64(void* ptr);
 
 void Reset64();
 

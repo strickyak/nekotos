@@ -43,12 +43,12 @@ type Gamer struct {
 
 	console [14][32]byte
 
-    level uint  // Original HELLO `p` parameter
-    hello []byte  // Original HELLO payload
-    consAddr uint
-    maxPlayers uint
-    gWall uint
-    gScore uint
+	level      uint   // Original HELLO `p` parameter
+	hello      []byte // Original HELLO payload
+	consAddr   uint
+	maxPlayers uint
+	gWall      uint
+	gScore     uint
 }
 
 func (o Gamer) String() string {
@@ -180,7 +180,6 @@ func (g *Gamer) SendPokeMemory(p uint, bb []byte) {
 func (g *Gamer) PollInput(inchan chan Packet) (p Packet, ok bool) {
 	select {
 	case p, ok = <-inchan:
-		log.Printf("PI got %v %v", p, ok)
 		if !ok {
 			log.Panicf("PollInput: inchan closed")
 		}
@@ -193,7 +192,6 @@ func (g *Gamer) PollInput(inchan chan Packet) (p Packet, ok bool) {
 func (g *Gamer) PollPendingInput(inchan chan Packet) {
 	for {
 		if p, ok := g.PollInput(inchan); ok {
-			log.Printf("POLL: %v", p)
 			switch p.c {
 			case CMD_LOG:
 				log.Printf("N1LOG: %q %q", g.handle, p.pay)
@@ -201,6 +199,8 @@ func (g *Gamer) PollPendingInput(inchan chan Packet) {
 				g.KeyScanHandler(p.pay)
 			case N_CONTROL:
 				g.ControlRequestHandler(p.p, p.pay)
+			default:
+				log.Printf("WUT? default PPI: %v", p)
 			}
 		} else {
 			break
@@ -407,7 +407,7 @@ func (gamer *Gamer) SendGameAndLaunch(bb []byte) {
 	// Flip back to Shell mode, so you're not executing the old game
 	// while loading the new game.
 	gamer.SendPacket(N_START, 0, nil)
-    gamer.SendInitializedScores();
+	gamer.SendInitializedScores()
 
 	for len(bb) >= 5 {
 		c := bb[0]
@@ -436,38 +436,37 @@ var ZeroHours = Value(time.ParseDuration("0h"))
 var TwentyFourHours = Value(time.ParseDuration("24h"))
 
 func (gamer *Gamer) WallTimeBytes(addMe time.Duration) []byte {
-    location, _ := time.LoadLocation("America/New_York")
-    now := time.Now().Add(addMe).In(location)
-    y, m, d := now.Date()
-    hr, minute, sec := now.Hour(), now.Minute(), now.Second()
-    weekday := Weekdays[now.Weekday()]
-    month := Months[m]
-    wall := []byte{
-        byte(sec), byte(minute), byte(hr),
-        byte(d), byte(m), byte(y-2000),
-        weekday[0], weekday[1], weekday[2], 0,
-        month[0], month[1], month[2], 0,
-    }
-    return wall
+	location, _ := time.LoadLocation("America/New_York")
+	now := time.Now().Add(addMe).In(location)
+	y, m, d := now.Date()
+	hr, minute, sec := now.Hour(), now.Minute(), now.Second()
+	weekday := Weekdays[now.Weekday()]
+	month := Months[m]
+	wall := []byte{
+		byte(sec), byte(minute), byte(hr),
+		byte(d), byte(m), byte(y - 2000),
+		weekday[0], weekday[1], weekday[2], 0,
+		month[0], month[1], month[2], 0,
+	}
+	return wall
 }
 func (gamer *Gamer) SendWallTime() {
-    bb := gamer.WallTimeBytes(ZeroHours)
-    bb = append(bb, gamer.WallTimeBytes(TwentyFourHours)[3:]...)  // omit tomorrow's h, m, s
-    log.Printf("SendWallTime $%04x: len=%d % 3x", gamer.gWall, len(bb), bb)
-    gamer.SendPacket(N_POKE, gamer.gWall, bb)
+	bb := gamer.WallTimeBytes(ZeroHours)
+	bb = append(bb, gamer.WallTimeBytes(TwentyFourHours)[3:]...) // omit tomorrow's h, m, s
+	log.Printf("SendWallTime $%04x: len=%d % 3x", gamer.gWall, len(bb), bb)
+	gamer.SendPacket(N_POKE, gamer.gWall, bb)
 }
 
 func (gamer *Gamer) SendInitializedScores() {
-    bb := []byte{
-        1, 0, // One player, and you are player zero.  TODO: multiplayer
-    }
-    bb = append(bb, make([]byte, gamer.maxPlayers)...) // partials
-    bb = append(bb, make([]byte, gamer.maxPlayers)...) // totals
-    bb = append(bb, make([]byte, gamer.maxPlayers)...) // old_partials
-    log.Printf("SendInitializedScores $%04x: len=%d % 3x", gamer.gScore, len(bb), bb)
-    gamer.SendPacket(N_POKE, gamer.gScore, bb)
+	bb := []byte{
+		1, 0, // One player, and you are player zero.  TODO: multiplayer
+	}
+	bb = append(bb, make([]byte, gamer.maxPlayers)...) // partials
+	bb = append(bb, make([]byte, gamer.maxPlayers)...) // totals
+	bb = append(bb, make([]byte, gamer.maxPlayers)...) // old_partials
+	log.Printf("SendInitializedScores $%04x: len=%d % 3x", gamer.gScore, len(bb), bb)
+	gamer.SendPacket(N_POKE, gamer.gScore, bb)
 }
-
 
 func (gamer *Gamer) Run() {
 	inchan := make(chan Packet)
@@ -478,14 +477,14 @@ func (gamer *Gamer) Run() {
 	}
 	go inpack.Go()
 
-    gamer.SendWallTime()
+	gamer.SendWallTime()
 	for {
 		gamer.Step(inchan)
 	}
 }
 
 func wordFromBytes(bb []byte, offset uint) uint {
-    return (uint(bb[offset]) << 8) | uint(bb[offset+1])
+	return (uint(bb[offset]) << 8) | uint(bb[offset+1])
 }
 
 func MCP(conn net.Conn, p uint, pay []byte) {

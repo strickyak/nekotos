@@ -70,6 +70,8 @@ gword PinDown[] gSTARTUP_DATA = {
     (gword) gAlloc64,
     (gword) gFree64,
     (gword) Reset64,
+    (gword) gSendCast,
+    (gword) gReceiveCast64,
 
     (gword) gTextScreen,
     (gword) gPMode1Screen,
@@ -78,7 +80,6 @@ gword PinDown[] gSTARTUP_DATA = {
     (gword) xSendControlPacket,
     (gword) gNetworkLog,
     (gword) gFatal,
-    // (gword) Console_Printf,
     (gword) PutStr,
     (gword) PutChar,
 
@@ -91,18 +92,6 @@ gword PinDown[] gSTARTUP_DATA = {
     (gword) &gReal,
     (gword) &gWall,
 };
-
-#if 0
-void TestByte(gbyte a) {
-    asm volatile("  LDA %0" : : "m" (a));
-}
-
-void TestWord(gword foo) {
-    gwob x = { .w= foo };
-    TestByte(x.b[0]);
-    TestByte(x.b[1]);
-}
-#endif
 
 void PlaceJMP(gword at, gfunc to) {
     gPoke1(at+0, JMP_Extended);

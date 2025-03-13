@@ -24,9 +24,10 @@ void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
     gIrqRestore(cc_value);
 }
 
-void gSend(gbyte* pay, gbyte size) {
-    gAssert(size >= 1);
-    gAssert(size <= 62);
+void gSendCast(const struct gamecast* pay, gbyte size) {
+    gAssert(size >= 0);
+    gAssert(size <= 60);
+    size += 2;  // for two header gbytes.
     SendPacket(NEKOT_GAMECAST, 0, pay, size);
 }
 
@@ -42,12 +43,7 @@ gbool need_recv_payload;
 gbool need_to_start_task;
 gword task_to_start;
 
-// Linked list of received GAMECAST packets.
-struct recvcast {
-    gbyte payload[62];
-    struct recvcast* next;
-};
-struct recvcast *recvcast_root;
+struct gamecast *recvcast_root;
 
 void ExecuteReceivedCommand(const gbyte* quint) {
     gbyte cmd = quint[0];
@@ -83,11 +79,11 @@ void ExecuteReceivedCommand(const gbyte* quint) {
     } else if (cmd == NEKOT_GAMECAST) { // 71
         gbyte cc_value = gIrqSaveAndDisable();
 
-        struct recvcast* chunk = (struct recvcast*) gAlloc64();
+        struct gamecast* chunk = (struct gamecast*) gAlloc64();
         if (!chunk) {
             gFatal("RECV CAST NOMEM", 0);
         }
-        gAssert(1 <= n);
+        gAssert(2 <= n);
         gAssert(n <= 62);
 
         errnum e4 = WizRecvChunkTry(chunk->payload, n);
@@ -100,7 +96,7 @@ void ExecuteReceivedCommand(const gbyte* quint) {
         // Need to append the chunk to the end of the chain!
         chunk->next = gNULL;
         if (recvcast_root) {
-            struct recvcast* ptr;
+            struct gamecast* ptr;
             // Find the end of the chain, which has no ->next.
             for (ptr = recvcast_root; ptr->next; ptr = ptr->next) {}
             // The new chunk is now the ->next.
@@ -149,6 +145,18 @@ void CheckReceived() {
 
 RESTORE:
     gIrqRestore(cc_value);
+}
+
+struct gamecast* gReceiveCast64() {
+    struct gamecast *ptr = gNULL;
+    gbyte cc_value = gIrqSaveAndDisable();
+    if (recvcast_root) {
+        ptr = recvcast_root;
+        recvcast_root = ptr->next;
+    }
+    gIrqRestore(cc_value);
+    ptr->next = gNULL;
+    return ptr;
 }
 
 #define DOUBLE_BYTE(W)  (gbyte)((gword)(W) >> 8), (gbyte)(gword)(W)

@@ -31,8 +31,8 @@ struct body {
 };
 
 gbyte mode;
-struct body ship[NUM_SHIPS] gZEROED;
-struct body missile[NUM_SHIPS] gZEROED;
+struct body TheShips[NUM_SHIPS] gZEROED;
+struct body TheMissiles[NUM_SHIPS] gZEROED;
 
 // Temporary
 int displayed_score[NUM_SHIPS] gZEROED;
@@ -206,27 +206,30 @@ gbyte RelevantKeysDown() {
   return z;
 }
 
-struct broadcast_payload {
+struct spacewar_msg {
   gbyte magic_aa;
   gbyte ship_num;
   struct body ship, missile;
   gword dings[NUM_SHIPS];
 };
 
+struct gamecast send_me;
+
 void BroadcastShip(int ship_num) {
   if (mode == 'S') return;
 
-  struct body* ptr_ship = ship + ship_num;
-  struct body* ptr_missile = missile + ship_num;
+  //struct body* ptr_ship = TheShips + ship_num;
+  //struct body* ptr_missile = TheMissiles + ship_num;
 
-  struct broadcast_payload pay = {
-      .magic_aa = 0xAA,
-      .ship_num = ship_num,
-      .ship = *ptr_ship,
-      .missile = *ptr_missile,
-  };
+  send_me.sender = 0;
+  send_me.flags = 0;
+  struct spacewar_msg* msg = (struct spacewar_msg*) send_me.payload;
+  msg->magic_aa = 0xAA;
+  msg->ship_num = ship_num;
+  msg->ship = TheShips[ship_num];
+  msg->missile = TheMissiles[ship_num];
 
-  gSend64( (gbyte*) &pay, sizeof(pay) );
+  gSendCast(&send_me, 2 + sizeof *msg);
 }
 
 gbyte Ships[] = {
@@ -237,7 +240,7 @@ gbyte Gravity[] = {
 #include "spacewar-gravity.h"
 };
 
-#define GRAF_LEN 0xC00  // (i.e. 3072 bytes) for G3CMode
+#define GRAF_LEN 0xC00  // (i.e. 3072 bytes) for G3CMode ("PMode1")
 
 #define W 128u
 #define H 96u
@@ -521,9 +524,9 @@ void WaitForKeyPressArrowsAnd0To7() {
 }
 
 void FireMissile(gbyte who) {
-  struct body* s = ship + who;
-  struct body* m = missile + who;
-  *m = *s;  // copy ship's position and momentum
+  struct body* s = TheShips + who;
+  struct body* m = TheMissiles + who;
+  *m = *s;  // copy TheShips's position and momentum
 #define M_SPEED 30
   m->x += M_SPEED * AccelR[s->direction];
   m->y -= M_SPEED * AccelS[s->direction];
@@ -536,7 +539,7 @@ gbool DetectHits(struct body* my_missile, gbyte my_num) {
   gbool z = gFALSE;
   for (gbyte i = 0; i < NUM_SHIPS; i++) {
     if (i == my_num) continue;  // dont count self-hits
-    struct body* p = ship + i;
+    struct body* p = TheShips + i;
     if (!p->ttl) continue;  // that ship does not exist
     gword dx = (my_missile->x > p->x) ? (my_missile->x - p->x)
                                      : (p->x - my_missile->x);
@@ -545,8 +548,8 @@ gbool DetectHits(struct body* my_missile, gbyte my_num) {
     gword dist = dx + dy;
 #define NEARBY 0x0400
     if (dist < NEARBY) {
-      ship[my_num].score+=3;  // Give me a point.
-      ship[my_num].dings[i]+=2;  // Ding the victim.
+      TheShips[my_num].score+=3;  // Give me a point.
+      TheShips[my_num].dings[i]+=2;  // Ding the victim.
       my_missile->ttl = 0;  // expire the missile.
       z = gTRUE;
       // continue to hit other ships simultaneously!
@@ -597,11 +600,11 @@ void AdvanceBody(struct body* p, int ship, gbool useGravity) {
 
 void DrawScores() {
   for (gbyte i = 0; i < NUM_SHIPS; i++) {
-    struct body* p = ship + i;
+    struct body* p = TheShips + i;
     int score = p->score;  // My claimed score.
 
     for (gbyte j = 0; j < NUM_SHIPS; j++) {  // Deduct dings.
-      struct body* q = ship + j;
+      struct body* q = TheShips + j;
       score -= q->dings[i];
     }
     // if (score<0) score=0;  // Be kind.
@@ -618,17 +621,47 @@ void DrawScores() {
 
 void DrawAll(gbyte* fb) {
   for (gbyte i = 0; i < NUM_SHIPS; i++) {
-    struct body* p = ship + i;
+    struct body* p = TheShips + i;
     DrawShip(fb, p, i, gFALSE);
-    struct body* m = missile + i;
+    struct body* m = TheMissiles + i;
     DrawShip(fb, m, i, gTRUE);
   }
 }
 
+void ProcessPacket(struct gamecast* chunk) {
+  // struct broadcast_payload {
+  // 	gbyte magic_aa;
+  // 	gbyte ship_num;
+  // 	word score;
+  // 	struct body ship, missile;
+  // };
+  struct spacewar_msg* msg =
+          (struct spacewar_msg*) chunk->payload;
+
+  if (msg->magic_aa != 0xAA) return;
+  gbyte n = msg->ship_num;
+  if (n >= NUM_SHIPS) return;
+
+  // TODO: is `->score` ignored?
+  TheShips[n] = msg->ship;
+  TheMissiles[n] = msg->missile;
+}
+
+void CheckIncomingPackets() {
+    while (gALWAYS) {
+        struct gamecast* chunk = gReceiveCast64();
+        if (!chunk) {
+            break;
+        }
+        ProcessPacket(chunk);
+        gFree64(chunk);
+    }
+}
+
 void after_main() {
   gbyte my_num = mode == 0; // TODO: gScore.player (had problems)
-  struct body* my = ship + my_num;
-  struct body* my_missile = missile + my_num;
+  struct body* my = TheShips + my_num;
+  // struct body* my_missile = TheMissiles + my_num;
 
   // Draw a constellation around the Strong Gravity Zone.
   gPXOR(GraphicsAddr( W/2-W/8, H/2-H/8 ), 0x02); // 0x80);
@@ -651,7 +684,7 @@ void after_main() {
   gword g = 0;
   gword embargo = 0;
   for (gword i = 0; i < NUM_SHIPS; i++) {
-    volatile struct body* p = ship + i;
+    volatile struct body* p = TheShips + i;
     p->x = 0x0800;
     p->y = ((i+1) << 12) + ((i+1) << 10);
     p->r = 30;  // 31+7*i;
@@ -702,16 +735,16 @@ LOOP:
     // Advance the ships.
     // gbyte modeship = mode-'1';
     // if (modeship < NUM_SHIPS) {
-    // ship[modeship].direction = direction;
+    // TheShips[modeship].direction = direction;
     // }
     for (gword i = 0; i < NUM_SHIPS; i++) {
-      AdvanceBody(ship + i, i, gTRUE);
-      AdvanceBody(missile + i, i, gFALSE);
+      AdvanceBody(TheShips + i, i, gTRUE);
+      AdvanceBody(TheMissiles + i, i, gFALSE);
     }
 
     for (gword who = 0; who < NUM_SHIPS; who++) {
     	if (mode=='S' || who == my_num) {
-	    struct body* who_missile = missile + who;
+	    struct body* who_missile = TheMissiles + who;
 	    if (who_missile->ttl && (mode == 'S' || embargo < g)) {
 	      gbool hit = DetectHits(who_missile, who);
 	      if (hit) {
@@ -744,31 +777,24 @@ LOOP:
 
   CHECK:
     // Must UNDRAW before checking and depreciating.
-    // CheckIncomingPackets();
-    {
-        gbyte* chunk = gReceive64();
-        if (chunk) {
-            // TODO: interpret the chunk
-            gFree64(chunk);
-        }
-    }
+    CheckIncomingPackets();
 
   DEPRECIATE:
     if (mode == 'S') {
       for (gbyte i = 0; i < NUM_SHIPS; i++) {
-        ship[i].ttl = 255;  // keep everyone alive!
+        TheShips[i].ttl = 255;  // keep everyone alive!
       }
     } else {
       for (gbyte i = 0; i < NUM_SHIPS; i++) {
         if (mode - '1' == i) {
-          ship[i].ttl = 255;  // keep myself alive!
+          TheShips[i].ttl = 255;  // keep myself alive!
         } else {
-          if (ship[i].ttl) ship[i].ttl--;  // depreciate others.
+          if (TheShips[i].ttl) TheShips[i].ttl--;  // depreciate others.
         }
       }
     }
     for (gbyte i = 0; i < NUM_SHIPS; i++) {
-      if (missile[i].ttl) missile[i].ttl--;
+      if (TheMissiles[i].ttl) TheMissiles[i].ttl--;
     }
 
     g++;
@@ -777,9 +803,9 @@ LOOP:
 	      case 20:	FireMissile(0); break;
 	      case 90:	FireMissile(2); break;
 	      case 140:	FireMissile(3); break;
-	      case 120:	ship[0].direction = (ship[0].direction + 1) & 15;
-	      case 190:	ship[3].direction = (ship[0].direction + 7) & 15;
-	      case 40:	ship[2].direction = (ship[0].direction + 13) & 15;
+	      case 120:	TheShips[0].direction = (TheShips[0].direction + 1) & 15;
+	      case 190:	TheShips[3].direction = (TheShips[0].direction + 7) & 15;
+	      case 40:	TheShips[2].direction = (TheShips[0].direction + 13) & 15;
 	    }
     }
   }

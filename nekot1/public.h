@@ -94,40 +94,56 @@ void gIrqRestore(gbyte cc_value);
 
 // gAlloc64 allocate a 64 gbyte Chunk of memory.
 // Succeeds or returns gNULL.
-gbyte* gAlloc64();
+void* gAlloc64();
 
 // gFree64 frees a 64 gbyte Chunk that was allocated with gAlloc64().
 // If ptr is gNULL, this function returns without doing anything.
-void gFree64(gbyte* ptr);
+void gFree64(void* ptr);
 
 /////////////////////
 //
-//  Networking
+//  GameCast Networking
 
-// In the following, messages can be 1 to 64 bytes long.
-// The very first gbyte is reserved by the OS, and all the rest
-// are available to the game.  The OS fills in the
-// player number of the sender in the first gbyte.
-// The operating system will call gFree64 when it
-// has been sent.
+// The network model that Games can directly use peer-to-peer
+// is called GameCast.  It is like a Broadcast message, except
+// that it only goes to other peers (other Cocos) in your same
+// Game, in your same Game Shard.
+//
+// Message payloads can be 0 to 60 bytes long.
+// They are sent with a 2-byte header, representing the
+// player number of the sender, and a set of flag bits.
+// The OS will fill in the player number of the sender.
+// You should use zero the flags field (at lest until later when
+// flags actually get defined).
+// The final field `next` in the following struct is not
+// transmitted or received.  It is available for making
+// singly-linked lists of messages, if you need to.
 
-// gSendCast attempts to send a "multicast" message of 1 to 62 bytes
-// to every active player in your game shard.
-// It succeeds or it calls gFatal().
+struct gamecast {
+    gbyte sender;
+    gbyte flags;  // must be zero.
+    gbyte payload[60];
+    struct gamecast *next;
+};
+
+// gSendCast attempts to send a GameCast message of 0 to 60
+// payload bytes to every active player in your game shard.
 // The address you give does NOT have to be a Chunk allocated with gAlloc64.
 // You will still own the memory, after you call gSendCast.
-void gSendCast(gbyte* ptr, gbyte size); // size 1 to 62.
+void gSendCast(const struct gamecast* ptr, gbyte payload_size);
 
-// gReceiveCast64 attempts to receive a "multicast" message sent by
+// gReceiveCast64 attempts to receive a GameCast message sent by
 // anyone in your game shard, including your own,
 // that were set with gSendCast().  If no message has
 // been received, the gNULL pointer is returned.
 // If you need to know the length of the received
-// message, that needs to be sent in the "fixed"
-// portion at the front of the message, perhaps as
-// the second gbyte.  You should call gFree() on the
+// message, that needs to be sent in the message.
+// Bytes after the valid part of the payload that was sent
+// will be arbitrary junk.
+//
+// IMPORTANT:  You should call gFree64() on the
 // chunk when you are done with it.
-gbyte* gReceiveCast64();
+struct gamecast* gReceiveCast64();
 
 // If you can view the MCP logs, you can log to them.
 // Don't log much!
