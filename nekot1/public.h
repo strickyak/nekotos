@@ -1,10 +1,42 @@
 #ifndef _NEKOT1_PUBLIC_H_
 #define _NEKOT1_PUBLIC_H_
 
-// Proposed "g" API for Nekot Gaming OS.
+// 2025-03-13:  Proposed nekot1 `g` API for Nekot Gaming OS.
 
 // In the following, remember that "Game" is what we call the
 // user programs or processes or applications or apps that this OS can run.
+
+// Notice that this "nekot1/public.h" is the ONLY #include file
+// you need for Nekot.
+// There is no <stdio.h> or <stdlib.h> or <memory.h>,
+// although we may try to provide something for the most common cases
+// (like we do for memcpy, memset, and strlen, and va_{list,start,arg}).
+
+// Soon we hope to provide some optional libraries for game authors,
+// to do common things like scan the keyboard for keypresses, or draw
+// pixels in a framebuffer for various screen modes.
+// Look in the ../lib8 directory for some preliminary libraries.
+
+// We compile with the 6809 port of GCC using -std=gnu99, -Os,
+// -fomit-frame-pointer, and f-whole-program.
+
+// Pay attention to gBeginMain(), which must be called inside your
+// main routine.   `main` takes no arguments, and should never return,
+// although the declared return type is `int`.
+
+// Also notice that you can divide your program into two parts like this:
+//   * main() contains only startup code, and ends with a call
+//               gAfterMain(after_main)
+//        Initialized global variables containing tables and data that
+//        are only needed during startup can be marked with the
+//        attribute gSTARTUP_DATA (put it before the `=` or the `;`).
+//   * after_main contains the actual game loop.  The memory used by
+//        startup code and startup data will be made available for re-use,
+//        if you do it this way.  [ TODO: finish this feature. ]
+//   Q: should they be renamed `setup` and `loop`?  (like Arduino sketches)
+//        Using `loop` also solves the problem "main should never return";
+//        we can just call `loop` again and again.  And it guides new
+//        game authors into thinking in terms of a loop.
 
 /////////////////////
 //
@@ -33,6 +65,8 @@ typedef union gWordOrBytes {
 // You should not use things directly from "nekot1/friend.h";
 // they are required for some "nekot1/public.h" macros to work.
 #include "nekot1/friend.h"
+
+#include <stdarg.h>  // You can write functions like `printf` with `...` args.
 
 #define gPeek1(ADDR) (*(volatile gbyte*)(gword)(ADDR))
 #define gPoke1(ADDR,VALUE) (*(volatile gbyte*)(gword)(ADDR) = (gbyte)(VALUE))
