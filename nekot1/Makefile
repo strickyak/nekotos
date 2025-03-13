@@ -2,7 +2,7 @@ CFILES = prelude.c alloc64.c score.c wall.c real.c irq.c breakkey.c kern.c vdg.c
 SFILES = prelude.s alloc64.s score.s wall.s real.s irq.s breakkey.s kern.s vdg.s network.s wiznet.s console.s keyboard.s main.s
 OFILES = prelude.o alloc64.o score.o wall.o real.o irq.o breakkey.o kern.o vdg.o network.o wiznet.o console.o keyboard.o main.o
 
-all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb red green blue life lib8 forth
+all: $(SFILES) $(OFILES) _nekot2.decb _nekot1.decb red green blue life lib8 forth spacewar
 
 .SUFFIXES:
 
