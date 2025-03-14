@@ -8,7 +8,7 @@ extern int gPartialScores[gMAX_PLAYERS];
 extern int gTotalScores[gMAX_PLAYERS];
 
 // private:
-void DoPartialScores();  // on the Real.seconds?
+void SendPartialScores();  // on the Real.seconds.
 
 
 #endif // _NEKOT1_SCORE_H_

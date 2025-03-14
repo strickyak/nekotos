@@ -17,8 +17,7 @@ gSCREEN(TextScreen, 2);
 #include "games/forth/stack.c"
 #include "games/forth/walk.c"
 
-int main() {
-    gBeginMain();
+void setup() {
     gTextScreen(TextScreen, 0);
 
     Text_Init();
@@ -37,13 +36,17 @@ int main() {
     rclear();
     clear();
     set_input(tib, TIBSIZE, TIB_ID);
+}
 
-    while(refill()) {
+void loop() {
+    if(refill()) {
         char *word_adr;
         cell word_len;
 
         while ((word_len = parse_word(&word_adr)) != 0) {
             handle_word(word_adr, word_len);
         }
+    } else {
+        gFatal("cannot refill", 0);
     }
 }

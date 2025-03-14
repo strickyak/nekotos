@@ -48,8 +48,7 @@ void DisplayLife(gbyte in[W][H]) {
 }
 
 volatile gword generation;
-void after_main() {
-        while (TRUE) {
+void loop() {
             DisplayLife(board[0]);
             ComputeLife(board[0], board[1]);
             ++generation;
@@ -57,11 +56,9 @@ void after_main() {
             DisplayLife(board[1]);
             ComputeLife(board[1], board[0]);
             ++generation;
-        }
 }
 
-int main() {
-    gBeginMain();
+void setup() {
     gTextScreen(D, 1);
     gNetworkLog("hello life");
 
@@ -83,7 +80,4 @@ int main() {
             if ((c & 3) == 1) board[0][x][y] = 1;
         }
     }
-
-    gAfterMain(after_main);
-    // NOT REACHED.
 }

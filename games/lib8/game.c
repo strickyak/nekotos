@@ -1,5 +1,3 @@
-#include "nekot1/public.h"
-
 gSCREEN(TextScreen, 2);
 
 #include "games/lib8/platform-keyboard.h"
@@ -8,19 +6,19 @@ gSCREEN(TextScreen, 2);
 #include "games/lib8/platform-keyboard.c"
 #include "games/lib8/platform-text.c"
 
-int main() {
-    gBeginMain();
+void setup() {
     gTextScreen(TextScreen, 0);
 
     Text_Init();
     Printf("Hello LIB8\n");
+}
 
-    while (gKern.always_true) {
-        int c = getchar();
+void loop() {
+    int c = getchar();
+    if (c) {
+        // PutDec(c);
         PutChar(c);
     }
 
-    while (gKern.always_true) {
-        ++ TextScreen[511];
-    }
+    ++ TextScreen[511];
 }

@@ -658,9 +658,12 @@ void CheckIncomingPackets() {
     }
 }
 
-void after_main() {
+void setup() {
+  gPMode1Screen(Screen, 0);
+  ClearScreen(Screen, 0);
+  gNetworkLog("Spacewar Running");
+
   gbyte my_num = mode == 0; // TODO: gScore.player (had problems)
-  struct body* my = TheShips + my_num;
   // struct body* my_missile = TheMissiles + my_num;
 
   // Draw a constellation around the Strong Gravity Zone.
@@ -681,8 +684,6 @@ void after_main() {
   }
 
   // Create Ships
-  gword g = 0;
-  gword embargo = 0;
   for (gword i = 0; i < NUM_SHIPS; i++) {
     volatile struct body* p = TheShips + i;
     p->x = 0x0800;
@@ -698,7 +699,14 @@ void after_main() {
     displayed_score[i] = p->score;
     DrawDecimal(Screen, 100, i << 3, i + 1, p->score);
   }
-LOOP:
+}
+
+void loop() {
+  gbyte my_num = mode == 0; // TODO: gScore.player (had problems)
+  struct body* my = TheShips + my_num;
+  gword g = 0;
+  gword embargo = 0;
+
   while (gALWAYS) {
     if (gTRUE || g & 1) {  // every time was to toucy.
       // Check keyboard.
@@ -809,14 +817,4 @@ LOOP:
 	    }
     }
   }
-}
-
-int main() {
-    gBeginMain();
-
-    gPMode1Screen(Screen, 0);
-    ClearScreen(Screen, 0);
-    gNetworkLog("Spacewar Running");
-
-    gAfterMain(after_main);
 }

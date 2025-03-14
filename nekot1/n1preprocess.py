@@ -40,8 +40,7 @@ def out(s): print(s, file=w)
 
 out(f'// This file is generated from {sys.argv[1]} by n1preprocess.py')
 out(f'')
-out(f'#define gSCREEN(Name,NumPages)')
-out(f'#define gREGION(Name,Type)')
+out('#include "nekot1/game_prelude.h"')
 out(f'')
 
 for scr in screens:
@@ -54,10 +53,11 @@ for rgn in regions:
     out(f'#define  {rgn[0]}  (*({rgn[1]} *)({addr}))')
 out(f'#define  _nPRE_REGIONS   ({addr})')
 
-out('')
-out('unsigned int _n1pre_final           __attribute__ ((section (".final"))) = 0xAEEE;')
-out('unsigned int _n1pre_final_startup   __attribute__ ((section (".final.startup"))) = 0xAEEF;')
-out('extern struct _n1pre_entry {char e; int m;} const _n1pre_entry;')
+#out('')
+#out('unsigned int _n1pre_final           __attribute__ ((section (".final"))) = 0xAEEE;')
+#out('unsigned int _n1pre_final_startup   __attribute__ ((section (".final.startup"))) = 0xAEEF;')
+#out('extern struct _n1pre_entry {char e; int m;} const _n1pre_entry;')
+
 out('')
 out('')
 out('')
@@ -68,9 +68,14 @@ out('')
 out('')
 out('')
 
-out(f'#line 1000000 "{sys.argv[2]}"')
-out('')
-out('int const _n1pre_screens = _nPRE_SCREENS;')
-out('int const _n1pre_regions = _nPRE_REGIONS;')
-out('struct _n1pre_entry const _n1pre_entry __attribute__ ((section (".text.entry"))) = {0x7E/*JMP_Extended*/, (int)main};')
-out('//END.')
+out(f'')
+out('#include "nekot1/game_postlude.h"')
+
+#out(f'#line 1000000 "{sys.argv[2]}"')
+#out('')
+#out('int const _n1pre_screens = _nPRE_SCREENS;')
+#out('int const _n1pre_regions = _nPRE_REGIONS;')
+#out('struct _n1pre_entry const _n1pre_entry __attribute__ ((section (".text.entry"))) = {0x7E/*JMP_Extended*/, (int)main};')
+
+out(f'')
+out('// END by n1preprocess.py')

@@ -158,22 +158,19 @@ volatile gbyte TRUE = 1;
 
 #define  END   (3*1024)
 
-void after_main() {
-        while (TRUE) {
-            for (gword w = 0; w < END; w+=2) {
-                gPoke2(0x0202, w);
-                gPoke2(G+w, ~gPeek2(G+w));
-                if ((w&7)==2) WaitForATick();
-            }
-            gGameChain("/tmp/_red.decb");
-        }
+void loop() {
+    for (gword w = 0; w < END; w+=2) {
+        gPoke2(0x0202, w);
+        gPoke2(G+w, ~gPeek2(G+w));
+        if ((w&7)==2) WaitForATick();
+    }
+    gGameChain("/tmp/_green.decb");
 }
 
-int main() {
-    gBeginMain();
+void setup() {
     gPin(FONT_Wrapper);
     gPMode1Screen(G, 0);
-    gNetworkLog("hello BLUE");
+    gNetworkLog("hello red");
 
     gword c0 = 0x0000;
     gword c1 = 0x5555;
@@ -197,12 +194,9 @@ int main() {
     }
 
     gbyte x = 2;
-    for (const char* s = "THIS IS BLUE"; *s; s++) {
+    for (const char* s = "THIS IS RED"; *s; s++) {
         DrawChar(*s, x, 30, Blue0);
         x += 9;
         gPoke2(0x0202, x);
     }
-
-    gAfterMain(after_main);
-    // NOT REACHED.
 }

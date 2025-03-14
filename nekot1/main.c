@@ -12,7 +12,7 @@ gword _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
 struct pia_reset {
     gword addr;
     gbyte value;
-} pia_reset[] gSTARTUP_DATA = {
+} pia_reset[] gSETUP_DATA = {
     { 0xff21, 0x00 },  // choose data direction
     { 0xff23, 0x00 },  // choose data direction
     { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
@@ -30,26 +30,13 @@ struct pia_reset {
     { 0 }
 };
 
-void after_main() {
-    // Wipe out the startup code, to prove it is never needed again.
-    for (gbyte* p = sizeof(gword) + (gbyte*)&_Final;
-         p < (gbyte*)_Final_Startup;
-         p++) {
-        *p = 0x3F;
-    }
-
-    gEnableIrq();
-    PutStr("READY\n");
-    StartTask((gword)ChatTask); // Start the no-game task.
-}
-
 void ClearPage256(gword p) {
     for (gword i = 0; i<256; i+=2) {
-        gPoke2(p+i, 0);
+        gPoke2(p+i, 0x0000);
     }
 }
 
-void before_main() {
+void entry_wrapper() {
     asm volatile("\n"
         "  .globl entry \n"
         "entry:         \n"
@@ -59,8 +46,10 @@ void before_main() {
         );
 }
 
-gword PinDown[] gSTARTUP_DATA = {
-    (gword) after_main,
+extern void embark(void);
+
+gword PinDown[] gSETUP_DATA = {
+    (gword) embark,
 
     (gword) Breakkey_Handler,
     (gword) Irq_Handler,
@@ -76,14 +65,14 @@ gword PinDown[] gSTARTUP_DATA = {
     (gword) gTextScreen,
     (gword) gPMode1Screen,
     (gword) gModeScreen,
-    (gword) xAfterMain3,
+    (gword) xAfterSetup,
     (gword) xSendControlPacket,
     (gword) gNetworkLog,
     (gword) gFatal,
     (gword) PutStr,
     (gword) PutChar,
 
-    (gword) before_main,
+    (gword) entry_wrapper,
     (gword) &_More0,
     (gword) &_More1,
     (gword) &_Final,
@@ -99,7 +88,7 @@ void PlaceJMP(gword at, gfunc to) {
 }
 
 // Interrupt Relays
-gword coco2_relays[] gSTARTUP_DATA = {
+gword coco2_relays[] gSETUP_DATA = {
     0x0100,
     0x0103,
     0x010F,
@@ -107,7 +96,7 @@ gword coco2_relays[] gSTARTUP_DATA = {
     0x0106,
     0x0109,
 };
-gword coco3_relays[] gSTARTUP_DATA = {
+gword coco3_relays[] gSETUP_DATA = {
     0xFFEE,
     0xFFF1,
     0xFFF4,
@@ -115,7 +104,7 @@ gword coco3_relays[] gSTARTUP_DATA = {
     0xFFFA,
     0xFFFD,
 };
-gfunc handlers[] gSTARTUP_DATA = {
+gfunc handlers[] gSETUP_DATA = {
     gFatalSWI3,
     gFatalSWI2,
     gFatalFIRQ,
@@ -124,7 +113,7 @@ gfunc handlers[] gSTARTUP_DATA = {
     gFatalNMI,
 };
 
-int main() {
+void setup(void) {
     ClearPage256(0x0000); // .bss
     ClearPage256(0x0200); // vdg console p1
     ClearPage256(0x0300); // vdg console p2
@@ -159,9 +148,29 @@ int main() {
 
     Network_Init();
     HelloMCP();
+}
 
-    // ================================
-    after_main();
+void embark(void) {
+    // Wipe out the setup/startup code, to prove it is never needed again.
+    for (gword p = 2 + (gword)&_Final;
+         p < (gword)_Final_Startup;
+         p+=2) {
+        gPoke2(p, 0x3F3F);
+    }
+
+    gEnableIrq();
+    PutStr("READY\n");
+    StartTask((gword)ChatTask); // Start the no-game task.
+}
+
+int main() {
+    setup();
+
+    embark();
+
+    // NOT REACHED
+    gPin(embark);
+    gPin(main);
     gPin(PinDown);
     gFatal("EXIT", 0);
 }

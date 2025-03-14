@@ -127,20 +127,22 @@ void gIrqRestore(gbyte cc_value) {
     );
 }
 
-void xAfterMain3(gfunc after_main, gword* final, gword* final_startup) {
-    // Prove that startup is no longer used.
-    for (gword w = (gword)final; w < (gword)final_startup; w++) {
-        gPoke1(w, 0x3F);
+void xAfterSetup(gfunc loop, gword* final_, gword* final_startup) {
+    // Prove that setup is no longer used.
+    for (gword w = 2+(gword)final_; w < (gword)final_startup; w++) {
+        gPoke1(w, 0x3F);  // a bunch of SWI traps.
     }
 
     asm volatile("\n"
-        "  ldx   %0      \n"  // entry point
-        "  lds   #$01FE  \n"  // Reset the stack
-        "  jsr   ,X      \n"  // There is no way back.
-        "FOREVER:        \n"
-        "  bra  FOREVER  \n"  // If after_main returns, get stuck.
+        "  ldx   %0           \n"  // get parameter `loop` before resetting the stack.
+        "  lds   #$01FE       \n"  // Reset the stack!
+        "  pshs  X            \n"  // Save X
+        "LOOP_FOREVER:        \n"
+        "  ldx   ,S           \n"  // Restore X
+        "  jsr   ,X           \n"  // Call loop,
+        "  bra  LOOP_FOREVER  \n"  // repeatedly.
         : // outputs
-        : "m" (after_main) // inputs
+        : "m" (loop) // inputs
     );
     // Never returns.
 }

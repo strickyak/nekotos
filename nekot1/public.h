@@ -24,19 +24,19 @@
 // main routine.   `main` takes no arguments, and should never return,
 // although the declared return type is `int`.
 
-// Also notice that you can divide your program into two parts like this:
-//   * main() contains only startup code, and ends with a call
-//               gAfterMain(after_main)
+// Also notice that you will not have a `main()` function.
+// Instead you must divide your main program into two parts like this:
+//
+//   * `void setup(void)` contains only setup code.
 //        Initialized global variables containing tables and data that
-//        are only needed during startup can be marked with the
-//        attribute gSTARTUP_DATA (put it before the `=` or the `;`).
-//   * after_main contains the actual game loop.  The memory used by
-//        startup code and startup data will be made available for re-use,
+//        are only needed during setup can be marked with the
+//        attribute gSETUP_DATA (put it before the `=` or the `;`).
+//
+//   * `void loop(void)` contains the actual game loop.  The memory used by
+//        setup code and setup data will be made available for re-use,
 //        if you do it this way.  [ TODO: finish this feature. ]
-//   Q: should they be renamed `setup` and `loop`?  (like Arduino sketches)
-//        Using `loop` also solves the problem "main should never return";
-//        we can just call `loop` again and again.  And it guides new
-//        game authors into thinking in terms of a loop.
+//
+// (We are using the same concept and names as Arduino Sketches use.)
 
 /////////////////////
 //
@@ -107,13 +107,13 @@ void gIrqRestore(gbyte cc_value);
 // in common may chain values in memory from one
 // to the other, for as many as are specified the same.
 
-#ifndef gSCREEN
-#define gSCREEN(Name,NumPages)       extern gbyte Name[NumPages*256];
-#endif
+// gSCREEN(Name,NumPages) declares Name to be the address of
+// a reserved framebuffer of the specified number of 256-byte pages.
+#define gSCREEN(Name,NumPages)  // LIKE: extern gbyte Name[NumPages*256];
 
-#ifndef gREGION
-#define gREGION(Name,Type)    extern Type Name;
-#endif
+// gREGION(Name,Type) declares Name to be a global variable
+// of the specified type.
+#define gREGION(Name,Type)      // LIKE: extern Type Name;
 
 // Example:
 //
@@ -199,40 +199,6 @@ void gModeScreen(gbyte* screen_addr, gword mode_code);
 
 /////////////////////
 //
-//  Scoring
-
-// gMAX_PLAYERS is the maximum number of active players
-// in a single game shard.
-#define gMAX_PLAYERS 8
-
-struct score {
-
-// gScore.number_of_players is the current number of
-// active players in the game.
-       gCONST gbyte number_of_players;
-
-// gScore.player tells you your player number
-// (from 0 to gMAX_PLAYERS-1) if you are active in the game.
-// If you are just a viewer, you are not an active player,
-// and this variable will be 255.
-       gCONST gbyte player;
-
-// gScore.partials are contributions to scores from this coco.
-// You change these to add or deduct points to a player.
-       int partials[gMAX_PLAYERS];
-
-// gScore.totals is the total score, calculated in the MCP.
-// Read Only, set by the OS, the sum of all partial scores.
-       gCONST int totals[gMAX_PLAYERS];
-
-// Ignore these.  They are for internal use,
-// to determine if the partials have changed.
-       gCONST int old_partials[gMAX_PLAYERS];
-};
-extern struct score gScore;
-
-/////////////////////
-//
 //  gKern Module
 
 // Normal end of game.  Scores are valid and may be published
@@ -253,40 +219,19 @@ extern struct score gScore;
 // Common pre-allocated regions are also kept in memory.
 #define gGameChain(NEXT_GAME_NAME)  xSendControlPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
 
-// gBeginMain must be called at the beginning of your main() function.
-#define gBeginMain() {                                  \
-        asm volatile(".globl __n1pre_entry");           \
-        gPoke2(0, &_n1pre_entry);                       \
-        asm volatile(".globl __n1pre_final");           \
-        gPoke2(0, &_n1pre_final);                       \
-        asm volatile(".globl __n1pre_final_startup");   \
-        gPoke2(0, &_n1pre_final_startup);               \
-    }
-
 // gPin(f) will pin down function f, so GCC doesn't erase it.
 // Sometimes if you are using inline assembly language
 // inside a bogus wrapper function, you need to tell GCC
 // that the function is needed even if it isn't ever
-// explicitly called.
+// explicitly called.  Your `loop` function is a good place
+// to use gPin.
 #define gPin(THING)  gPoke2(0, &(THING))
 
-// gAfterMain does not end the game -- it just ends the startup code,
-// and frees the startup code in memory, making that memory available.
-//
-// If you call this at the end of your main function,
-// it will exit the main function and enter the function f.
-// The idea is that you put all your startup initialization
-// code in main, and the memory for the startup code is
-// freed up when the startup is done.  f points to the
-// function where the non-startup code continues.
-#define gAfterMain(after_main)    \
-      xAfterMain3((after_main), &_n1pre_final, &_n1pre_final_startup)
-
 // Global variables or data tables that are only used
-// by startup code can be marked with the attribute
-// gSTARTUP_DATA.  They will be freed when you call
+// by setup code can be marked with the attribute
+// gSETUP_DATA.  They will be freed when you call
 // gAfterMain().
-#define gSTARTUP_DATA   __attribute__ ((section (".data.startup")))
+#define gSETUP_DATA   __attribute__ ((section (".data.startup")))
 
 // The following gKern variables can be read by the game
 // to find out what state the Kernel is in.
@@ -333,6 +278,40 @@ struct kern {
 
 };
 extern struct kern gKern;
+
+/////////////////////
+//
+//  Scoring
+
+// gMAX_PLAYERS is the maximum number of active players
+// in a single game shard.
+#define gMAX_PLAYERS 8
+
+struct score {
+
+// gScore.number_of_players is the current number of
+// active players in the game.
+       gCONST gbyte number_of_players;
+
+// gScore.player tells you your player number
+// (from 0 to gMAX_PLAYERS-1) if you are active in the game.
+// If you are just a viewer, you are not an active player,
+// and this variable will be 255.
+       gCONST gbyte player;
+
+// gScore.partials are contributions to scores from this coco.
+// You change these to add or deduct points to a player.
+       int partials[gMAX_PLAYERS];
+
+// gScore.totals is the total score, calculated in the MCP.
+// Read Only, set by the OS, the sum of all partial scores.
+       gCONST int totals[gMAX_PLAYERS];
+
+// Ignore these.  They are for internal use,
+// to determine if the partials have changed.
+       gCONST int old_partials[gMAX_PLAYERS];
+};
+extern struct score gScore;
 
 /////////////////////
 // Real Time

@@ -18,8 +18,8 @@ void gFatalNMI();
 void gFatalFIRQ();
 
 void StartTask(gword entry);
+void xAfterSetup(gfunc loop, gword* final_, gword* final_startup);
 
-// Shouldn't these be public?
 gbyte IrqSaveAndDisable();
 void IrqRestore(gbyte cc_value);
 
