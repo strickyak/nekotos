@@ -3,8 +3,18 @@
 
 // 2025-03-13:  Proposed nekot1 `g` API for Nekot Gaming OS.
 
-// In the following, remember that "Game" is what we call the
-// user programs or processes or applications or apps that this OS can run.
+// In the following, "Game" is what we call the user programs
+// or processes or applications or apps that this OS can run.
+
+// The source for each game lives in a separate subdirectory
+// of `games/` and the main program must be in a file named
+// `game.c`.  In order for the compiler to do whole-program
+// optimizations, your entire program must be included in
+// `game.c`, even if it means adding #include statements
+// to include other `.c` files!
+// Place this repo `nekot-coco-microkernel` in your `coco-shelf`
+// repo, and place the `coco-shelf` repo in your $HOME directory,
+// for best chances of things working, for now.
 
 // Notice that this "nekot1/public.h" is the ONLY #include file
 // you need for Nekot.
@@ -20,23 +30,31 @@
 // We compile with the 6809 port of GCC using -std=gnu99, -Os,
 // -fomit-frame-pointer, and f-whole-program.
 
-// Pay attention to gBeginMain(), which must be called inside your
-// main routine.   `main` takes no arguments, and should never return,
-// although the declared return type is `int`.
-
-// Also notice that you will not have a `main()` function.
+// Notice that you will not have a `main()` function.
 // Instead you must divide your main program into two parts like this:
 //
 //   * `void setup(void)` contains only setup code.
-//        Initialized global variables containing tables and data that
-//        are only needed during setup can be marked with the
-//        attribute gSETUP_DATA (put it before the `=` or the `;`).
 //
-//   * `void loop(void)` contains the actual game loop.  The memory used by
+//   * `void loop(void)` contains the actual game action.  The memory used by
 //        setup code and setup data will be made available for re-use,
 //        if you do it this way.  [ TODO: finish this feature. ]
 //
 // (We are using the same concept and names as Arduino Sketches use.)
+//
+// Your loop function must call gReceiveCast64 frequently, like at least
+// every 100ms.  And you must gFree64 a message you get from there.
+// Or Nekot will hit a fatal error when it runs out of memory.
+
+// Initialized global variables containing tables and data that
+// are only needed during setup can be marked with the
+// attribute `gSETUP_DATA` (put it before the `=`).
+//
+// Small global variables (things that are one or two bytes)
+// that are not explicitly initialized (called .bss variables)
+// are generally fine, but you can only have 128 bytes worth
+// of them.  Larger variables that are not explicitly initialized
+// can be marked with the attribute `gZEROED` to move them from
+// the small .bss section to a section with more space.
 
 /////////////////////
 //
@@ -252,10 +270,22 @@ void gModeScreen(gbyte* screen_addr, gword mode_code);
 //
 //     while (gTRUE) { ... }
 //
-// due to bugs in GCC.
+// due to bugs in our version of GCC.
 
 struct kern {
-    // The active game also owns and can scan the keyboard
+    // TODO: memory curtains are not ready yet.
+    // If your game wants to make raw allocations of memory
+    // at runtime, the memory betweens these two curtains
+    // is free.  If you take memory from the low part of
+    // this region, increase the low_memory_curtain appropriately.
+    // If you take memory from the high part of this region,
+    // decrease the high_memory_curtain appropriately.
+    // It is possible to write a library like malloc() and free()
+    // that uses this memory.
+    //TODO// word low_memory_curtain;
+    //TODO// word high_memory_curtain;
+
+    // When a game is active and focused, it owns and can scan the keyboard
     // (except for the BREAK key), and the game's screen
     // is being shown.   If a game is active but
     // focus_game is gFALSE, the game must ignore the
@@ -266,7 +296,7 @@ struct kern {
     // gKern.always_true must always be gTRUE.
     gbool volatile gCONST always_true;
 
-    // The following fields are not needed by games.
+    // ---- The following fields are not needed by games: ----
 
     // A game is active.
     // From a game, this should always be seen as gTRUE.
@@ -276,17 +306,20 @@ struct kern {
     // From a game, this should always be seen as gFALSE.
     gbool volatile gCONST in_irq;
 
+    // To determine if setup allocated any low memory.
+    word old_low_memory_curtain;
 };
 extern struct kern gKern;
 
 /////////////////////
 //
-//  Scoring
+//  TODO: Scoring
 
 // gMAX_PLAYERS is the maximum number of active players
 // in a single game shard.
 #define gMAX_PLAYERS 8
 
+// TODO: Scoring does not work yet.
 struct score {
 
 // gScore.number_of_players is the current number of
