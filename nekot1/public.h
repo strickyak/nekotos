@@ -282,8 +282,8 @@ struct kern {
     // decrease the high_memory_curtain appropriately.
     // It is possible to write a library like malloc() and free()
     // that uses this memory.
-    //TODO// word low_memory_curtain;
-    //TODO// word high_memory_curtain;
+    //TODO// gword low_memory_curtain;
+    //TODO// gword high_memory_curtain;
 
     // When a game is active and focused, it owns and can scan the keyboard
     // (except for the BREAK key), and the game's screen
@@ -307,7 +307,7 @@ struct kern {
     gbool volatile gCONST in_irq;
 
     // To determine if setup allocated any low memory.
-    word old_low_memory_curtain;
+    gword old_low_memory_curtain;
 };
 extern struct kern gKern;
 
