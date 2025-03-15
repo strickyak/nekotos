@@ -15,6 +15,8 @@ tx_ptr_t WizBytesToSend( tx_ptr_t tx_ptr,
                         const gbyte* data, gword n);
 void WizFinalizeSend( gword n);
 
+void WizSend(const gbyte* addr, gword size);
+
 errnum WizRecvGetBytesWaiting(gword* bytes_waiting_out);
 errnum WizRecvChunkTry( gbyte* buf, gword n);
 

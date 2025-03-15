@@ -13,6 +13,7 @@
 #include "nekot1/breakkey.h"
 #include "nekot1/kern.h"
 #include "nekot1/vdg.h"
+#include "nekot1/bonobo.h"
 #include "nekot1/wiznet.h"
 #include "nekot1/network.h"
 #include "nekot1/kern.h"

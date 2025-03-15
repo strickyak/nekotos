@@ -1,5 +1,7 @@
 #include "nekot1/private.h"
 
+#if 0
+---- moved to wiznet.c ---
 void WizSend(const gbyte* addr, gword size) {
     gbyte cc_value = gIrqSaveAndDisable();
 
@@ -9,6 +11,7 @@ void WizSend(const gbyte* addr, gword size) {
 
     gIrqRestore(cc_value);
 }
+#endif
 
 void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
     gbyte cc_value = gIrqSaveAndDisable();
@@ -28,7 +31,7 @@ void gSendCast(const struct gamecast* pay, gbyte size) {
     gAssert(size >= 0);
     gAssert(size <= 60);
     size += 2;  // for two header gbytes.
-    SendPacket(NEKOT_GAMECAST, 0, pay, size);
+    SendPacket(NEKOT_GAMECAST, 0, (const gbyte*)pay, size);
 }
 
 void xSendControlPacket(gword p, const gbyte* pay, gword size) {
@@ -59,7 +62,7 @@ void ExecuteReceivedCommand(const gbyte* quint) {
         if (e2==NOTYET) return;  // do not let need_recv_payload get falsified.
         if (e2) gFatal("E-M",e2);
 
-        gMemcpy((gbyte*)gPeek2(six), (gbyte*)gPeek2(six+2), gPeek2(six+4));
+        gMemcpy((void*)gPeek2(six), (void*)gPeek2(six+2), gPeek2(six+4));
 
     } else if (cmd == NEKOT_POKE) { // 66
         errnum e3 = WizRecvChunkTry((gbyte*)p, n);

@@ -150,11 +150,25 @@ errnum WizSendChunk( char* data, gword n) {
   // data[2], data[3], data[4]);
   errnum e = WizCheck();
   if (e) return e;
+
   tx_ptr_t tx_ptr = WizReserveToSend(n);
   WizDataToSend(tx_ptr, data, n);
   WizFinalizeSend(n);
   // PrintH("Ax WSC.");
   return OKAY;
+}
+
+void WizSend(const gbyte* addr, gword size) {
+    gbyte cc_value = gIrqSaveAndDisable();
+
+  errnum e = WizCheck();
+  if (e) gFatal("WizSend.WizCheck", e);
+
+    tx_ptr_t t = WizReserveToSend(size);
+    t = WizBytesToSend(t, addr, size);
+    WizFinalizeSend(size);
+
+    gIrqRestore(cc_value);
 }
 
 //////////////////////////////////////////////////////////////////
