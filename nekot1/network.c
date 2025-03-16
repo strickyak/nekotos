@@ -1,18 +1,5 @@
 #include "nekot1/private.h"
 
-#if 0
----- moved to wiznet.c ---
-void WizSend(const gbyte* addr, gword size) {
-    gbyte cc_value = gIrqSaveAndDisable();
-
-    tx_ptr_t t = WizReserveToSend(size);
-    t = WizBytesToSend(t, addr, size);
-    WizFinalizeSend(size);
-
-    gIrqRestore(cc_value);
-}
-#endif
-
 void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
     gbyte cc_value = gIrqSaveAndDisable();
     gbyte qbuf[5];
@@ -62,7 +49,15 @@ void ExecuteReceivedCommand(const gbyte* quint) {
         if (e2==NOTYET) return;  // do not let need_recv_payload get falsified.
         if (e2) gFatal("E-M",e2);
 
-        gMemcpy((void*)gPeek2(six), (void*)gPeek2(six+2), gPeek2(six+4));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+
+        void* dst = (void*)gPeek2(six);
+        void* src = (void*)gPeek2(six+2);
+        gword siz = gPeek2(six+4);
+        gMemcpy((char*)dst, (char*)src, siz);
+
+#pragma GCC diagnostic pop
 
     } else if (cmd == NEKOT_POKE) { // 66
         errnum e3 = WizRecvChunkTry((gbyte*)p, n);
