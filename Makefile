@@ -1,6 +1,6 @@
 all: \
   for-16k-cocoio \
-  for-16k-bonobo \
+  # notyet # for-16k-bonobo \
   ##
 
 for-16k-cocoio:

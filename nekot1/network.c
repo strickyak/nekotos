@@ -8,8 +8,8 @@ void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
     gPoke2(qbuf+1, size);
     gPoke2(qbuf+3, p);
 
-    WizSend(qbuf, 5);
-    WizSend(pay, size);
+    NET_Send(qbuf, 5);
+    NET_Send(pay, size);
 
     gIrqRestore(cc_value);
 }
@@ -45,7 +45,7 @@ void ExecuteReceivedCommand(const gbyte* quint) {
     } else if (cmd == NEKOT_MEMCPY) { // 65
         gbyte six[6];
         gAssert(n==6);
-        errnum e2 = WizRecvChunkTry((gbyte*)six, n);
+        errnum e2 = NET_RecvChunkTry((gbyte*)six, n);
         if (e2==NOTYET) return;  // do not let need_recv_payload get falsified.
         if (e2) gFatal("E-M",e2);
 
@@ -60,7 +60,7 @@ void ExecuteReceivedCommand(const gbyte* quint) {
 #pragma GCC diagnostic pop
 
     } else if (cmd == NEKOT_POKE) { // 66
-        errnum e3 = WizRecvChunkTry((gbyte*)p, n);
+        errnum e3 = NET_RecvChunkTry((gbyte*)p, n);
         if (e3==NOTYET) return;  // do not let need_recv_payload get falsified.
         if (e3) gFatal("E-P",e3);
 
@@ -84,7 +84,7 @@ void ExecuteReceivedCommand(const gbyte* quint) {
         gAssert(2 <= n);
         gAssert(n <= 62);
 
-        errnum e4 = WizRecvChunkTry(chunk->payload, n);
+        errnum e4 = NET_RecvChunkTry(chunk->payload, n);
         if (e4==NOTYET) {
             gIrqRestore(cc_value);
             return;  // do not let need_recv_payload get falsified.
@@ -120,7 +120,7 @@ void CheckReceived() {
     gbyte quint[5];
 
     if (!need_recv_payload) {
-        gbyte err = WizRecvChunkTry(quint, 5);
+        gbyte err = NET_RecvChunkTry(quint, 5);
         if (err==NOTYET) goto RESTORE;
         if (err) gFatal("RECV", err);
         need_recv_payload = gTRUE;
@@ -172,5 +172,5 @@ void HelloMCP() {
 }
 
 void Network_Init() {
-    Wiznet_Init();
+    NET_Init();
 }

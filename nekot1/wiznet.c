@@ -1,3 +1,5 @@
+#if NET_TYPE_cocoio
+
 #include "nekot1/private.h"
 
 #include "nekot1/w5100s_defs.h"
@@ -232,3 +234,5 @@ void Wiznet_Init() {
          p[0] = '7';
     }
 }
+
+#endif // NET_TYPE_cocoio

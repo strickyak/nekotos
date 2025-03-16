@@ -20,8 +20,8 @@ static gbool ScanReturnChanged(gbyte* p, gbyte* prev) {
 
 static void SendKeyboardPacket(gbyte* p) {
     struct quint q = {NEKOT_KEYSCAN, 8, 0};
-    WizSend( (gbyte*) &q, sizeof q );
-    WizSend( p, 8 );
+    NET_Send( (gbyte*) &q, sizeof q );
+    NET_Send( p, 8 );
 }
 
 void KeyboardHandler() {

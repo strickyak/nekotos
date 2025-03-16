@@ -1,3 +1,5 @@
+#if NET_TYPE_bonobo
+
 #include "nekot1/private.h"
 
 #define bCONTROL 0xFF68
@@ -86,3 +88,5 @@ void Bonobo_Init() {
     gbool ok = bProbeHardware();
     if (!ok) gFatal("bonobo not found", 0);
 }
+
+#endif // NET_TYPE_bonobo

@@ -41,4 +41,16 @@ void Network_Init(void);
 #define CMD_DATA 204
 #define CMD_ECHO 217
 
+#if NET_TYPE_cocoio
+  #define  NET_Send         WizSend
+  #define  NET_RecvChunkTry WizRecvChunkTry
+  #define  NET_Init         Wiznet_Init
+#endif
+
+#if NET_TYPE_bonobo
+  #define  NET_Send         BonoboSend
+  #define  NET_RecvChunkTry BonoboRecvChunkTry
+  #define  NET_Init         Bonobo_Init
+#endif
+
 #endif // _NEKOT1_NETWORK_H_
