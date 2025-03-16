@@ -6,6 +6,13 @@ do
     echo "$x"
 done
 
+DFLAGS=$(
+    for x
+    do
+        echo " -D$(echo $x | tr '=' '_')=1 "
+    done
+)
+
 # All *.c files under /nekot1/ are used.
 KERNEL_CFILES=$(
     for x in $(cd nekot1 && echo [a-z]*.c)
@@ -29,6 +36,8 @@ CFILES=$(echo ${KERNEL_CFILES})
 
 GAMES=$(echo ${GAMES})
 
+DFLAGS=$(echo ${DFLAGS})
+
 HERE
 
 # Slurp the common.mk file.
@@ -40,7 +49,6 @@ do
 
     echo "$x.game: ../games/$x/game.c"
 	echo '	python3 ../nekot1/n1preprocess.py $<' $x.c
-    #echo "	cpp -I../games/$x -I.. ../games/$x/game.c >> $x.c"
     echo '	$(GCC) -fwhole-program -S $(GCFLAGS)' -I../games/$x -I.. $x.c
 
 	echo '	cat _nekot1_sym.s >>' $x.s
@@ -48,7 +56,8 @@ do
 	echo '	$(LWLINK) --decb' --output=$x.game $x.o -lgcc --entry=__n1pre_entry --script=_game.script --map=$x.map
 	echo '	grep "^Section:"' $x.map
 	echo '	cp -vf' $x.game /tmp/$x.game
-	echo '	echo OKAY'
+	echo '	cp -vf' $x.game /tmp/$x.'$$(cat _nekot1.decb.hash).game'
+	echo '	echo OKAY $@'
     echo
 
 done

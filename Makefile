@@ -1,4 +1,7 @@
-
+all: \
+  for-16k-cocoio \
+  for-16k-bonobo \
+  ##
 
 for-16k-cocoio:
 	rm -rf build-$@
@@ -14,4 +17,5 @@ for-16k-bonobo:
         RAM_LIMIT=16384 NET_TYPE=bonobo
 	make -C build-$@
 
-
+clean:
+	rm -rf build-*/

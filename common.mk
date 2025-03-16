@@ -5,8 +5,8 @@ all: ${KERNEL_PRODUCTS} ${GAMES}
 
 .SUFFIXES:
 
-GCC = ../../bin/gcc6809
-GCFLAGS = -Os -std=gnu99 -I.. -f'omit-frame-pointer' -Wall
+GCC = ../../bin/gcc6809 -std=gnu99 
+GCFLAGS = -Os -I.. -f'omit-frame-pointer' -Wall $(DFLAGS)
 
 LWASM = ../../bin/lwasm.orig --obj  \
       --pragma=undefextern --pragma=cescapes --pragma=importundefexport
@@ -29,7 +29,10 @@ _nekot1.o: _nekot1.s
 _nekot1.decb: _nekot1.o
 	$(LWLINK) $< -o'$@' --map='$@.map' --script=../nekot1/kernel.script --entry=entry -lgcc
 	grep '^Section:' $@.map
-	echo OKAY
+	sha256sum < $@ | dd bs=1 count=10 | ( cat ; echo '' ) > $@.hash
+	cat $@.hash
+	cp -av $@ nekot1.$$(cat $@.hash).decb
+	echo OKAY $@
 
 _nekot1_sym.s : _nekot1.decb
 	awk ' \
