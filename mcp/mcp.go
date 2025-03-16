@@ -324,31 +324,31 @@ func (g *Gamer) ExecuteLine() {
 		log.Printf("-> STOP <-")
 		g.SendPacket(N_START, 0, nil)
 	} else if s == "R" {
-		decb := Value(os.ReadFile("/tmp/_red.decb"))
+		decb := Value(os.ReadFile("/tmp/red.game"))
 		log.Printf("=> BLUE <=\n")
 		g.SendGameAndLaunch(decb)
 	} else if s == "G" {
-		decb := Value(os.ReadFile("/tmp/_green.decb"))
+		decb := Value(os.ReadFile("/tmp/green.game"))
 		log.Printf("=> BLUE <=\n")
 		g.SendGameAndLaunch(decb)
 	} else if s == "B" {
-		decb := Value(os.ReadFile("/tmp/_blue.decb"))
+		decb := Value(os.ReadFile("/tmp/blue.game"))
 		log.Printf("=> BLUE <=\n")
 		g.SendGameAndLaunch(decb)
 	} else if s == "L" {
-		decb := Value(os.ReadFile("/tmp/_life.decb"))
+		decb := Value(os.ReadFile("/tmp/life.game"))
 		log.Printf("=> LIFE <=\n")
 		g.SendGameAndLaunch(decb)
 	} else if s == "8" {
-		decb := Value(os.ReadFile("/tmp/_lib8.decb"))
+		decb := Value(os.ReadFile("/tmp/lib8.game"))
 		log.Printf("=> LIB8 <=\n")
 		g.SendGameAndLaunch(decb)
 	} else if s == "4" {
-		decb := Value(os.ReadFile("/tmp/_forth.decb"))
+		decb := Value(os.ReadFile("/tmp/forth.game"))
 		log.Printf("=> FORTH <=\n")
 		g.SendGameAndLaunch(decb)
 	} else if s == "S" {
-		decb := Value(os.ReadFile("/tmp/_spacewar.decb"))
+		decb := Value(os.ReadFile("/tmp/spacewar.game"))
 		log.Printf("=> SPACEWAR <=\n")
 		g.SendGameAndLaunch(decb)
 	}
