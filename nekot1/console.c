@@ -3,7 +3,7 @@
 #include <stdarg.h>
 
 #define SLOW_CONSOLE 0
-gword volatile slow_delay;
+gword volatile slow_her_down;
 
 static void AdvanceCursor() {
     ++Console.cursor;
@@ -22,7 +22,7 @@ static void AdvanceCursor() {
     gPoke1(Console.cursor, 0xFF);
 #if SLOW_CONSOLE
     for (gword i = 0; i < SLOW_CONSOLE; i++) {
-        slow_delay++;
+        slow_her_down++;
     }
 #endif
 }
