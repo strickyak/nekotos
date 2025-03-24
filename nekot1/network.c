@@ -10,6 +10,7 @@ void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
 
     NET_Send(qbuf, 5);
     NET_Send(pay, size);
+    // gFatal("STUCK2", 666);
 
     gIrqRestore(cc_value);
 }
@@ -162,15 +163,20 @@ struct gamecast* gReceiveCast64() {
 void HelloMCP() {
     gbyte rev = 1;
     gbyte hello[] = {
-        'n', 'e', 'k', 'o', 't', '1', '.', '0',
+        'n', 'e', 'k', 'o', 't', '1', '\0', '\0',
         DOUBLE_BYTE(Cons),
         DOUBLE_BYTE(gMAX_PLAYERS),
         DOUBLE_BYTE(&gScore),
         DOUBLE_BYTE(&gWall),
     };
+    PutChar('[');
+    PutStr(hello);
     SendPacket(CMD_HELLO_NEKOT, rev, hello, sizeof hello);
+    PutChar(']');
+    PutChar('H');
 }
 
 void Network_Init() {
     NET_Init();
+    PutChar('N');
 }

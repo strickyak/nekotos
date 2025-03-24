@@ -164,7 +164,7 @@ void loop() {
         gPoke2(G+w, ~gPeek2(G+w));
         if ((w&7)==2) WaitForATick();
     }
-    gGameChain("/tmp/_blue.decb");
+    gGameChain("/tmp/blue.game");
 }
 
 void setup() {

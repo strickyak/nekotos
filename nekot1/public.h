@@ -282,8 +282,8 @@ struct kern {
     // decrease the high_memory_curtain appropriately.
     // It is possible to write a library like malloc() and free()
     // that uses this memory.
-    //TODO// gword low_memory_curtain;
-    //TODO// gword high_memory_curtain;
+    gword low_memory_curtain;
+    gword high_memory_curtain;
 
     // When a game is active and focused, it owns and can scan the keyboard
     // (except for the BREAK key), and the game's screen
@@ -307,7 +307,8 @@ struct kern {
     gbool volatile gCONST in_irq;
 
     // To determine if setup allocated any low memory.
-    gword old_low_memory_curtain;
+    // Only used by the kernel.
+    gword gCONST old_low_memory_curtain_before_setup;
 };
 extern struct kern gKern;
 
@@ -399,6 +400,17 @@ struct wall {
 };
 extern gCONST struct wall gWall;
 
+///////////////////////////////////////////////////////
+// 
+//  Nekot Kernel Configuration
+
+struct config {
+    gword ram_limit;
+    const char* net_type;
+};
+extern gCONST struct config gConfig;
+
+typedef unsigned int size_t;
 ///////////////////////////////////////////////////////
 // 
 //  Standard Library Support

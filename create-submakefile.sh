@@ -9,6 +9,7 @@ done
 DFLAGS=$(
     for x
     do
+        echo " -D$x  "
         echo " -D$(echo $x | tr '=' '_')=1 "
     done
 )

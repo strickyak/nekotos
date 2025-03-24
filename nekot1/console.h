@@ -19,6 +19,6 @@ void PutChar(char c);
 void PutStr(const char* s);
 void PutDec(gword x);
 gbyte DivMod10(gword x, gword* out_div);  // returns mod
-// void Console_Printf(const char* format, ...);
+void Printf(const char* format, ...);
 
 #endif // _NEKOT1_CONSOLE_H_

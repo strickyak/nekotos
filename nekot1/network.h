@@ -48,9 +48,9 @@ void Network_Init(void);
 #endif
 
 #if NET_TYPE_bonobo
-  #define  NET_Send         BonoboSend
-  #define  NET_RecvChunkTry BonoboRecvChunkTry
-  #define  NET_Init         Bonobo_Init
+  #define  NET_Send          BonoboSend
+  #define  NET_RecvChunkTry  BonoboRecvChunkTry
+  #define  NET_Init          Bonobo_Init
 #endif
 
 #endif // _NEKOT1_NETWORK_H_

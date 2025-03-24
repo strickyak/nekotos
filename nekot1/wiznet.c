@@ -233,6 +233,8 @@ void Wiznet_Init() {
     } else if ((gword)Wiznet.wiz_port == 0xFF78u) {
          p[0] = '7';
     }
+    PutChar('W');
+    PutChar(p[0]);
 }
 
 #endif // NET_TYPE_cocoio

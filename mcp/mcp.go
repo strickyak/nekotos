@@ -26,6 +26,7 @@ const (
 type Gamer struct {
 	conn      net.Conn
 	sendMutex sync.Mutex
+	hellos    map[uint][]byte
 
 	handle string
 	name   string
@@ -145,8 +146,10 @@ func (o *InputPacketizer) Go() {
 }
 
 func (g *Gamer) SendPacket(c byte, p uint, bb []byte) {
-	g.sendMutex.Lock()
 	n := uint(len(bb))
+	g.sendMutex.Lock()
+	log.Printf("mcp Gamer.SendPacket c=$%x=%d. p=$%x=%d. len=$%x=%d. ( % 3x )", c, c, p, p, n, n, bb)
+
 	buf := []byte{c, byte(n >> 8), byte(n), byte(p >> 8), byte(p)}
 	buf = append(buf, bb...)
 	_ = Value(g.conn.Write(buf))
@@ -453,8 +456,8 @@ func (gamer *Gamer) WallTimeBytes(addMe time.Duration) []byte {
 func (gamer *Gamer) SendWallTime() {
 	bb := gamer.WallTimeBytes(ZeroHours)
 	bb = append(bb, gamer.WallTimeBytes(TwentyFourHours)[3:]...) // omit tomorrow's h, m, s
-	log.Printf("SendWallTime $%04x: len=%d % 3x", gamer.gWall, len(bb), bb)
-	gamer.SendPacket(N_POKE, gamer.gWall, bb)
+	log.Printf("NOT SendWallTime $%04x: len=%d. % 3x", gamer.gWall, len(bb), bb)
+	// gamer.SendPacket(N_POKE, gamer.gWall, bb)
 }
 
 func (gamer *Gamer) SendInitializedScores() {
@@ -464,8 +467,8 @@ func (gamer *Gamer) SendInitializedScores() {
 	bb = append(bb, make([]byte, gamer.maxPlayers)...) // partials
 	bb = append(bb, make([]byte, gamer.maxPlayers)...) // totals
 	bb = append(bb, make([]byte, gamer.maxPlayers)...) // old_partials
-	log.Printf("SendInitializedScores $%04x: len=%d % 3x", gamer.gScore, len(bb), bb)
-	gamer.SendPacket(N_POKE, gamer.gScore, bb)
+	log.Printf("NOT SendInitializedScores $%04x: len=%d % 3x", gamer.gScore, len(bb), bb)
+	// gamer.SendPacket(N_POKE, gamer.gScore, bb)
 }
 
 func (gamer *Gamer) Run() {
@@ -487,23 +490,43 @@ func wordFromBytes(bb []byte, offset uint) uint {
 	return (uint(bb[offset]) << 8) | uint(bb[offset+1])
 }
 
-func MCP(conn net.Conn, p uint, pay []byte) {
-	g := &Gamer{
-		conn:       conn,
-		handle:     "YAK",
-		name:       "YAK",
-		level:      p,
-		hello:      pay,
-		consAddr:   wordFromBytes(pay, 8),
-		maxPlayers: wordFromBytes(pay, 10),
-		gWall:      wordFromBytes(pay, 12),
-		gScore:     wordFromBytes(pay, 14),
+func MCP(conn net.Conn, p uint, pay []byte, hellos map[uint][]byte) {
+	var g *Gamer
+
+	if len(pay) > 0 {
+		g = &Gamer{
+			conn:       conn,
+			handle:     "YAK",
+			hellos:     hellos,
+			name:       "YAK",
+			level:      p,
+			hello:      pay,
+			consAddr:   wordFromBytes(pay, 8),
+			maxPlayers: wordFromBytes(pay, 10),
+			gWall:      wordFromBytes(pay, 12),
+			gScore:     wordFromBytes(pay, 14),
+		}
+	} else {
+		g = &Gamer{
+			conn:   conn,
+			handle: "YAK",
+			hellos: hellos,
+			name:   "YAK",
+			level:  p,
+			hello:  pay,
+			// consAddr:   wordFromBytes(pay, 8),
+			// maxPlayers: wordFromBytes(pay, 10),
+			// gWall:      wordFromBytes(pay, 12),
+			// gScore:     wordFromBytes(pay, 14),
+		}
 	}
+
 	for i := 0; i < 14; i++ {
 		for j := 0; j < 32; j++ {
 			g.console[i][j] = 32
 		}
 	}
+
 	g.Run()
 }
 
