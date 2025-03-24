@@ -8,11 +8,11 @@ gword _More1 gZEROED = 0x9998; // not .data
 gword _Final __attribute__ ((section (".final"))) = 0x9990;
 gword _Final_Startup __attribute__ ((section (".final.startup"))) = 0x9991;
 
-// pia_reset table traced from coco3 startup.
-struct pia_reset {
+// pia_reset_sequence table traced from coco3 startup.
+struct pia_reset_sequence {
     gword addr;
     gbyte value;
-} pia_reset[] gSETUP_DATA = {
+} pia_reset_sequence[] gSETUP_DATA = {
     { 0xff21, 0x00 },  // choose data direction
     { 0xff23, 0x00 },  // choose data direction
     { 0xff20, 0xfe },  // bit 0 input; rest are outputs.
@@ -48,9 +48,17 @@ void entry_wrapper() {
 
 extern void embark(void);
 
-gword PinDown[] gSETUP_DATA = {
+gword PinDownGlobalNames[] gSETUP_DATA = {
+    // Taking the address of `embark` prevents it from being
+    // inlined inside main.  Only things inlined inside main
+    // are in the area called `.text.startup` which gets
+    // recycled after setup, when we embark.
     (gword) embark,
 
+    // Taking the address of other things in the kernel
+    // prevents them from being optimized away.
+    // Things that might be referenced by games
+    // need to exist in the compiled kernel!
     (gword) Breakkey_Handler,
     (gword) Irq_Handler,
     (gword) Irq_Handler_entry,
@@ -80,10 +88,11 @@ gword PinDown[] gSETUP_DATA = {
     (gword) &gScore,
     (gword) &gReal,
     (gword) &gWall,
+    (gword) &gConfig,
 };
 
-void PlaceJMP(gword at, gfunc to) {
-    gPoke1(at+0, JMP_Extended);
+void PlaceOpcodeJMP(gword at, gfunc to) {
+    gPoke1(at+0, OPCODE_JMP_Extended);
     gPoke2(at+1, to);
 }
 
@@ -113,6 +122,9 @@ gfunc handlers[] gSETUP_DATA = {
     gFatalNMI,
 };
 
+char StrNekotMicrokernel[] gSETUP_DATA = "\nNEKOT MICROKERNEL... ";
+char StrReady[] gSETUP_DATA = " READY\n";
+
 void setup(void) {
     ClearPage256(0x0000); // .bss
     ClearPage256(0x0200); // vdg console p1
@@ -128,26 +140,25 @@ void setup(void) {
 
     // Redirect the 6 Interrupt Relays to our handlers.
     for (gbyte i = 0; i < 6; i++) {
-        PlaceJMP(coco2_relays[i], handlers[i]);
-        PlaceJMP(coco3_relays[i], handlers[i]);
+        PlaceOpcodeJMP(coco2_relays[i], handlers[i]);
+        PlaceOpcodeJMP(coco3_relays[i], handlers[i]);
     }
 
     Console_Init();
-    for (struct pia_reset *p = pia_reset; p->addr; p++) {
+    for (struct pia_reset_sequence *p = pia_reset_sequence; p->addr; p++) {
         gPoke1(p->addr, p->value);
     }
     Vdg_Init();
 
-
-    PutStr("\nNEKOT MICROKERNEL... ");
+    PutStr(StrNekotMicrokernel);
     Spin_Init();
-
-    gPeek1(0xFF02);        // Clear VSYNC IRQ
-    gPoke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
-    gPeek1(0xFF02);        // Clear VSYNC IRQ
-
     Network_Init();
     HelloMCP();
+
+    gPeek1(0xFF02);        // Clear VSYNC IRQ // TODO
+    gPoke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
+
+    PutStr(StrReady);
 }
 
 void embark(void) {
@@ -158,19 +169,16 @@ void embark(void) {
         gPoke2(p, 0x3F3F);
     }
 
-    gEnableIrq();
-    PutStr("READY\n");
+    // gEnableIrq();  // Let StartTask do it.
     StartTask((gword)ChatTask); // Start the no-game task.
 }
 
 int main() {
     setup();
-
     embark();
 
     // NOT REACHED
-    gPin(embark);
-    gPin(main);
-    gPin(PinDown);
-    gFatal("EXIT", 0);
+
+    gPin(PinDownGlobalNames);
+    gFatal("MAIN", 0);
 }

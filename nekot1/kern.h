@@ -6,6 +6,8 @@
 #define GAME_BSS_BEGIN  0x0080
 #define GAME_BSS_LIMIT  0x0100
 
+extern gword volatile SavedStackPointer; // in IRQ Handler
+
 struct kern gKern;
 
 void Kern_Init();

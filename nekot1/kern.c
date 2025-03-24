@@ -2,6 +2,8 @@
 
 // kern.c
 
+gword volatile SavedStackPointer; // in IRQ Handler
+
 void FatalSpin(const char *why) {
     volatile gbyte* p = (volatile gbyte*) Cons;
 
@@ -19,25 +21,44 @@ void gFatal(const char* why, gword arg) {
     PutDec(arg);
     PutStr(": ");
     PutStr(why);
+    PutStr("\n$");
+
+    // Reify things
+    gPoke2(0, &gFatal);
+    gPoke2(0, &why);
+    gPoke2(2, &arg);
+
+    const gbyte* p = (const gbyte*)gPeek2(4);
+    PutHex( (gword)p );
+    PutStr(": ");
+    for (gbyte i = 0; i < 32; i++) {
+        PutHex(p[i]);
+        if ((i&3)==3) PutChar(',');
+        if ((i&15)==15) PutChar(';');
+        PutChar(' ');
+    }
+    PutChar('$');
     FatalSpin(why);
 }
 
-void gFatalSWI(gbyte n) {
-    gFatal("SWI", n);
-}
 void gFatalSWI1() {
+    asm volatile("sts %0" :: "m" (SavedStackPointer));
     gFatal("SWI", 1);
 }
 void gFatalSWI2() {
+    asm volatile("sts %0" :: "m" (SavedStackPointer));
     gFatal("SWI", 2);
 }
 void gFatalSWI3() {
+    asm volatile("sts %0" :: "m" (SavedStackPointer));
     gFatal("SWI", 3);
 }
 void gFatalNMI() {
+    asm volatile("sts %0" :: "m" (SavedStackPointer));
     gFatal("NMI", 0);
 }
 void gFatalFIRQ() {
+    asm volatile("sts %0" :: "m" (SavedStackPointer));
     gFatal("FIRQ", 0);
 }
 
@@ -63,19 +84,23 @@ void StartTask(gword entry) {
     if (entry == (gword)ChatTask) {
         // Zero the previous Game's memory.
         // TODO: Don't clear the screens & Common Regions.
+#if 1
         extern gword _Final;
-        for (gword p = 2+(gword)&_Final; p < 0x4000; p+=2) {
+        for (gword p = 2+(gword)&_Final; p < 0x3800; p+=2) {
             gPoke2(p, 0);
         }
-
+        for (gword p = 0x3800; p < 0x4000; p+=2) {
+            gPoke2(p, 0x3F3F);  // Swi Traps
+        }
+#endif
         gKern.in_game = gFALSE;
         gKern.focus_game = gFALSE;
     } else {
+#if 1
         // Set SWI Traps in likely places.
         for (gword p = 0; p < 8; p+=2) {
-            gPoke2(p, 0x3F3F);
+            gPoke2(p, 0x3F3F);  // Swi Traps
         }
-#if 0
         // Set SWI Traps in a lot more memory.
         // TODO: we should not be clearing Common Regions.
         for (gword p = 0x3C00; p < 0xFEEE; p+=2) {
@@ -112,12 +137,10 @@ gbyte gIrqSaveAndDisable() {
         :  // inputs
         : "b"  // Clobbers B
     );
-    //PutChar(64 + (cc_value & 0x10));
     return cc_value;
 }
 
 void gIrqRestore(gbyte cc_value) {
-    //PutChar(65 + (cc_value & 0x10));
     asm volatile("\n"
         "  ldb %0  \n"
         "  tfr b,cc  \n"

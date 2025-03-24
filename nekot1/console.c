@@ -2,6 +2,9 @@
 
 #include <stdarg.h>
 
+#define SLOW_CONSOLE 0
+gword volatile slow_delay;
+
 static void AdvanceCursor() {
     ++Console.cursor;
     while (Console.cursor >= PANE_LIMIT) {
@@ -17,6 +20,11 @@ static void AdvanceCursor() {
         Console.cursor -= 32;
     }
     gPoke1(Console.cursor, 0xFF);
+#if SLOW_CONSOLE
+    for (gword i = 0; i < SLOW_CONSOLE; i++) {
+        slow_delay++;
+    }
+#endif
 }
 
 void PutRawByte(gbyte x) {
@@ -49,7 +57,7 @@ void PutStr(const char* s) {
     }
 }
 
-#if 0
+#if 1
 char HexAlphabet[] = "0123456789ABCDEF";
 
 void PutHex(gword x) {
@@ -78,7 +86,7 @@ void PutDec(gword x) {
   // eschew mod // PutChar('0' + (gbyte)(x % 10u));
   PutChar('0' + DivMod10(x, &div));
 }
-#if 0
+#if 1
 void PutSigned(int x) {
     if (x<0) {
         x = -x;
@@ -87,8 +95,8 @@ void PutSigned(int x) {
     PutDec(x);
 }
 #endif
-#if 0
-void Console_Printf(const char* format, ...) {
+#if 1
+void Printf(const char* format, ...) {
     gbyte cc_value = gIrqSaveAndDisable();
 
     va_list ap;
@@ -106,18 +114,18 @@ void Console_Printf(const char* format, ...) {
 #if 0
                 {
                     int x = va_arg(ap, int);
-                    PutDec(x);
+                    PutSigned(x);
                 }
                 break;
 #endif
             case 'u':
-            case 'x':
                 {
                     gword x = va_arg(ap, gword);
                     PutDec(x);
+                    PutChar('.');
                 }
                 break;
-#if 0
+#if 1
             case 'x':
                 {
                     gword x = va_arg(ap, gword);

@@ -45,7 +45,7 @@ _nekot1_sym.o : _nekot1_sym.s
 	$(LWASM) -o'$@' $< --list='$@.list' --map='$@.map' --symbol-dump='$@.sym'
 
 _game.script : _nekot1.decb
-	sh ../nekot1/n1-create-game-script.sh < $<.map > _game.script
+	sh ../nekot1/n1-create-game-script.sh < '$<.map' > '_game.script'
 
 install: _nekot1.decb
 	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem

@@ -13,7 +13,7 @@
 #define IRQVEC_COCO12 0x010Cu
 #define IRQVEC_COCO3  0xFEF7u
 
-#define JMP_Extended  (gbyte)0x7E
+#define OPCODE_JMP_Extended  (gbyte)0x7E
 
 typedef void (*gfunc)(void);
 
