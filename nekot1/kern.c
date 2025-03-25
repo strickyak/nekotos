@@ -84,7 +84,7 @@ void StartTask(gword entry) {
     if (entry == (gword)ChatTask) {
         // Zero the previous Game's memory.
         // TODO: Don't clear the screens & Common Regions.
-#if 1
+#if 0
         extern gword _Final;
         for (gword p = 2+(gword)&_Final; p < 0x3800; p+=2) {
             gPoke2(p, 0);
@@ -96,7 +96,7 @@ void StartTask(gword entry) {
         gKern.in_game = gFALSE;
         gKern.focus_game = gFALSE;
     } else {
-#if 1
+#if 0
         // Set SWI Traps in likely places.
         for (gword p = 0; p < 8; p+=2) {
             gPoke2(p, 0x3F3F);  // Swi Traps
