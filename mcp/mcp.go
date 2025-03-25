@@ -180,29 +180,17 @@ func (g *Gamer) SendPokeMemory(p uint, bb []byte) {
 	}
 }
 
-func (g *Gamer) PollInput(inchan chan Packet) (p Packet, ok bool) {
+func (g *Gamer) WaitOnPacket(inchan chan Packet) (p Packet, ok bool) {
 	p, ok = <-inchan
 	if !ok {
 		log.Panicf("PollInput: inchan closed")
 	}
 	return
-
-/*
-	select {
-	case p, ok = <-inchan:
-		if !ok {
-			log.Panicf("PollInput: inchan closed")
-		}
-		return p, true
-	default:
-		return p, false
-	}
-*/
 }
 
-func (g *Gamer) PollPendingInput(inchan chan Packet) {
+func (g *Gamer) HandlePackets(inchan chan Packet) {
 	for {
-		if p, ok := g.PollInput(inchan); ok {
+		if p, ok := g.WaitOnPacket(inchan); ok {
 			switch p.c {
 			case CMD_LOG:
 				log.Printf("N1LOG: %q %q", g.handle, p.pay)
@@ -216,7 +204,7 @@ func (g *Gamer) PollPendingInput(inchan chan Packet) {
 		} else {
 			break
 		}
-	}  // doesn't actually spin
+	}
 }
 
 func ExtractCString(bb []byte) string {
@@ -409,7 +397,7 @@ func (g *Gamer) PrintLine(s string) {
 }
 
 func (gamer *Gamer) Step(inchan chan Packet) {
-	gamer.PollPendingInput(inchan)  // doesn't actually spin
+	gamer.HandlePackets(inchan)  // doesn't return until Error
 }
 
 // SendGameAndLaunch takes the contents of a DECB binary,
@@ -490,7 +478,7 @@ func (gamer *Gamer) Run() {
 
 	gamer.SendWallTime()
 	for {
-		gamer.Step(inchan)  // doesn't actually spin
+		gamer.Step(inchan)  // doesn't return until Error
 	}
 }
 
