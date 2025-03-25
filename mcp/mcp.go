@@ -24,12 +24,12 @@ const (
 )
 
 type Gamer struct {
-	conn      net.Conn
-	sendMutex sync.Mutex
-	hellos    map[uint][]byte
+	Conn      net.Conn
+	SendMutex sync.Mutex
+	Hellos    map[uint][]byte
 
-	handle string
-	name   string
+	Handle string
+	Name   string
 
 	// game  *Game
 	// shard *Shard
@@ -39,35 +39,26 @@ type Gamer struct {
 	// cons *Console
 	// line *LineBuf
 
-	keys [8]byte
-	line []byte
+	Keys [8]byte
+	Line []byte
 
-	console [14][32]byte
+	Console [14][32]byte
 
-	level      uint   // Original HELLO `p` parameter
-	hello      []byte // Original HELLO payload
-	consAddr   uint
-	maxPlayers uint
-	gWall      uint
-	gScore     uint
+	Level      uint   // Original HELLO `p` parameter
+	Hello      []byte // Original HELLO payload
+	ConsAddr   uint
+	MaxPlayers uint
+	GWall      uint
+	GScore     uint
 }
 
 func (o Gamer) String() string {
-	return o.handle
+	return o.Handle
 }
 
 type Game struct {
-	name   string
+	Name   string
 	source string
-}
-
-type Load struct {
-	binary []byte
-	addr   uint
-	entry  uint
-
-	done  uint
-	total uint
 }
 
 const (
@@ -92,7 +83,7 @@ type Packet struct {
 	pay []byte
 }
 type InputPacketizer struct {
-	conn  net.Conn
+	Conn  net.Conn
 	out   chan<- Packet
 	gamer *Gamer
 }
@@ -101,9 +92,9 @@ func (o *InputPacketizer) Go() {
 	defer func() {
 		r := recover()
 		if r != nil {
-			log.Printf("PANIC: user %q error %v", o.gamer.handle, r)
+			log.Printf("PANIC: user %q error %v", o.gamer.Handle, r)
 			close(o.out)
-			o.conn.Close()
+			o.Conn.Close()
 		}
 	}()
 
@@ -112,7 +103,7 @@ func (o *InputPacketizer) Go() {
 		// Get Header
 		var header [5]byte
 
-		n, err := o.conn.Read(header[:])
+		n, err := o.Conn.Read(header[:])
 		if err != nil {
 			log.Printf("InputPacketizer %q cannot Read header: %v", o.gamer, err)
 			break
@@ -129,7 +120,7 @@ func (o *InputPacketizer) Go() {
 		}
 		p.pay = make([]byte, p.n)
 
-		n, err = o.conn.Read(p.pay)
+		n, err = o.Conn.Read(p.pay)
 		if err != nil {
 			log.Printf("InputPacketizer %q cannot Read %d byte payload: %v", o.gamer, n, err)
 			break
@@ -147,13 +138,14 @@ func (o *InputPacketizer) Go() {
 
 func (g *Gamer) SendPacket(c byte, p uint, bb []byte) {
 	n := uint(len(bb))
-	g.sendMutex.Lock()
 	log.Printf("mcp Gamer.SendPacket c=$%x=%d. p=$%x=%d. len=$%x=%d. ( % 3x )", c, c, p, p, n, n, bb)
 
 	buf := []byte{c, byte(n >> 8), byte(n), byte(p >> 8), byte(p)}
 	buf = append(buf, bb...)
-	_ = Value(g.conn.Write(buf))
-	g.sendMutex.Unlock()
+
+	g.SendMutex.Lock()
+	_ = Value(g.Conn.Write(buf))
+	g.SendMutex.Unlock()
 }
 
 func (g *Gamer) SendMemCopy(d uint, s uint, count uint) {
@@ -193,7 +185,7 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 		if p, ok := g.WaitOnPacket(inchan); ok {
 			switch p.c {
 			case CMD_LOG:
-				log.Printf("N1LOG: %q %q", g.handle, p.pay)
+				log.Printf("N1LOG: %q %q", g.Handle, p.pay)
 			case N_KEYSCAN:
 				g.KeyScanHandler(p.pay)
 			case N_CONTROL:
@@ -243,11 +235,11 @@ func (g *Gamer) ControlRequestHandler(p uint, pay []byte) {
 		g.SendPacket(N_START, 0, nil)
 
 	case 'L': // Logging
-		log.Printf("N1Log: %q logs %q", g.handle, pay)
+		log.Printf("N1Log: %q logs %q", g.Handle, pay)
 
 	case 'S': // Partial Scoring
 		// Handle Partial Scores
-		log.Printf("N1: %q scores % 3x", g.handle, pay)
+		log.Printf("N1: %q scores % 3x", g.Handle, pay)
 
 	default:
 		panic(p)
@@ -283,19 +275,19 @@ func WhatChar(i int, y byte) byte {
 func (g *Gamer) KeyScanHandler(bb []byte) {
 	var ch byte
 	for i, x := range bb {
-		prev := g.keys[i]
+		prev := g.Keys[i]
 		if prev != x {
 			// This byte changed.
 			y := (x ^ prev) & x // bits added.
 			ch = WhatChar(i, y)
 			if ch != 0 {
-				log.Printf("KeyScanHandler: ch=%d(%c) y=%x prev=%x i=%x bb=(%02x) keys=(%02x)", ch, ch, y, prev, i, bb, g.keys[:])
+				log.Printf("KeyScanHandler: ch=%d(%c) y=%x prev=%x i=%x bb=(%02x) keys=(%02x)", ch, ch, y, prev, i, bb, g.Keys[:])
 				break
 			}
 		}
 	}
 
-	copy(g.keys[:], bb) // Save keyscan.
+	copy(g.Keys[:], bb) // Save keyscan.
 	if ch != 0 {
 		g.InkeyHandler(ch)
 	}
@@ -303,20 +295,20 @@ func (g *Gamer) KeyScanHandler(bb []byte) {
 
 func (g *Gamer) InkeyHandler(ch byte) {
 	if ' ' <= ch && ch <= '~' {
-		g.line = append(g.line, ch)
+		g.Line = append(g.Line, ch)
 	} else if ch == 8 { // backspace
-		if len(g.line) > 0 {
-			g.line = g.line[:len(g.line)-1] // remove last char
+		if len(g.Line) > 0 {
+			g.Line = g.Line[:len(g.Line)-1] // remove last char
 		}
 	} else if ch == 10 { // enter
 		g.ExecuteLine()
-		g.line = nil
+		g.Line = nil
 	}
 	g.DrawLineOnStatusLine()
 }
 func (g *Gamer) ExecuteLine() {
-	s := string(g.line)
-	log.Printf("GAMER %q EXEC(%q)\n", g.handle, s)
+	s := string(g.Line)
+	log.Printf("GAMER %q EXEC(%q)\n", g.Handle, s)
 	g.PrintLine(s)
 
 	if s == "0" {
@@ -357,10 +349,10 @@ func (g *Gamer) DrawLineOnStatusLine() {
 	const BlueBottom = 0xA3
 	const RedBox = 0xFF
 	var bar [32]byte
-	n := len(g.line)
+	n := len(g.Line)
 	for i := 0; i < 32; i++ {
 		if 1 <= i && i <= n {
-			bar[i] = 63 & g.line[i-1]
+			bar[i] = 63 & g.Line[i-1]
 		} else if i == n+1 {
 			bar[i] = RedBox
 		} else {
@@ -372,27 +364,27 @@ func (g *Gamer) DrawLineOnStatusLine() {
 
 func (g *Gamer) PrintLine(s string) {
 	for i := 0; i < 13; i++ {
-		g.console[i] = g.console[i+1]
+		g.Console[i] = g.Console[i+1]
 	}
 	g.SendMemCopy(0x0220, 0x0240, 13*32)
 	for j := 0; j < 32; j++ {
 		if j < len(s) {
 			ch := s[j]
 			if 64 <= ch && ch <= 95 {
-				g.console[13][j] = ch - 64
+				g.Console[13][j] = ch - 64
 			} else if 96 <= ch && ch <= 127 {
-				g.console[13][j] = ch - 96
+				g.Console[13][j] = ch - 96
 			} else {
-				g.console[13][j] = ch
+				g.Console[13][j] = ch
 			}
 		} else {
-			g.console[13][j] = 32
+			g.Console[13][j] = 32
 		}
 	}
 
-	g.SendPokeMemory(0x0220+13*32, g.console[13][:])
+	g.SendPokeMemory(0x0220+13*32, g.Console[13][:])
 	// for i := uint(0); i < 14; i++ {
-	// g.SendPokeMemory(0x0220+i*32, g.console[i][:])
+	// g.SendPokeMemory(0x0220+i*32, g.Console[i][:])
 	// }
 }
 
@@ -452,25 +444,25 @@ func (gamer *Gamer) WallTimeBytes(addMe time.Duration) []byte {
 func (gamer *Gamer) SendWallTime() {
 	bb := gamer.WallTimeBytes(ZeroHours)
 	bb = append(bb, gamer.WallTimeBytes(TwentyFourHours)[3:]...) // omit tomorrow's h, m, s
-	log.Printf("NOT SendWallTime $%04x: len=%d. % 3x", gamer.gWall, len(bb), bb)
-	// gamer.SendPacket(N_POKE, gamer.gWall, bb)
+	log.Printf("SendWallTime $%04x: len=%d % 3x", gamer.GWall, len(bb), bb)
+	// gamer.SendPacket(N_POKE, gamer.GWall, bb)
 }
 
 func (gamer *Gamer) SendInitializedScores() {
 	bb := []byte{
 		1, 0, // One player, and you are player zero.  TODO: multiplayer
 	}
-	bb = append(bb, make([]byte, gamer.maxPlayers)...) // partials
-	bb = append(bb, make([]byte, gamer.maxPlayers)...) // totals
-	bb = append(bb, make([]byte, gamer.maxPlayers)...) // old_partials
-	log.Printf("NOT SendInitializedScores $%04x: len=%d % 3x", gamer.gScore, len(bb), bb)
-	// gamer.SendPacket(N_POKE, gamer.gScore, bb)
+	bb = append(bb, make([]byte, 2*gamer.MaxPlayers)...) // partials
+	bb = append(bb, make([]byte, 2*gamer.MaxPlayers)...) // totals
+	bb = append(bb, make([]byte, 2*gamer.MaxPlayers)...) // old_partials
+	log.Printf("SendInitializedScores $%04x: len=%d % 3x", gamer.GScore, len(bb), bb)
+	// gamer.SendPacket(N_POKE, gamer.GScore, bb)
 }
 
 func (gamer *Gamer) Run() {
 	inchan := make(chan Packet)
 	inpack := &InputPacketizer{
-		conn:  gamer.conn,
+		Conn:  gamer.Conn,
 		out:   inchan,
 		gamer: gamer,
 	}
@@ -491,39 +483,47 @@ func MCP(conn net.Conn, p uint, pay []byte, hellos map[uint][]byte) {
 
 	if len(pay) > 0 {
 		g = &Gamer{
-			conn:       conn,
-			handle:     "YAK",
-			hellos:     hellos,
-			name:       "YAK",
-			level:      p,
-			hello:      pay,
-			consAddr:   wordFromBytes(pay, 8),
-			maxPlayers: wordFromBytes(pay, 10),
-			gWall:      wordFromBytes(pay, 12),
-			gScore:     wordFromBytes(pay, 14),
+			Conn:       conn,
+			Handle:     "YAK",
+			Hellos:     hellos,
+			Name:       "YAK",
+			Level:      p,
+			Hello:      pay,
+			ConsAddr:   wordFromBytes(pay, 8),
+			MaxPlayers: wordFromBytes(pay, 10),
+			GWall:      wordFromBytes(pay, 12),
+			GScore:     wordFromBytes(pay, 14),
 		}
 	} else {
 		g = &Gamer{
-			conn:   conn,
-			handle: "YAK",
-			hellos: hellos,
-			name:   "YAK",
-			level:  p,
-			hello:  pay,
-			// consAddr:   wordFromBytes(pay, 8),
-			// maxPlayers: wordFromBytes(pay, 10),
-			// gWall:      wordFromBytes(pay, 12),
-			// gScore:     wordFromBytes(pay, 14),
+			Conn:   conn,
+			Handle: "YAK",
+			Hellos: hellos,
+			Name:   "YAK",
+			Level:  p,
+			Hello:  pay,
+			// ConsAddr:   wordFromBytes(pay, 8),
+			// MaxPlayers: wordFromBytes(pay, 10),
+			// GWall:      wordFromBytes(pay, 12),
+			// GScore:     wordFromBytes(pay, 14),
 		}
 	}
 
 	for i := 0; i < 14; i++ {
 		for j := 0; j < 32; j++ {
-			g.console[i][j] = 32
+			g.Console[i][j] = 32
 		}
 	}
 
 	g.Run()
+}
+
+//////////////////////////////////////////////////////
+//
+//  Utilities
+
+func wordFromBuffer(bb []byte, offset uint) uint {
+	return (uint(bb[offset]) << 8) | uint(bb[offset+1])
 }
 
 func Value[T any](value T, err error) T {
@@ -532,6 +532,4 @@ func Value[T any](value T, err error) T {
 	}
 	return value
 }
-func Format(f string, args ...any) string {
-	return fmt.Sprintf(f, args...)
-}
+var Format = fmt.Sprintf
