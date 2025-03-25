@@ -18,54 +18,54 @@ import (
 )
 
 type A struct {
-    GamerByHandle map[string]*mcp.Gamer
-    RoomByNumber map[uint]*Room
+	GamerByHandle map[string]*mcp.Gamer
+	RoomByNumber  map[uint]*Room
 }
 
 var Actives = newActives()
 
 func newActives() *A {
-    return &A{
-        handles: make(map[string]*mcp.Gamer)
-    }
+	return &A{
+		handles: make(map[string]*mcp.Gamer),
+	}
 }
 
 func Enlist(gamer *mcp.Gamer) {
-    handle := gamer.Handle
-    existing, already := Actives.GamerByHandle[handle]
-    if already {
-        Discharge(existing)
-    }
-    Actives.GamerByHandle[handle] = gamer
+	handle := gamer.Handle
+	existing, already := Actives.GamerByHandle[handle]
+	if already {
+		Discharge(existing)
+	}
+	Actives.GamerByHandle[handle] = gamer
 
 }
 
 func Discharge(gamer *mcp.Gamer) {
-    Try(mcp.Kick(gamer))
-    Try(gamer.Conn.Close())
-    gamer.Conn = nil
+	Try(mcp.Kick(gamer))
+	Try(gamer.Conn.Close())
+	gamer.Conn = nil
 }
 
-func Try(func fn()) {
-    defer func() {
-        r := recover()
-        if r != nil {
-            log.Printf("Try ignored: %q", r)
-        }
-    }()
-    fn()
+func Try(fn func()) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			log.Printf("Try ignored: %q", r)
+		}
+	}()
+	fn()
 }
 
 type Room struct {
-    Number  uint
-    Title   string
-    Members map[string]*mcp.Gamer
+	Number  uint
+	Title   string
+	Members map[string]*mcp.Gamer
 }
 
 func GamerJoinRoom(gamer *mcp.Gamer, number uint) {
 }
 
 func GamerLeaveRoom(gamer *mcp.Gamer, number uint) {
-    // number should't be required,
-    // but it can be checked.
+	// number should't be required,
+	// but it can be checked.
 }

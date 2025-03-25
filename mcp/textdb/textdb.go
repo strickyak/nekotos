@@ -113,9 +113,9 @@ func (db *TextDB) WriteToLogFile(key, ts, value, remark string) {
 func (db *TextDB) Keys(prefix string) []string {
 	var keys []string
 	for k := range db.recs {
-        if strings.HasPrefix(k, prefix) {
-		    keys = append(keys, k)
-        }
+		if strings.HasPrefix(k, prefix) {
+			keys = append(keys, k)
+		}
 	}
 	sort.Strings(keys)
 	return keys
