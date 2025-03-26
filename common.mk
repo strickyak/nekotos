@@ -47,7 +47,7 @@ _nekot1_sym.o : _nekot1_sym.s
 _game.script : _nekot1.decb
 	sh ../nekot1/n1-create-game-script.sh < '$<.map' > '_game.script'
 
-install: _nekot1.decb
+install-test98: _nekot1.decb
 	cp -vf  _nekot1.decb  ../../build-frobio/pizga-base/Internal/LEMMINGS/test98.lem
 
 ################
