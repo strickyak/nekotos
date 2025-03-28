@@ -50,6 +50,7 @@ type Gamer struct {
 
 	Level      uint   // Original HELLO `p` parameter
 	Hello      []byte // Original HELLO payload
+	NekotHash  []byte
 	ConsAddr   uint
 	MaxPlayers uint
 	GWall      uint
@@ -195,16 +196,21 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 			case N_CONTROL:
 				g.ControlRequestHandler(p.p, p.pay)
 			case N_HELLO:
-				if len(p.pay) == 16 && string(p.pay[:6]) == "nekot1" {
+				Log("%q HELLO(%d) [%d] % 3x", g, p.p, len(p.pay), p.pay)
+				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:6]) == "nekot1" {
 					g.ConsAddr = WordFromBytes(p.pay, 8)
 					g.MaxPlayers = WordFromBytes(p.pay, 10)
 					g.GWall = WordFromBytes(p.pay, 12)
 					g.GScore = WordFromBytes(p.pay, 14)
-					g.SendWallTime()
+					now := g.SendWallTime()
+					log.Printf("HELLO(1) sent Wall Time: %v", now)
+				} else if p.p == 2 && len(p.pay) == 8 {
+					g.NekotHash = p.pay
+					log.Printf("HELLO(2) from NekotHash % 3x", p.pay)
+					g.ConsoleSync()
 				} else {
-					log.Panicf("unknown HELLO: % 3x", p.pay)
+					log.Panicf("unknown HELLO(%d): % 3x", p.p, p.pay)
 				}
-				Log("%q HELLO(%d) [%d] % 3x", g, p.p, len(p.pay), p.pay)
 			default:
 				Log("WUT? default PPI: %v", p)
 			}
@@ -394,6 +400,13 @@ func (g *Gamer) ExecuteSlashCommand(s string) {
 	   	}
 	*/
 }
+
+func (g *Gamer) ReadVersionedGameFile(basename string) []byte {
+	filename := Format("/tmp/%s.%02x.game", basename, g.NekotHash)
+	log.Printf("%v ReadVersionedGameFile: %q", filename)
+	return Value(os.ReadFile(filename))
+}
+
 func (g *Gamer) EnterLine() {
 	s := string(g.Line)
 	log.Printf("GAMER %q LINE %q\n", g.Handle, s)
@@ -405,32 +418,25 @@ func (g *Gamer) EnterLine() {
 		log.Printf("-> STOP <-")
 		g.SendPacket(N_START, 0, nil)
 	} else if s == "R" {
-		decb := Value(os.ReadFile("/tmp/red.game"))
-		log.Printf("=> BLUE <=\n")
+		decb := g.ReadVersionedGameFile("red")
 		g.SendGameAndLaunch(decb)
 	} else if s == "G" {
-		decb := Value(os.ReadFile("/tmp/green.game"))
-		log.Printf("=> BLUE <=\n")
+		decb := g.ReadVersionedGameFile("green")
 		g.SendGameAndLaunch(decb)
 	} else if s == "B" {
-		decb := Value(os.ReadFile("/tmp/blue.game"))
-		log.Printf("=> BLUE <=\n")
+		decb := g.ReadVersionedGameFile("blue")
 		g.SendGameAndLaunch(decb)
 	} else if s == "L" {
-		decb := Value(os.ReadFile("/tmp/life.game"))
-		log.Printf("=> LIFE <=\n")
+		decb := g.ReadVersionedGameFile("life")
 		g.SendGameAndLaunch(decb)
 	} else if s == "8" {
-		decb := Value(os.ReadFile("/tmp/lib8.game"))
-		log.Printf("=> LIB8 <=\n")
+		decb := g.ReadVersionedGameFile("lib8")
 		g.SendGameAndLaunch(decb)
 	} else if s == "4" {
-		decb := Value(os.ReadFile("/tmp/forth.game"))
-		log.Printf("=> FORTH <=\n")
+		decb := g.ReadVersionedGameFile("forth")
 		g.SendGameAndLaunch(decb)
 	} else if s == "S" {
-		decb := Value(os.ReadFile("/tmp/spacewar.game"))
-		log.Printf("=> SPACEWAR <=\n")
+		decb := g.ReadVersionedGameFile("spacewar")
 		g.SendGameAndLaunch(decb)
 	}
 }
@@ -505,10 +511,8 @@ var Months = []string{"ZZZ", "JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "A
 var ZeroHours = Value(time.ParseDuration("0h"))
 var TwentyFourHours = Value(time.ParseDuration("24h"))
 
-func (gamer *Gamer) WallTimeBytes(addMe time.Duration) []byte {
-	location, _ := time.LoadLocation("America/New_York")
-	now := time.Now().Add(addMe).In(location)
-	y, m, d := now.Date()
+func (gamer *Gamer) WallTimeBytes(now time.Time, addMe time.Duration) []byte {
+	y, m, d := now.Add(addMe).Date()
 	hr, minute, sec := now.Hour(), now.Minute(), now.Second()
 	weekday := Weekdays[now.Weekday()]
 	month := Months[m]
@@ -520,13 +524,17 @@ func (gamer *Gamer) WallTimeBytes(addMe time.Duration) []byte {
 	}
 	return wall
 }
-func (gamer *Gamer) SendWallTime() {
-	bb := gamer.WallTimeBytes(ZeroHours)
-	bb = append(bb, gamer.WallTimeBytes(TwentyFourHours)[3:]...) // omit tomorrow's h, m, s
+func (gamer *Gamer) SendWallTime() time.Time {
+	location, _ := time.LoadLocation("America/New_York")
+	now := time.Now().In(location)
+
+	bb := gamer.WallTimeBytes(now, ZeroHours)
+	bb = append(bb, gamer.WallTimeBytes(now, TwentyFourHours)[3:]...) // omit tomorrow's h, m, s
 	log.Printf("SendWallTime $%04x: len=%d % 3x", gamer.GWall, len(bb), bb)
 	if gamer.GWall > 0 {
 		gamer.SendPacket(N_POKE, gamer.GWall, bb)
 	}
+	return now
 }
 
 func (gamer *Gamer) SendInitializedScores() {

@@ -131,6 +131,10 @@ void setup(void) {
     ClearPage256(0x0300); // vdg console p2
     ClearPage256(0x0400); // chunks of 64-gbyte
 
+    // The post-linker puts Version Hash at $0118.
+    // Copy Version Hash down to page 0, at $0018.
+    memcpy(0x0018, 0x0118, 8);
+
     // Coco3 in Compatibility Mode.
     gPoke1(0xFF90, 0x80);
     gPoke1(0xFF91, 0x00);
@@ -169,7 +173,6 @@ void embark(void) {
         gPoke2(p, 0x3F3F);
     }
 
-    // gEnableIrq();  // Let StartTask do it.
     StartTask((gword)ChatTask); // Start the no-game task.
 }
 

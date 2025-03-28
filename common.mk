@@ -29,9 +29,13 @@ _nekot1.o: _nekot1.s
 _nekot1.decb: _nekot1.o
 	$(LWLINK) $< -o'$@' --map='$@.map' --script=../nekot1/kernel.script --entry=entry -lgcc
 	grep '^Section:' $@.map
-	sha256sum < $@ | dd bs=1 count=10 | ( cat ; echo '' ) > $@.hash
+	sha256sum < $@ | dd bs=1 count=16 | ( cat ; echo '' ) > $@.hash
 	cat $@.hash
-	cp -av $@ nekot1.$$(cat $@.hash).decb
+	python3 -c "import sys; sys.stdout.buffer.write(bytes([0, 0, 8, 0x01, 0x18]))" > _hash.decb
+	python3 -c "import sys; x=0x$$(cat $@.hash); sys.stdout.buffer.write(bytes([(255 & (x>>(8*(7-i)))) for i in range(8)]))" >> _hash.decb
+	cat _hash.decb $@  > $@.new
+	mv -fv $@.new $@
+	cp -fv $@ nekot1.$$(cat $@.hash).decb
 	echo OKAY $@
 
 _nekot1_sym.s : _nekot1.decb

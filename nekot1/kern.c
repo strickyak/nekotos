@@ -43,23 +43,23 @@ void gFatal(const char* why, gword arg) {
 
 void gFatalSWI1() {
     asm volatile("sts %0" :: "m" (SavedStackPointer));
-    gFatal("SWI", 1);
+    gFatal("SWI", 11);
 }
 void gFatalSWI2() {
     asm volatile("sts %0" :: "m" (SavedStackPointer));
-    gFatal("SWI", 2);
+    gFatal("SWI", 22);
 }
 void gFatalSWI3() {
     asm volatile("sts %0" :: "m" (SavedStackPointer));
-    gFatal("SWI", 3);
+    gFatal("SWI", 33);
 }
 void gFatalNMI() {
     asm volatile("sts %0" :: "m" (SavedStackPointer));
-    gFatal("NMI", 0);
+    gFatal("NMI", 44);
 }
 void gFatalFIRQ() {
     asm volatile("sts %0" :: "m" (SavedStackPointer));
-    gFatal("FIRQ", 0);
+    gFatal("FIRQ", 55);
 }
 
 // StartTask begins the given function entry,
@@ -84,19 +84,19 @@ void StartTask(gword entry) {
     if (entry == (gword)ChatTask) {
         // Zero the previous Game's memory.
         // TODO: Don't clear the screens & Common Regions.
-#if 0
+#if 1
         extern gword _Final;
         for (gword p = 2+(gword)&_Final; p < 0x3800; p+=2) {
             gPoke2(p, 0);
         }
-        for (gword p = 0x3800; p < 0x4000; p+=2) {
+        for (gword p = 0x2000; p < 0x4000; p+=2) {
             gPoke2(p, 0x3F3F);  // Swi Traps
         }
 #endif
         gKern.in_game = gFALSE;
         gKern.focus_game = gFALSE;
     } else {
-#if 0
+#if 1
         // Set SWI Traps in likely places.
         for (gword p = 0; p < 8; p+=2) {
             gPoke2(p, 0x3F3F);  // Swi Traps
@@ -122,7 +122,7 @@ void StartTask(gword entry) {
         "  andcc #^$50   \n"  // Allow interrupts.
         "  jmp   ,X      \n"  // There is no way back.
         : // outputs
-        : "m" (entry) // inputs
+        : "m" (entry) // input %0
     );
     // Never returns.
 }
@@ -171,6 +171,12 @@ void xAfterSetup(gfunc loop, gword* final_, gword* final_startup) {
 }
 
 void ChatTask() {
+    volatile gbyte* p = (volatile gbyte*)Cons;
+
+    // debugging blocks
+    // while (gKern.always_true) { p[33]++; }
+    // while (!gKern.always_true) { p[35]++; }
+    
     NowSwitchToChatScreen();
 
     while (gKern.always_true) {

@@ -1,5 +1,0 @@
-section .absolute      load 0x0000
-section .text.startup  load 0x2002
-section .text
-section .data
-section *

@@ -161,7 +161,6 @@ struct gamecast* gReceiveCast64() {
 #define DOUBLE_BYTE(W)  (gbyte)((gword)(W) >> 8), (gbyte)(gword)(W)
 
 void HelloMCP() {
-    gbyte rev = 1;
     gbyte hello[] = {
         'n', 'e', 'k', 'o', 't', '1', '\0', '\0',
         DOUBLE_BYTE(Cons),
@@ -169,11 +168,13 @@ void HelloMCP() {
         DOUBLE_BYTE(&gScore),
         DOUBLE_BYTE(&gWall),
     };
+
     PutChar('[');
     PutStr(hello);
-    SendPacket(CMD_HELLO_NEKOT, rev, hello, sizeof hello);
-    PutChar(']');
+    SendPacket(CMD_HELLO_NEKOT, 1, hello, sizeof hello);
     PutChar('H');
+    SendPacket(CMD_HELLO_NEKOT, 2, 0x0118, 8);
+    PutChar(']');
 }
 
 void Network_Init() {
