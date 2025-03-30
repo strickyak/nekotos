@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/strickyak/nekot-coco-microkernel/mcp/actives"
 	"github.com/strickyak/nekot-coco-microkernel/mcp/transcript"
 	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
 )
@@ -200,8 +201,8 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:6]) == "nekot1" {
 					g.ConsAddr = WordFromBytes(p.pay, 8)
 					g.MaxPlayers = WordFromBytes(p.pay, 10)
-					g.GWall = WordFromBytes(p.pay, 12)
-					g.GScore = WordFromBytes(p.pay, 14)
+					g.GScore = WordFromBytes(p.pay, 12)
+					g.GWall = WordFromBytes(p.pay, 14)
 					now := g.SendWallTime()
 					log.Printf("HELLO(1) sent Wall Time: %v", now)
 				} else if p.p == 2 && len(p.pay) == 8 {
@@ -403,7 +404,7 @@ func (g *Gamer) ExecuteSlashCommand(s string) {
 
 func (g *Gamer) ReadVersionedGameFile(basename string) []byte {
 	filename := Format("/tmp/%s.%02x.game", basename, g.NekotHash)
-	log.Printf("%v ReadVersionedGameFile: %q", filename)
+	log.Printf("%v ReadVersionedGameFile: %q", g, filename)
 	return Value(os.ReadFile(filename))
 }
 
@@ -417,6 +418,9 @@ func (g *Gamer) EnterLine() {
 	} else if s == "0" {
 		log.Printf("-> STOP <-")
 		g.SendPacket(N_START, 0, nil)
+	} else if s == "C" {
+		decb := g.ReadVersionedGameFile("clock")
+		g.SendGameAndLaunch(decb)
 	} else if s == "R" {
 		decb := g.ReadVersionedGameFile("red")
 		g.SendGameAndLaunch(decb)
@@ -484,6 +488,7 @@ func (gamer *Gamer) SendGameAndLaunch(bb []byte) {
 	// while loading the new game.
 	gamer.SendPacket(N_START, 0, nil)
 	gamer.SendInitializedScores()
+	gamer.SendWallTime()
 
 	for len(bb) >= 5 {
 		c := bb[0]
@@ -549,12 +554,27 @@ func (gamer *Gamer) SendInitializedScores() {
 }
 
 func (gamer *Gamer) Run() {
+    Log("================================")
+    actives.Enlist(gamer)
+    Log("================================")
+
 	inchan := make(chan Packet)
 	inpack := &InputPacketizer{
 		Conn:  gamer.Conn,
 		out:   inchan,
 		gamer: gamer,
 	}
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			log.Printf("GAMER RUN %v EXITING, CAUGHT %v", gamer, r)
+		}
+		Try(func() { actives.Discharge(gamer) })
+		Try(func() { close(inchan) })
+		Try(func() { gamer.Conn.Close() })
+	}()
+
 	go inpack.Go()
 
 	gamer.ConsoleSync()
@@ -577,8 +597,8 @@ func MCP(conn net.Conn, p uint, pay []byte, hellos map[uint][]byte) {
 			Trans:      transcript.New(),
 			ConsAddr:   WordFromBytes(pay, 8),
 			MaxPlayers: WordFromBytes(pay, 10),
-			GWall:      WordFromBytes(pay, 12),
-			GScore:     WordFromBytes(pay, 14),
+			GScore:     WordFromBytes(pay, 12),
+			GWall:      WordFromBytes(pay, 14),
 		}
 	} else {
 		g = &Gamer{

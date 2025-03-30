@@ -1,20 +1,28 @@
 #include "nekot1/private.h"
 
+// SendPacket sends a Quint Header and a payload
+// of 0 to 64 bytes.
 void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
-    gbyte cc_value = gIrqSaveAndDisable();
-    gbyte qbuf[5];
+    size = (size > 64) ? 64 : size;
 
+    gbyte qbuf[5];
     qbuf[0] = cmd;
     gPoke2(qbuf+1, size);
     gPoke2(qbuf+3, p);
 
+    gbyte cc_value = gIrqSaveAndDisable();
     NET_Send(qbuf, 5);
     NET_Send(pay, size);
-    // gFatal("STUCK2", 666);
-
     gIrqRestore(cc_value);
 }
 
+// gSendCast is used by games to send gamecasts to other cocos
+// in the same game shard.  The size is the payload size.
+// It does not count the first two bytes of the struct,
+// sender & flags, which are set by the system.
+// The receiver is not told the payload size that was sent.
+// So use (say) the first byte of the payload for the payload size,
+// if you want the receiver to know it.
 void gSendCast(const struct gamecast* pay, gbyte size) {
     gAssert(size >= 0);
     gAssert(size <= 60);
@@ -22,10 +30,14 @@ void gSendCast(const struct gamecast* pay, gbyte size) {
     SendPacket(NEKOT_GAMECAST, 0, (const gbyte*)pay, size);
 }
 
+// Games call this indirectly to send control packets
+// to the MCP.
 void xSendControlPacket(gword p, const gbyte* pay, gword size) {
     SendPacket(NEKOT_CONTROL, p, pay, size);
 }
 
+// Games can log a message with the network.
+// Dont spam it too badly!
 void gNetworkLog(const char* s) {
     SendPacket(CMD_LOG, 0, (const gbyte*)s, strlen(s));
 }
@@ -82,8 +94,8 @@ void ExecuteReceivedCommand(const gbyte* quint) {
         if (!chunk) {
             gFatal("RECV CAST NOMEM", 0);
         }
-        gAssert(2 <= n);
-        gAssert(n <= 62);
+        gAssert(2 <= n);   // two mandatory header bytes, and
+        gAssert(n <= 62);  // up to 60 payload bytes.
 
         errnum e4 = NET_RecvChunkTry(chunk->payload, n);
         if (e4==NOTYET) {
@@ -148,12 +160,14 @@ RESTORE:
 
 struct gamecast* gReceiveCast64() {
     struct gamecast *ptr = gNULL;
+
     gbyte cc_value = gIrqSaveAndDisable();
     if (recvcast_root) {
         ptr = recvcast_root;
         recvcast_root = ptr->next;
     }
     gIrqRestore(cc_value);
+
     ptr->next = gNULL;
     return ptr;
 }
@@ -173,7 +187,7 @@ void HelloMCP() {
     PutStr(hello);
     SendPacket(CMD_HELLO_NEKOT, 1, hello, sizeof hello);
     PutChar('H');
-    SendPacket(CMD_HELLO_NEKOT, 2, 0x0118, 8);
+    SendPacket(CMD_HELLO_NEKOT, 2, 0x0118, 8);  // Hash of NekotOS
     PutChar(']');
 }
 

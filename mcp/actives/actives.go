@@ -1,24 +1,21 @@
 package actives
 
 import (
-	"bufio"
-	"fmt"
-	"log"
-	"os"
-	"path"
-	"path/filepath"
-	"sort"
-	"strings"
-	"time"
+	//"bufio"
+	//"fmt"
+	//"log"
+	//"path/filepath"
+	//"sort"
+	//"strings"
+	//"time"
 
-	"github.com/strickyak/nekot-coco-microkernel/mcp"
 
 	// for Assert, Value
-	. "github.com/strickyak/frobio/frob3/lemma/util"
+	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
 )
 
 type A struct {
-	GamerByHandle map[string]*mcp.Gamer
+	GamerByHandle map[string]any
 	RoomByNumber  map[uint]*Room
 }
 
@@ -26,46 +23,39 @@ var Actives = newActives()
 
 func newActives() *A {
 	return &A{
-		handles: make(map[string]*mcp.Gamer),
+		GamerByHandle: make(map[string]any),
 	}
 }
 
-func Enlist(gamer *mcp.Gamer) {
-	handle := gamer.Handle
-	existing, already := Actives.GamerByHandle[handle]
+func Enlist(gamer any) {
+	handle := Str(gamer)
+	_, already := Actives.GamerByHandle[handle]
 	if already {
-		Discharge(existing)
+		Panic("Handle %q already enlisted", handle)
 	}
 	Actives.GamerByHandle[handle] = gamer
 
+    Log("@@@@@@@@ Enlisted: %q Now: %s", handle, KeysString(Actives.GamerByHandle))
+
 }
 
-func Discharge(gamer *mcp.Gamer) {
-	Try(mcp.Kick(gamer))
-	Try(gamer.Conn.Close())
-	gamer.Conn = nil
-}
+func Discharge(gamer any) {
+	handle := Str(gamer)
+	delete(Actives.GamerByHandle, handle)
 
-func Try(fn func()) {
-	defer func() {
-		r := recover()
-		if r != nil {
-			log.Printf("Try ignored: %q", r)
-		}
-	}()
-	fn()
+    Log("@@@@@@@@ Discharged: %q Now: %s", handle, KeysString(Actives.GamerByHandle))
 }
 
 type Room struct {
 	Number  uint
 	Title   string
-	Members map[string]*mcp.Gamer
+	Members map[string]any
 }
 
-func GamerJoinRoom(gamer *mcp.Gamer, number uint) {
+func GamerJoinRoom(gamer any, number uint) {
 }
 
-func GamerLeaveRoom(gamer *mcp.Gamer, number uint) {
+func GamerLeaveRoom(gamer any, number uint) {
 	// number should't be required,
 	// but it can be checked.
 }
