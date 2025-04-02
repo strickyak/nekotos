@@ -91,10 +91,23 @@ struct gime_reset_sequence {
   { 0 }
 };
 
+void memsetWords(gword p, gword value, gword num_bytes) {
+    for (gword i = 0; i<num_bytes; i+=2) {
+        gPoke2(p+i, value);
+    }
+}
+
 void Delay(gword n) {
     for (gword i = 0; i < n; i++) {
         asm volatile(" mul \n mul \n mul \n mul \n mul" : : : "d");
     }
+}
+
+volatile gbyte* cold = 0x0A0;
+void ColdPrint(const char* s) {
+    while (*s) *cold++ = *s++;
+    *cold++ = ' ';
+    Delay(20000);
 }
 
 void RamRefresh() {
@@ -106,33 +119,33 @@ void RamRefresh() {
 }
 
 void SamInit() {
-    // For p the even numbers in the magic SAM range:
-    for (gword p = 0xFFC0; p < 0xFFE0; p+=2) {
-        gPoke1(p, 0);
-    }
-    // But poke 0xFFDF for "TY=1" for "all ram, no rom".
-    // This may matter on a coco3 for changing the irq vectors
-    // in the $FExx page.
-    gPoke1(0xFFDF, 0);
+    // ram_sizer marks the extra SAM bit that sets our ram size.
+    gword ram_sizer = 0;
 
     // SAM has a setting for 4K, 16K, or 64K.
     // Probe for keys 0 (4K) and 1 (64K).  Default is 16K.
     gPoke1(0xFF02, ~1); // probe for '0'
-    gbyte zero = ~(0x10 & gPeek1(0xFF00)); // sense for '0'
-    gPoke1(0xFF02, ~2); // probe for '0'
-    gbyte one = ~(0x10 & gPeek1(0xFF00)); // sense for '1'
-    if (zero) {
-        // No change.      // M=00 for 4K
-    } else if (one) {
-        gPoke1(0xffdd, 0);  // M=10 for 64K
-    } else {
-        gPoke1(0xffdb, 0);  // M=01 for 16K
-    }
-}
+    gbyte zero_key = ~(0x10 & gPeek1(0xFF00)); // sense for '0'
 
-void memsetWords(gword p, gword value, gword num_bytes) {
-    for (gword i = 0; i<num_bytes; i+=2) {
-        gPoke2(p+i, value);
+    gPoke1(0xFF02, ~2); // probe for '0'
+    gbyte one_key = ~(0x10 & gPeek1(0xFF00)); // sense for '1'
+
+    if (zero_key) {
+        // M=00 for 4K
+        ram_sizer = 0;  // No extra bit.
+    } else if (one_key) {
+        // M=10 for 64K
+        ram_sizer = 0xFFDC;
+    } else {
+        // M=01 for 16K
+        ram_sizer = 0xFFDA;
+    }
+
+    // For p the even numbers in the magic SAM range:
+    for (gword p = 0xFFC0; p < 0xFFE0; p+=2) {
+        // FFD[EF] should be FFDF for "TY=1" for "all ram, no rom".
+        gbyte yes = (p == 0xFFDE || p == ram_sizer); 
+        gPoke1(p+yes, 0);
     }
 }
 
@@ -222,48 +235,105 @@ gfunc handlers[] gSETUP_DATA = {
     gFatalNMI,
 };
 
-char StrNekotMicrokernel[] gSETUP_DATA = "\nNEKOT MICROKERNEL... ";
+char StrNekotOS[] gSETUP_DATA = "\nNEKOTOS ... ";
 char StrReady[] gSETUP_DATA = " READY\n";
 
 void setup(void) {
+    Delay(20000);
+
+    // Sam Pre-Init to TEXT AT 0x0400 for Cold Boot
+    for (gword p = 0xFFC0; p < 0xFFD4; p+=2) {
+        gPoke1(p, 0);
+    }
+    // --------- BEGIN COLD SCREEN --------
+
+    memsetWords(0x0000, 0x3020, 0x80);   // Initial Spoonfed Screen
+    memsetWords(0x0080, 0xF3F3, 32);
+    memsetWords(0x00A0, 0x2D2D, 64);
+    memsetWords(0x00E0, 0xFCFC, 32);
+    memsetWords(0x0200, 0x3320, 0x200);  // Eventual NekotOS Console.
+    memsetWords(0x0400, 0x3420, 0x100);  // ROM boot screen.
+    Delay(20000);
+    ColdPrint("COLD");
+
     // Redirect the 6 Interrupt Relays to our handlers.
     for (gbyte i = 0; i < 6; i++) {
         PlaceOpcodeJMP(coco2_relays[i], handlers[i]);
         PlaceOpcodeJMP(coco3_relays[i], handlers[i]);
     }
+    ColdPrint("RELAYS");
 
     RamRefresh();
+    ColdPrint("RAM");
+#if 0
     SamInit();
+#endif
+    // Coco2 16K, CocoIO:         Works with D5 or D5.
+    // Coco3 (6309/512K) CocoIO:  Works with D4 or D5.
+
+    // Coco2 16K, Bonobo:         Works with D5 or D5.
+    // Coco3 (6309/512K) Bonobo:  Works with D4 or D5.
+
+    // D4 chooses "lower 32K" for $0000-$7FFF.
+    // D5 chooses "upper 32K" for $0000-$7FFF.
+    if (0) { // D5?
+        gPoke1(0xFFD5, 0);
+        ColdPrint("D5");
+    } else {
+        gPoke1(0xFFD4, 0);
+        ColdPrint("D4");
+    }
+
+    gPoke1(0xFFD6, 0);  // slow CPU speed.
+    ColdPrint("D6");
+    gPoke1(0xFFD8, 0);
+    ColdPrint("D8");
+
+    // DA and DC are for memory size.
+    gPoke1(0xFFDB, 0);
+    ColdPrint("DB");
+    gPoke1(0xFFDC, 0);
+    ColdPrint("DC");
+
+    gPoke1(0xFFDF, 0);
+    ColdPrint("DF");  // all RAM
+
     for (struct gime_reset_sequence *p = gime_reset_sequence; p->addr; p++) {
         gPoke1(p->addr, p->value);
     }
+    ColdPrint("GIME");
     for (struct pia_reset_sequence *p = pia_reset_sequence; p->addr; p++) {
         gPoke1(p->addr, p->value);
     }
+    ColdPrint("PIA");
     // Coco3 in Compatibility Mode.
     gPoke1(0xFF90, 0x88);
     gPoke1(0xFF91, 0x00);
+    ColdPrint("COMPAT");
 
     // Value is a word, but count is in bytes:
     memsetWords(0x0000, 0, 0x80); // .bss
-    memsetWords(0x0080, 0x1B1D, 0x80); // Poke "[]" patterns.
     memsetWords(0x0200, 0, 0x100); // vdg console p1
     memsetWords(0x0300, 0, 0x100); // vdg console p2
-    memsetWords(0x0400, 0, 0x100); // chunks of 64-gbyte
-    Delay(10000);
+    ColdPrint("ZERO");
 
     // The post-linker puts Version Hash at $0118.
     // Copy Version Hash down to page 0, at $0018.
-    memcpy(0x0018, 0x0118, 8);
+    memcpy((void*)0x0018, (void*)0x0118, 8);
+    ColdPrint("HASH");
 
-    Alloc64_Init();  // first 4 chunks in 0x04XX.
     Kern_Init();
+    ColdPrint("KERN");
 
+    // --------- END COLD SCREEN --------
     Console_Init();
     Vdg_Init();
 
-    PutStr(StrNekotMicrokernel);
+    PutStr(StrNekotOS);
     Delay(10000);
+
+    memsetWords(0x0400, 0, 0x100); // chunks of 64-gbyte
+    Alloc64_Init();  // first 4 chunks in 0x04XX.
 
     Spin_Init();
     Network_Init();
@@ -290,11 +360,12 @@ void embark(void) {
 }
 
 int main() {
+    gPin(entry_wrapper);
+    gPin(PinDownGlobalNames);
+
     setup();
     embark();
 
     // NOT REACHED
-
-    gPin(PinDownGlobalNames);
     gFatal("MAIN", 0);
 }
