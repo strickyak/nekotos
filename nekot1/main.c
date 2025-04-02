@@ -91,12 +91,6 @@ struct gime_reset_sequence {
   { 0 }
 };
 
-void memsetWords(gword p, gword value, gword num_bytes) {
-    for (gword i = 0; i<num_bytes; i+=2) {
-        gPoke2(p+i, value);
-    }
-}
-
 void Delay(gword n) {
     for (gword i = 0; i < n; i++) {
         asm volatile(" mul \n mul \n mul \n mul \n mul" : : : "d");
@@ -107,7 +101,15 @@ volatile gbyte* cold = 0x0A0;
 void ColdPrint(const char* s) {
     while (*s) *cold++ = *s++;
     *cold++ = ' ';
-    Delay(20000);
+
+    // Assuming PIA0 is already set up for keyboard scanning:
+    gPoke1(KEYBOARD_PROBE, ~(1<<4)); // Probe for Down Arrow
+    gbyte sense = ((1<<3) & ~gPeek1(KEYBOARD_SENSE));
+    if (sense) {
+        Delay(20000);
+    } else {
+        Delay(1000);
+    }
 }
 
 void RamRefresh() {
@@ -124,11 +126,11 @@ void SamInit() {
 
     // SAM has a setting for 4K, 16K, or 64K.
     // Probe for keys 0 (4K) and 1 (64K).  Default is 16K.
-    gPoke1(0xFF02, ~1); // probe for '0'
-    gbyte zero_key = ~(0x10 & gPeek1(0xFF00)); // sense for '0'
+    gPoke1(KEYBOARD_PROBE, ~1); // probe for '0'
+    gbyte zero_key = ~(0x10 & gPeek1(KEYBOARD_SENSE)); // sense for '0'
 
-    gPoke1(0xFF02, ~2); // probe for '0'
-    gbyte one_key = ~(0x10 & gPeek1(0xFF00)); // sense for '1'
+    gPoke1(KEYBOARD_PROBE, ~2); // probe for '0'
+    gbyte one_key = ~(0x10 & gPeek1(KEYBOARD_SENSE)); // sense for '1'
 
     if (zero_key) {
         // M=00 for 4K
@@ -193,6 +195,12 @@ gword PinDownGlobalNames[] gSETUP_DATA = {
     (gword) PutStr,
     (gword) PutChar,
 
+    (gword) memset,
+    (gword) memcpy,
+    (gword) memset_words,
+    (gword) memcpy_words,
+    (gword) strlen,
+
     (gword) entry_wrapper,
     (gword) &_More0,
     (gword) &_More1,
@@ -239,6 +247,10 @@ char StrNekotOS[] gSETUP_DATA = "\nNEKOTOS ... ";
 char StrReady[] gSETUP_DATA = " READY\n";
 
 void setup(void) {
+    for (struct pia_reset_sequence *p = pia_reset_sequence; p->addr; p++) {
+        gPoke1(p->addr, p->value);
+    }
+
     Delay(20000);
 
     // Sam Pre-Init to TEXT AT 0x0400 for Cold Boot
@@ -247,13 +259,13 @@ void setup(void) {
     }
     // --------- BEGIN COLD SCREEN --------
 
-    memsetWords(0x0000, 0x3020, 0x80);   // Initial Spoonfed Screen
-    memsetWords(0x0080, 0xF3F3, 32);
-    memsetWords(0x00A0, 0x2D2D, 64);
-    memsetWords(0x00E0, 0xFCFC, 32);
-    memsetWords(0x0200, 0x3320, 0x200);  // Eventual NekotOS Console.
-    memsetWords(0x0400, 0x3420, 0x100);  // ROM boot screen.
-    Delay(20000);
+    memset_words(0x0000, 0x3020, 0x40);   // Initial Spoonfed Screen
+    memset_words(0x0080, 0xF3F3, 16);
+    memset_words(0x00A0, 0x2D2D, 32);
+    memset_words(0x00E0, 0xFCFC, 16);
+    memset_words(0x0200, 0x3320, 0x100);  // Eventual NekotOS Console.
+    memset_words(0x0400, 0x3420, 0x80);  // ROM boot screen.
+    Delay(10000);
     ColdPrint("COLD");
 
     // Redirect the 6 Interrupt Relays to our handlers.
@@ -261,7 +273,7 @@ void setup(void) {
         PlaceOpcodeJMP(coco2_relays[i], handlers[i]);
         PlaceOpcodeJMP(coco3_relays[i], handlers[i]);
     }
-    ColdPrint("RELAYS");
+    ColdPrint("VECT");
 
     RamRefresh();
     ColdPrint("RAM");
@@ -302,19 +314,14 @@ void setup(void) {
         gPoke1(p->addr, p->value);
     }
     ColdPrint("GIME");
-    for (struct pia_reset_sequence *p = pia_reset_sequence; p->addr; p++) {
-        gPoke1(p->addr, p->value);
-    }
-    ColdPrint("PIA");
     // Coco3 in Compatibility Mode.
     gPoke1(0xFF90, 0x88);
     gPoke1(0xFF91, 0x00);
     ColdPrint("COMPAT");
 
-    // Value is a word, but count is in bytes:
-    memsetWords(0x0000, 0, 0x80); // .bss
-    memsetWords(0x0200, 0, 0x100); // vdg console p1
-    memsetWords(0x0300, 0, 0x100); // vdg console p2
+    memset_words(0x0000, 0, 0x40); // .bss
+    memset_words(0x0200, 0, 0x80); // vdg console p1
+    memset_words(0x0300, 0, 0x80); // vdg console p2
     ColdPrint("ZERO");
 
     // The post-linker puts Version Hash at $0118.
@@ -332,15 +339,15 @@ void setup(void) {
     PutStr(StrNekotOS);
     Delay(10000);
 
-    memsetWords(0x0400, 0, 0x100); // chunks of 64-gbyte
+    memset_words(0x0400, 0, 0x80); // chunks of 64-gbyte
     Alloc64_Init();  // first 4 chunks in 0x04XX.
 
     Spin_Init();
     Network_Init();
     HelloMCP();
 
-    gPeek1(0xFF02);        // Clear VSYNC IRQ // TODO
-    gPoke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
+    // gPeek1(KEYBOARD_PROBE);  // Clear VSYNC IRQ // TODO
+    gPoke1(0xFF03, 0x35);    // +1: Enable VSYNC (FS) IRQ
 
     PutStr(StrReady);
     Delay(10000);
@@ -348,13 +355,7 @@ void setup(void) {
 
 void embark(void) {
     // Wipe out the setup/startup code, to prove it is never needed again.
-#if 1
-    for (gword p = 2 + (gword)&_Final;
-         p < (gword)_Final_Startup;
-         p+=2) {
-        gPoke2(p, 0x3F3F);
-    }
-#endif
+    memset_words( (gword)&_Final, 0x3F3F, ((gword)&_Final_Startup - (gword)&_Final)>>1);
 
     StartTask((gword)ChatTask); // Start the no-game task.
 }

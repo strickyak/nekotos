@@ -251,7 +251,8 @@ func (g *Gamer) ControlRequestHandler(p uint, pay []byte) {
 		if Dont_CausesHangs {
 			g.PrintLine(Format("*** GAME CHAIN TO %s", filename))
 		}
-		g.SendPacket(N_START, 0, nil)
+		// Do not g.SendPacket(N_START, 0, nil),
+		// because g.SendGameAndLaunch will do that.
 
 		decb := Value(os.ReadFile(filename))
 		g.SendGameAndLaunch(decb)

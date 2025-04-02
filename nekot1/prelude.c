@@ -1,36 +1,17 @@
 #include "nekot1/private.h"
 
-void gMemcpy(void *dest, const void *src, gword count) {
-    gbyte* d1 = (gbyte*)dest;
-    gbyte* s1 = (gbyte*)src;
-    // If count is odd, copy one initial byte.
-    if (count & 1) {
-        *d1++ = *s1++;
-    }
-    // Now use a stride of 2 bytes.
-    count >>= 1;  // Divide count by 2.
-    gword* d2 = (gword*)d1;
-    gword* s2 = (gword*)s1;
-    for (gword i = 0; i < count; i++) {
-        *d2++ = *s2++;
+void memcpy_words(gword dest, gword src, gword num_words) {
+    for (gword i = 0; i < num_words; i++) {
+        gPoke2(dest, gPeek2(src));
+        dest += 2;
+        src += 2;
     }
 }
 
-void gMemset(void* dest, gbyte value, gword count) {
-    gbyte* d1 = (gbyte*)dest;
-    // If count is odd, set one initial byte.
-    if (count & 1) {
-        *d1++ = value;
-    }
-    // Now use a stride of 2.
-    count >>= 1;  // Divide count by 2.
-
-    gwob w;
-    w.b[0] = w.b[1] = value;
-
-    gword* d2 = (gword*)d1;
-    for (gword i = 0; i < count; i++) {
-        *d2++ = w.w;
+void memset_words(gword p, gword value, gword num_words) {
+    for (gword i = 0; i<num_words; i++) {
+        gPoke2(p, value);
+        p += 2;
     }
 }
 

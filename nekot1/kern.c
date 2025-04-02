@@ -6,13 +6,17 @@ void FatalSpin(const char *why) {
     volatile gbyte* p = (volatile gbyte*) Cons;
 
     // Work around GCC infinite loop bug.
-    while (gKern.always_true) {
+    while (gALWAYS) {
         gPoke2(p, gPeek2(p) + 1);
     }
 }
 
 void gFatal(const char* why, gword arg) {
     gDisableIrq();
+    // Reify things
+    gPoke2(0, &gFatal);
+    gPoke2(0, &why);
+    gPoke2(2, &arg);
 
     NowSwitchToChatScreen();
     PutStr("\nFATAL ");
@@ -20,11 +24,6 @@ void gFatal(const char* why, gword arg) {
     PutStr(": ");
     PutStr(why);
     PutStr("\n$");
-
-    // Reify things
-    gPoke2(0, &gFatal);
-    gPoke2(0, &why);
-    gPoke2(2, &arg);
 
     const gbyte* p = (const gbyte*)gPeek2(4);
     PutHex( (gword)p );
@@ -41,23 +40,23 @@ void gFatal(const char* why, gword arg) {
 
 void gFatalSWI1() {
     asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
-    gFatal("SWI", 11);
+    gFatal("SWI", gKern.saved_stack_pointer);
 }
 void gFatalSWI2() {
     asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
-    gFatal("SWI", 22);
+    gFatal("SWI2", gKern.saved_stack_pointer);
 }
 void gFatalSWI3() {
     asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
-    gFatal("SWI", 33);
+    gFatal("SWI3", gKern.saved_stack_pointer);
 }
 void gFatalNMI() {
     asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
-    gFatal("NMI", 44);
+    gFatal("NMI", gKern.saved_stack_pointer);
 }
 void gFatalFIRQ() {
     asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
-    gFatal("FIRQ", 55);
+    gFatal("FIRQ", gKern.saved_stack_pointer);
 }
 
 // StartTask begins the given function entry,
@@ -75,43 +74,26 @@ void StartTask(gword entry) {
     }
 
     // Zero the Game's BSS.
-    for (gword p = GAME_BSS_BEGIN; p < GAME_BSS_LIMIT; p+=2) {
-        gPoke2(p, 0);
-    }
+    memset_words(GAME_BSS_BEGIN, 0, (GAME_BSS_LIMIT-GAME_BSS_BEGIN)>>1);
 
     if (entry == (gword)ChatTask) {
-        // Zero the previous Game's memory.
-        // TODO: Don't clear the screens & Common Regions.
-#if 0
-        extern gword _Final;
-        for (gword p = 2+(gword)&_Final; p < 0x3800; p+=2) {
-            gPoke2(p, 0);
-        }
-        for (gword p = 0x2000; p < 0xFEEE; p+=2) {
-            gPoke2(p, 0x3F3F);  // Swi Traps
-        }
-#endif
         gKern.in_game = gFALSE;
         gKern.focus_game = gFALSE;
     } else {
-        // Set SWI Traps in likely places.
-        for (gword p = 0; p < 8; p+=2) {
-            gPoke2(p, 0x3F3F);  // Swi Traps
-        }
-#if 0
-        // Set SWI Traps in a lot more memory.
-        // TODO: we should not be clearing Common Regions.
-        for (gword p = 0x3C00; p < 0xFEEE; p+=2) {
-            gPoke2(p, 0x3F3F);
-            if ((p & 0x07FF) == 0) PutChar('_');
-        }
-#endif
         gKern.in_game = gTRUE;
         gKern.focus_game = gTRUE;
         // Until the game changes the display,
         // you get an Orange Console.
         gTextScreen(Cons, COLORSET_ORANGE);
     }
+
+    // Set SWI Traps at start of memory (scratchpad).
+    memset_words(0x0000u, 0x3F3F, 8);
+    // TODO: between app's low water and high water.
+#if 0
+    // Breaks on 16K coco2:
+    memset_words(0x4000u, 0x3F3F, (0xFE00u - 0x4000u)>>1);
+#endif
 
     gKern.in_irq = gFALSE;
     asm volatile("\n"
@@ -176,7 +158,7 @@ void ChatTask() {
     
     NowSwitchToChatScreen();
 
-    while (gKern.always_true) {
+    while (gALWAYS) {
         gAssert(!gKern.in_game);
         gAssert(!gKern.in_irq);
 

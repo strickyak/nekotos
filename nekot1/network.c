@@ -68,7 +68,7 @@ void ExecuteReceivedCommand(const gbyte* quint) {
         void* dst = (void*)gPeek2(six);
         void* src = (void*)gPeek2(six+2);
         gword siz = gPeek2(six+4);
-        gMemcpy((char*)dst, (char*)src, siz);
+        memcpy((char*)dst, (char*)src, siz);
 
 #pragma GCC diagnostic pop
 
