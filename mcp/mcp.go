@@ -517,9 +517,10 @@ var ZeroHours = Value(time.ParseDuration("0h"))
 var TwentyFourHours = Value(time.ParseDuration("24h"))
 
 func (gamer *Gamer) WallTimeBytes(now time.Time, addMe time.Duration) []byte {
-	y, m, d := now.Add(addMe).Date()
-	hr, minute, sec := now.Hour(), now.Minute(), now.Second()
-	weekday := Weekdays[now.Weekday()]
+	then := now.Add(addMe)
+	y, m, d := then.Date()
+	hr, minute, sec := then.Hour(), then.Minute(), then.Second()
+	weekday := Weekdays[then.Weekday()]
 	month := Months[m]
 	wall := []byte{
 		byte(sec), byte(minute), byte(hr),
