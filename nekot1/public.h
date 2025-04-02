@@ -261,10 +261,10 @@ void gModeScreen(gbyte* screen_addr, gword mode_code);
 // is gTRUE, the game can scan the keyboard (but it must
 // disable interrupts while doing so).
 //
-// If the game has an infinite loop (say, as the
-// outer game loop) it is better to use
+// If the game has an infinite loop (even one with a
+// break, continue, or return in it) it is better to use
 //
-//     while (gKern.always_true) { ... }
+//     while (gALWAYS) { ... }
 //
 // rather than
 //
@@ -293,7 +293,8 @@ struct kern {
     // not visible -- the Chat screen is shown, instead.
     gbool volatile focus_game;
 
-    // gKern.always_true must always be gTRUE.
+    // gKern.always_true must always be set to 1.
+    // Sampled by gALWAYS.
     gbool volatile gCONST always_true;
 
     // ---- The following fields are not needed by games: ----
@@ -309,6 +310,9 @@ struct kern {
     // To determine if setup allocated any low memory.
     // Only used by the kernel.
     gword gCONST old_low_memory_curtain_before_setup;
+
+    // Internal.
+    gword volatile saved_stack_pointer;
 };
 extern struct kern gKern;
 

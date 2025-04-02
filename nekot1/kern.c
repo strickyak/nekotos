@@ -2,8 +2,6 @@
 
 // kern.c
 
-gword volatile SavedStackPointer; // in IRQ Handler
-
 void FatalSpin(const char *why) {
     volatile gbyte* p = (volatile gbyte*) Cons;
 
@@ -42,23 +40,23 @@ void gFatal(const char* why, gword arg) {
 }
 
 void gFatalSWI1() {
-    asm volatile("sts %0" :: "m" (SavedStackPointer));
+    asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
     gFatal("SWI", 11);
 }
 void gFatalSWI2() {
-    asm volatile("sts %0" :: "m" (SavedStackPointer));
+    asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
     gFatal("SWI", 22);
 }
 void gFatalSWI3() {
-    asm volatile("sts %0" :: "m" (SavedStackPointer));
+    asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
     gFatal("SWI", 33);
 }
 void gFatalNMI() {
-    asm volatile("sts %0" :: "m" (SavedStackPointer));
+    asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
     gFatal("NMI", 44);
 }
 void gFatalFIRQ() {
-    asm volatile("sts %0" :: "m" (SavedStackPointer));
+    asm volatile("sts %0" :: "m" (gKern.saved_stack_pointer));
     gFatal("FIRQ", 55);
 }
 
@@ -84,23 +82,23 @@ void StartTask(gword entry) {
     if (entry == (gword)ChatTask) {
         // Zero the previous Game's memory.
         // TODO: Don't clear the screens & Common Regions.
-#if 1
         extern gword _Final;
         for (gword p = 2+(gword)&_Final; p < 0x3800; p+=2) {
             gPoke2(p, 0);
         }
-        for (gword p = 0x2000; p < 0x4000; p+=2) {
+#if 0
+        for (gword p = 0x2000; p < 0xFEEE; p+=2) {
             gPoke2(p, 0x3F3F);  // Swi Traps
         }
 #endif
         gKern.in_game = gFALSE;
         gKern.focus_game = gFALSE;
     } else {
-#if 1
         // Set SWI Traps in likely places.
         for (gword p = 0; p < 8; p+=2) {
             gPoke2(p, 0x3F3F);  // Swi Traps
         }
+#if 0
         // Set SWI Traps in a lot more memory.
         // TODO: we should not be clearing Common Regions.
         for (gword p = 0x3C00; p < 0xFEEE; p+=2) {
@@ -171,9 +169,8 @@ void xAfterSetup(gfunc loop, gword* final_, gword* final_startup) {
 }
 
 void ChatTask() {
-    volatile gbyte* p = (volatile gbyte*)Cons;
-
     // debugging blocks
+    // volatile gbyte* p = (volatile gbyte*)Cons;
     // while (gKern.always_true) { p[33]++; }
     // while (!gKern.always_true) { p[35]++; }
     

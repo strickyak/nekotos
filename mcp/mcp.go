@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/strickyak/nekot-coco-microkernel/mcp/actives"
 	"github.com/strickyak/nekot-coco-microkernel/mcp/transcript"
 	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
 )
@@ -34,6 +33,7 @@ type Gamer struct {
 
 	Handle string
 	Name   string
+	Room   *Room
 
 	// game  *Game
 	// shard *Shard
@@ -554,9 +554,9 @@ func (gamer *Gamer) SendInitializedScores() {
 }
 
 func (gamer *Gamer) Run() {
-    Log("================================")
-    actives.Enlist(gamer)
-    Log("================================")
+	Log("================================")
+	Enlist(gamer)
+	Log("================================")
 
 	inchan := make(chan Packet)
 	inpack := &InputPacketizer{
@@ -570,7 +570,7 @@ func (gamer *Gamer) Run() {
 		if r != nil {
 			log.Printf("GAMER RUN %v EXITING, CAUGHT %v", gamer, r)
 		}
-		Try(func() { actives.Discharge(gamer) })
+		Try(func() { Discharge(gamer) })
 		Try(func() { close(inchan) })
 		Try(func() { gamer.Conn.Close() })
 	}()
@@ -598,7 +598,7 @@ func MCP(conn net.Conn, p uint, pay []byte, hellos map[uint][]byte) {
 			ConsAddr:   WordFromBytes(pay, 8),
 			MaxPlayers: WordFromBytes(pay, 10),
 			GScore:     WordFromBytes(pay, 12),
-			GWall:      WordFromBytes(pay, 14),
+			GWall:      WordFromBytes(pay, 12),
 		}
 	} else {
 		g = &Gamer{

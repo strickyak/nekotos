@@ -1,9 +1,9 @@
 package util
 
 import (
+	"bytes"
 	"fmt"
 	"log"
-	"bytes"
 )
 
 //////////////////////////////////////////////////////
@@ -37,30 +37,30 @@ func Try(fn func()) (exception string) {
 	defer func() {
 		r := recover()
 		if r != nil {
-            exception = Format("%v", r)
+			exception = Format("%v", r)
 			log.Printf("Try ignored: %q", exception)
 		}
 	}()
 	fn()
-    return
+	return
 }
 
 func Str(x any) string {
-    return Format("%v", x)
+	return Format("%v", x)
 }
 
 func KeysString[K comparable, V any](d map[K]V) string {
-    var buf bytes.Buffer
-    for k := range d {
-        buf.WriteString(Str(k))
-    }
-    return buf.String()
+	var buf bytes.Buffer
+	for k := range d {
+		buf.WriteString(Str(k))
+	}
+	return buf.String()
 }
 
 //type Comparable interface {
-    //int
-    //uint
-    //string
+//int
+//uint
+//string
 //}
 
 var Format = fmt.Sprintf
