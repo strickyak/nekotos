@@ -91,9 +91,15 @@ struct gime_reset_sequence {
   { 0 }
 };
 
+void Delay(gword n) {
+    for (gword i = 0; i < n; i++) {
+        asm volatile(" mul \n mul \n mul \n mul \n mul" : : : "d");
+    }
+}
+
 void RamRefresh() {
   // Before configuring SAM, give everything a refresh
-  // by rereading all RAM.
+  // by rereading all 16K RAM.
   for (gword p = 0; p < 0x4000; p+=2) {
     gPeek2(p);
   }
@@ -124,9 +130,9 @@ void SamInit() {
     }
 }
 
-void ClearPage256(gword p) {
-    for (gword i = 0; i<256; i+=2) {
-        gPoke2(p+i, 0x0000);
+void memsetWords(gword p, gword value, gword num_bytes) {
+    for (gword i = 0; i<num_bytes; i+=2) {
+        gPoke2(p+i, value);
     }
 }
 
@@ -220,6 +226,12 @@ char StrNekotMicrokernel[] gSETUP_DATA = "\nNEKOT MICROKERNEL... ";
 char StrReady[] gSETUP_DATA = " READY\n";
 
 void setup(void) {
+    // Redirect the 6 Interrupt Relays to our handlers.
+    for (gbyte i = 0; i < 6; i++) {
+        PlaceOpcodeJMP(coco2_relays[i], handlers[i]);
+        PlaceOpcodeJMP(coco3_relays[i], handlers[i]);
+    }
+
     RamRefresh();
     SamInit();
     for (struct gime_reset_sequence *p = gime_reset_sequence; p->addr; p++) {
@@ -232,10 +244,13 @@ void setup(void) {
     gPoke1(0xFF90, 0x88);
     gPoke1(0xFF91, 0x00);
 
-    ClearPage256(0x0000); // .bss
-    ClearPage256(0x0200); // vdg console p1
-    ClearPage256(0x0300); // vdg console p2
-    ClearPage256(0x0400); // chunks of 64-gbyte
+    // Value is a word, but count is in bytes:
+    memsetWords(0x0000, 0, 0x80); // .bss
+    memsetWords(0x0080, 0x1B1D, 0x80); // Poke "[]" patterns.
+    memsetWords(0x0200, 0, 0x100); // vdg console p1
+    memsetWords(0x0300, 0, 0x100); // vdg console p2
+    memsetWords(0x0400, 0, 0x100); // chunks of 64-gbyte
+    Delay(10000);
 
     // The post-linker puts Version Hash at $0118.
     // Copy Version Hash down to page 0, at $0018.
@@ -244,16 +259,12 @@ void setup(void) {
     Alloc64_Init();  // first 4 chunks in 0x04XX.
     Kern_Init();
 
-    // Redirect the 6 Interrupt Relays to our handlers.
-    for (gbyte i = 0; i < 6; i++) {
-        PlaceOpcodeJMP(coco2_relays[i], handlers[i]);
-        PlaceOpcodeJMP(coco3_relays[i], handlers[i]);
-    }
-
     Console_Init();
     Vdg_Init();
 
     PutStr(StrNekotMicrokernel);
+    Delay(10000);
+
     Spin_Init();
     Network_Init();
     HelloMCP();
@@ -262,6 +273,7 @@ void setup(void) {
     gPoke1(0xFF03, 0x35);  // +1: Enable VSYNC (FS) IRQ
 
     PutStr(StrReady);
+    Delay(10000);
 }
 
 void embark(void) {
