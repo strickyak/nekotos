@@ -555,6 +555,7 @@ func (gamer *Gamer) SendInitializedScores() {
 
 func (gamer *Gamer) Run() {
 	Log("================================")
+	Try(func() { Discharge(gamer) })
 	Enlist(gamer)
 	Log("================================")
 

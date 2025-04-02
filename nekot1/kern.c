@@ -82,11 +82,11 @@ void StartTask(gword entry) {
     if (entry == (gword)ChatTask) {
         // Zero the previous Game's memory.
         // TODO: Don't clear the screens & Common Regions.
+#if 0
         extern gword _Final;
         for (gword p = 2+(gword)&_Final; p < 0x3800; p+=2) {
             gPoke2(p, 0);
         }
-#if 0
         for (gword p = 0x2000; p < 0xFEEE; p+=2) {
             gPoke2(p, 0x3F3F);  // Swi Traps
         }
