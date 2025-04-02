@@ -1,7 +1,7 @@
 #ifndef _NEKOT1_PRELUDE_H_
 #define _NEKOT1_PRELUDE_H_
 
-#define Cons ((gbyte*)0x0200)
+#define Cons ((gbyte*)0x0400)
 
 #define Pia0PortA     0xFF00u
 #define Pia0PortB     0xFF02u
@@ -24,5 +24,7 @@ int strlen(const char* s);
 
 void memcpy_words(gword dest, gword src, gword num_words);
 void memset_words(gword p, gword value, gword num_words);
+
+void ColdPrint(const char* s);
 
 #endif // _NEKOT1_PRELUDE_H_

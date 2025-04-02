@@ -1,5 +1,5 @@
 section .bss           load 0x0020
-section .data          load 0x0502
+section .data          load 0x0602
 section .data.more
 section .text
 section .final

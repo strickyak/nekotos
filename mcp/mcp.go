@@ -460,7 +460,7 @@ func (g *Gamer) DrawBottomLine() {
 			bar[i] = BlueBottom
 		}
 	}
-	g.SendPokeMemory(0x03E0, bar[:])
+	g.SendPokeMemory(0x05E0, bar[:])
 }
 
 func (g *Gamer) ConsoleSync() {
@@ -469,7 +469,7 @@ func (g *Gamer) ConsoleSync() {
 	w := len(scr[0])
 
 	for i := 0; i < n; i++ {
-		g.SendPokeMemory(0x0220+uint(i*w), scr[i][:])
+		g.SendPokeMemory(0x0420+uint(i*w), scr[i][:])
 	}
 }
 

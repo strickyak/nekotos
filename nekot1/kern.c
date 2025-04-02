@@ -95,6 +95,8 @@ void StartTask(gword entry) {
     memset_words(0x4000u, 0x3F3F, (0xFE00u - 0x4000u)>>1);
 #endif
 
+    Alloc64_Init();  // Eight chunks of 64 to be ready.
+
     gKern.in_irq = gFALSE;
     asm volatile("\n"
         "  ldx   %0      \n"  // entry point

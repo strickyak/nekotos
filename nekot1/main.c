@@ -97,29 +97,23 @@ void Delay(gword n) {
     }
 }
 
-volatile gbyte* cold = 0x0A0;
 void ColdPrint(const char* s) {
-    while (*s) *cold++ = *s++;
-    *cold++ = ' ';
+    // PutStr("\xF5 ");
+    PutStr("*** ");
+    PutStr(s);  
+    PutChar('\n');
 
     // Assuming PIA0 is already set up for keyboard scanning:
     gPoke1(KEYBOARD_PROBE, ~(1<<4)); // Probe for Down Arrow
     gbyte sense = ((1<<3) & ~gPeek1(KEYBOARD_SENSE));
     if (sense) {
-        Delay(20000);
+        Delay(15000);
     } else {
         Delay(1000);
     }
 }
 
-void RamRefresh() {
-  // Before configuring SAM, give everything a refresh
-  // by rereading all 16K RAM.
-  for (gword p = 0; p < 0x4000; p+=2) {
-    gPeek2(p);
-  }
-}
-
+#if 0
 void SamInit() {
     // ram_sizer marks the extra SAM bit that sets our ram size.
     gword ram_sizer = 0;
@@ -150,6 +144,7 @@ void SamInit() {
         gPoke1(p+yes, 0);
     }
 }
+#endif
 
 void entry_wrapper() {
     asm volatile("\n"
@@ -243,30 +238,95 @@ gfunc handlers[] gSETUP_DATA = {
     gFatalNMI,
 };
 
-char StrNekotOS[] gSETUP_DATA = "\nNEKOTOS ... ";
-char StrReady[] gSETUP_DATA = " READY\n";
+char StrNekotOS[] gSETUP_DATA = "NEKOTOS ... ";
+char StrReady[] gSETUP_DATA = " READY";
+
+void SplashRestore(int x, int y) {
+    if (x < 0) return;
+    if (y < 0) return;
+    if (x >= 32) return;
+    if (y >= 16) return;
+    gPoke1(Cons + 32*y + x, gPeek1(0x200 + 32*y + x));
+}
+
+void SplashSet(int x, int y) {
+    if (x < 0) return;
+    if (y < 0) return;
+    if (x >= 32) return;
+    if (y >= 16) return;
+    gPoke1(Cons + 32*y + x, 0xFF);
+}
+
+void Splash() {
+    memcpy_words(0x0200, 0x0400, 256);
+
+        for (int i = 0; i < 16; i++) {
+            for (int x = 16 - i; x < 16 + i; x++) {
+                int y1 = 8 - i;
+                int y2 = 8 + i;
+                SplashSet(x, y1);
+                SplashSet(x, y2);
+            }
+            for (int y = 8 - i; y < 8 + i; y++) {
+                int x1 = 16 - i;
+                int x2 = 16 + i;
+                SplashSet(x1, y);
+                SplashSet(x2, y);
+            }
+            Delay(100);
+
+            for (int x = 16 - i; x < 16 + i; x++) {
+                int y1 = 8 - i;
+                int y2 = 8 + i;
+                SplashRestore(x, y1);
+                SplashRestore(x, y2);
+            }
+            for (int y = 8 - i; y < 8 + i; y++) {
+                int x1 = 16 - i;
+                int x2 = 16 + i;
+                SplashRestore(x1, y);
+                SplashRestore(x2, y);
+            }
+        }
+}
 
 void setup(void) {
+    memset_words(0x0000, 0, 0x40); // .bss
     for (struct pia_reset_sequence *p = pia_reset_sequence; p->addr; p++) {
         gPoke1(p->addr, p->value);
     }
+    gPoke1(0xFF90, 0x88);
+    gPoke1(0xFF91, 0x00);
 
-    Delay(20000);
-
+    //Delay(10000);
     // Sam Pre-Init to TEXT AT 0x0400 for Cold Boot
+#if 1
     for (gword p = 0xFFC0; p < 0xFFD4; p+=2) {
-        gPoke1(p, 0);
+        gbyte yes = (p == 0xFFC8);
+        gPoke1(p+yes, 0);
     }
+#endif
+    //Delay(10000);
+    Splash();
+
+    Console_Init();
+    ColdPrint("INIT");
+
+#if 0
+    Vdg_Init();
+    ColdPrint("VDG");
+#endif
+
     // --------- BEGIN COLD SCREEN --------
 
-    memset_words(0x0000, 0x3020, 0x40);   // Initial Spoonfed Screen
-    memset_words(0x0080, 0xF3F3, 16);
-    memset_words(0x00A0, 0x2D2D, 32);
-    memset_words(0x00E0, 0xFCFC, 16);
-    memset_words(0x0200, 0x3320, 0x100);  // Eventual NekotOS Console.
-    memset_words(0x0400, 0x3420, 0x80);  // ROM boot screen.
-    Delay(10000);
-    ColdPrint("COLD");
+    //memset_words(0x0000, 0x3020, 0x40);   // Initial Spoonfed Screen
+    //memset_words(0x0080, 0xF3F3, 16);
+    //memset_words(0x00A0, 0x2D2D, 32);
+    //memset_words(0x00E0, 0xFCFC, 16);
+    // memset_words(0x0200, 0x3320, 0x100);  // Eventual NekotOS Console.
+    // memset_words(0x0400, 0x3420, 0x80);  // ROM boot screen.
+    // Delay(10000);
+    ColdPrint(StrNekotOS);
 
     // Redirect the 6 Interrupt Relays to our handlers.
     for (gbyte i = 0; i < 6; i++) {
@@ -275,11 +335,6 @@ void setup(void) {
     }
     ColdPrint("VECT");
 
-    RamRefresh();
-    ColdPrint("RAM");
-#if 0
-    SamInit();
-#endif
     // Coco2 16K, CocoIO:         Works with D5 or D5.
     // Coco3 (6309/512K) CocoIO:  Works with D4 or D5.
 
@@ -319,9 +374,8 @@ void setup(void) {
     gPoke1(0xFF91, 0x00);
     ColdPrint("COMPAT");
 
-    memset_words(0x0000, 0, 0x40); // .bss
-    memset_words(0x0200, 0, 0x80); // vdg console p1
-    memset_words(0x0300, 0, 0x80); // vdg console p2
+    // memset_words(0x0200, 0, 0x80); // vdg console p1
+    // memset_words(0x0300, 0, 0x80); // vdg console p2
     ColdPrint("ZERO");
 
     // The post-linker puts Version Hash at $0118.
@@ -332,15 +386,17 @@ void setup(void) {
     Kern_Init();
     ColdPrint("KERN");
 
-    // --------- END COLD SCREEN --------
-    Console_Init();
     Vdg_Init();
+    ColdPrint("VDG");
 
-    PutStr(StrNekotOS);
-    Delay(10000);
+    // --------- END COLD SCREEN --------
+    // X Console_Init();
+    // X Vdg_Init();
 
-    memset_words(0x0400, 0, 0x80); // chunks of 64-gbyte
-    Alloc64_Init();  // first 4 chunks in 0x04XX.
+    ColdPrint(StrNekotOS);
+
+    // memset_words(0x0400, 0, 0x80); // chunks of 64-gbyte
+    // Alloc64_Init();  // first 4 chunks in 0x04XX.
 
     Spin_Init();
     Network_Init();
@@ -349,8 +405,8 @@ void setup(void) {
     // gPeek1(KEYBOARD_PROBE);  // Clear VSYNC IRQ // TODO
     gPoke1(0xFF03, 0x35);    // +1: Enable VSYNC (FS) IRQ
 
-    PutStr(StrReady);
-    Delay(10000);
+    ColdPrint(StrReady);
+    Delay(3000);
 }
 
 void embark(void) {

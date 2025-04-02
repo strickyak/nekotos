@@ -82,5 +82,4 @@ void NowSwitchToChatScreen() {
 
 void Vdg_Init() {
     NowSwitchToChatScreen();
-    PutChar('V');
 }

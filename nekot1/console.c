@@ -43,11 +43,11 @@ void PutChar(char c) {
     } else if (x < 32) {
         // Ingore other control chars.
     } else if (x < 96) {
-            PutRawByte(63&x);
+            PutRawByte(63&x);  // Upper case.
     } else if (x < 128) {
-            PutRawByte(x-96);
+            PutRawByte(x-96); // Lower case.
     } else {
-            PutRawByte(x);
+            PutRawByte(x);  // Semigraphics.
     }
 }
 
@@ -150,20 +150,27 @@ void Printf(const char* format, ...) {
 #endif
 
 void Console_Init() {
+#if 1
+    Console.cursor = PANE_LIMIT - 32;
+    PutStr(" \n\n");
+    gPoke1(Console.cursor, 0xFF);
+#endif
     // gPoke2(0, AdvanceCursor);
 
     // Draw a greenish bar across the top of the Console.
     for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
         gPoke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
+#if 0
     // Fill the body of the screen with spaces.
     for (gword p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
         gPoke2(p, 0x2020);
     }
+#endif
     // Draw a blueish bar across the bottom of the Console.
     for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
         gPoke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
     }
-    Console.cursor = PANE_LIMIT - 32;
+    // Console.cursor = PANE_LIMIT - 32;
     gPoke1(Console.cursor, 0xFF);
 }

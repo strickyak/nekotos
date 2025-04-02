@@ -42,8 +42,9 @@ void Reset64() {
 }
 
 void Alloc64_Init() {
+    memset_words(0x0200, 0x3F3F, 256);
     Reset64();
-     for (gword p = 0x0400; p < 0x0500; p+=64) {
-        gFree64((gbyte*)p);
+     for (gword p = 0x0200; p < 0x0400; p+=64) {
+        gFree64((void*)p);
      }
 }
