@@ -4,6 +4,7 @@
 package mcp
 
 import (
+	"flag"
 	"log"
 	"net"
 	"os"
@@ -14,6 +15,9 @@ import (
 	"github.com/strickyak/nekot-coco-microkernel/mcp/transcript"
 	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
 )
+
+var GAMES_DIR = flag.String("games_dir", "/tmp", "where .games files are located")
+var GAME_ZONE = flag.String("zone", "America/New_York", "linux time zone location")
 
 const (
 	N_CLOSED  = 63
@@ -404,7 +408,7 @@ func (g *Gamer) ExecuteSlashCommand(s string) {
 }
 
 func (g *Gamer) ReadVersionedGameFile(basename string) []byte {
-	filename := Format("/tmp/%s.%02x.game", basename, g.NekotHash)
+	filename := Format("%s/%s.%02x.game", *GAMES_DIR, basename, g.NekotHash)
 	log.Printf("%v ReadVersionedGameFile: %q", g, filename)
 	return Value(os.ReadFile(filename))
 }
@@ -532,7 +536,11 @@ func (gamer *Gamer) WallTimeBytes(now time.Time, addMe time.Duration) []byte {
 	return wall
 }
 func (gamer *Gamer) SendWallTime() time.Time {
-	location, _ := time.LoadLocation("America/New_York")
+	location, err := time.LoadLocation(*GAME_ZONE)
+	if err != nil {
+		location = time.UTC
+		log.Printf("BAD GAME TIME ZONE %q -- USING UTC INSTEAD", *GAME_ZONE)
+	}
 	now := time.Now().In(location)
 
 	bb := gamer.WallTimeBytes(now, ZeroHours)
