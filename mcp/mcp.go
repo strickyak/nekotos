@@ -609,7 +609,7 @@ func MCP(conn net.Conn, p uint, pay []byte, hellos map[uint][]byte) {
 			ConsAddr:   WordFromBytes(pay, 8),
 			MaxPlayers: WordFromBytes(pay, 10),
 			GScore:     WordFromBytes(pay, 12),
-			GWall:      WordFromBytes(pay, 12),
+			GWall:      WordFromBytes(pay, 14),
 		}
 	} else {
 		g = &Gamer{
