@@ -14,11 +14,11 @@ DFLAGS=$(
     done
 )
 
-# All *.c files under /nekot1/ are used.
+# All *.c files under /kernel/ are used.
 KERNEL_CFILES=$(
-    for x in $(cd nekot1 && echo [a-z]*.c)
+    for x in $(cd kernel && echo [a-z]*.c)
     do
-        echo "../nekot1/$x"
+        echo "../kernel/$x"
     done
 )
 
@@ -49,15 +49,15 @@ do
     x=$(basename $g .game)
 
     echo "$x.game: ../games/$x/game.c"
-	echo '	python3 ../nekot1/n1preprocess.py $<' $x.c
+	echo '	python3 ../kernel/n1preprocess.py $<' $x.c
     echo '	$(GCC) -fwhole-program -S $(GCFLAGS)' -I../games/$x -I.. $x.c
 
-	echo '	cat _nekot1_sym.s >>' $x.s
+	echo '	cat _kernel_sym.s >>' $x.s
 	echo '	$(LWASM)' -o$x.o $x.s --list=$x.o.list --map=$x.o.map --symbol-dump=$x.o.sym
 	echo '	$(LWLINK) --decb' --output=$x.game $x.o -lgcc --entry=__n1pre_entry --script=_game.script --map=$x.map
 	echo '	grep "^Section:"' $x.map
 	echo '	cp -vf' $x.game /tmp/$x.game
-	echo '	cp -vf' $x.game /tmp/$x.'$$(cat _nekot1.decb.hash).game'
+	echo '	cp -vf' $x.game /tmp/$x.'$$(cat _kernel.decb.hash).game'
 	echo '	echo OKAY $@'
     echo
 

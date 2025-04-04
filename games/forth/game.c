@@ -1,4 +1,4 @@
-#include "nekot1/public.h"
+#include "kernel/public.h"
 
 gSCREEN(TextScreen, 2);
 

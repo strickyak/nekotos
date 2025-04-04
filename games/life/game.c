@@ -1,4 +1,4 @@
-#include "nekot1/public.h"
+#include "kernel/public.h"
 
 gSCREEN(D, 2);  // D for Semigraphics Display
 

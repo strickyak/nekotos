@@ -1,4 +1,4 @@
-#include "nekot1/public.h"
+#include "kernel/public.h"
 
 gSCREEN(Screen, 12);  // Screen for PMODE1
 

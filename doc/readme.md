@@ -1,6 +1,6 @@
-# The NEKOT COCO Microkernel API for Games
+# The NekotOS COCO Microkernel API for Games
 
-NEKOT is a multiplayer gaming microkernel for Tandy / Radio Shack Color
+NekotOS is a multiplayer gaming microkernel for Tandy / Radio Shack Color
 Computers with *high-speed networking*.
 
 Examples of *high-speed networking* are the CocoIOr ethernet card and
@@ -176,25 +176,25 @@ as read-only variables.
 
 ## Hardware Ownership
 
-The division of responsibilities between the NEKOT Microkernel and the
+The division of responsibilities between the NekotOS Microkernel and the
 Game (application) are a little unusual.  The microkernel leaves some
 things to the Game that a normal OS would usually provide, like keyboard
-and graphics -- that's why the NEKOT OS is called a Microkernel.
+and graphics -- that's why the NekotOS is called a Microkernel.
 
-### Nekot Responsibility
+### NekotOS Responsibility
 
-The NEKOT Microkernel owns the 60 Hz VSYNC IRQ.
+The NekotOS Microkernel owns the 60 Hz VSYNC IRQ.
 Games can poll the Real-Time Gaming clock for timing events.
 
-The NEKOT Microkernel owns the BREAK KEY duing Game mode.
+The NekotOS Microkernel owns the BREAK KEY duing Game mode.
 
-The NEKOT Microkernel owns the entire keyboard and displays a text screen
+The NekotOS Microkernel owns the entire keyboard and displays a text screen
 during Chat mode.
 
-The NEKOT Microkernel owns the networking hardware.
+The NekotOS Microkernel owns the networking hardware.
 Games use the API to send and receive messages.
 
-The NEKOT Microkernel owns the VDG/SAM video mode configuration.
+The NekotOS Microkernel owns the VDG/SAM video mode configuration.
 
 ### Game Responsibility
 

@@ -1,3 +1,3 @@
-module github.com/strickyak/nekot-coco-microkernel
+module github.com/strickyak/nekotos
 
 go 1.20

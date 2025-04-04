@@ -3,7 +3,7 @@ package transcript
 import (
 	"time"
 
-	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
+	. "github.com/strickyak/nekotos/mcp/util"
 )
 
 // To begin with, this is specific to the VDG 32x16 Text mode.

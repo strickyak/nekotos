@@ -1,67 +1,63 @@
-#include "kernel/public.h"
-#include "platform-text.h"
+#include "kernel/private.h"
 
 #include <stdarg.h>
 
-#define TEXT_STR_MAX 30
+#define SLOW_CONSOLE 0
+gword volatile slow_her_down;
 
-gword cursor;
-
-void AdvanceCursor() {
-    ++cursor;
-    while (cursor >= TEXT_LIMIT) {
+static void AdvanceCursor() {
+    ++Console.cursor;
+    while (Console.cursor >= PANE_LIMIT) {
         // Scroll Pane upward
-        for (gword p = TEXT_BEGIN; p < TEXT_LIMIT-32; p+=2) {
+        for (gword p = PANE_BEGIN; p < PANE_LIMIT-32; p+=2) {
             gPoke2(p, gPeek2(p+32));
         }
         // Clear bottom Pane line
-        for (gword p = TEXT_LIMIT-32; p < TEXT_LIMIT; p+=2) {
+        for (gword p = PANE_LIMIT-32; p < PANE_LIMIT; p+=2) {
             gPoke2(p, 0x2020);
         }
         // Move cursor back into bottom Pane line.
-        cursor -= 32;
+        Console.cursor -= 32;
     }
-    gPoke1(cursor, 0xFF);
+    gPoke1(Console.cursor, 0xFF);
+#if SLOW_CONSOLE
+    for (gword i = 0; i < SLOW_CONSOLE; i++) {
+        slow_her_down++;
+    }
+#endif
 }
 
 void PutRawByte(gbyte x) {
-    gPoke1(cursor, x);
+    gPoke1(Console.cursor, x);
     AdvanceCursor();
-    for (gword i = 0; i < 0x100; i++) {
-        gPoke2(0x3FFE, i);
-    }
 }
 void PutChar(char c) {
-    gPoke1(cursor, 0x20);
+    gPoke1(Console.cursor, 0x20);
 
     gbyte x = (gbyte)c; // Unsigned!
     if (x == '\n') {
-            while (cursor < TEXT_LIMIT-1) {
+            while (Console.cursor < PANE_LIMIT-1) {
                 PutChar(' ');
             }
             PutChar(' ');
     } else if (x < 32) {
-            PutChar('_'); // back arrow for Control Chars
+        // Ingore other control chars.
     } else if (x < 96) {
-            PutRawByte(63&x);
+            PutRawByte(63&x);  // Upper case.
     } else if (x < 128) {
-            PutRawByte(x-96);
+            PutRawByte(x-96); // Lower case.
     } else {
-            PutRawByte(x);
+            PutRawByte(x);  // Semigraphics.
     }
 }
 
 void PutStr(const char* s) {
-    int max = TEXT_STR_MAX;
     for (; *s; s++) {
         PutChar(*s);
-        if (max-- <= 0) {
-            PutChar('\\');
-            return;
-        }
     }
 }
 
+#if 1
 char HexAlphabet[] = "0123456789ABCDEF";
 
 void PutHex(gword x) {
@@ -70,7 +66,7 @@ void PutHex(gword x) {
   }
   PutChar(HexAlphabet[15u & x]);
 }
-
+#endif
 gbyte DivMod10(gword x, gword* out_div) {  // returns mod
   gword div = 0;
   while (x >= 10000) x -= 10000, div += 1000;
@@ -90,7 +86,7 @@ void PutDec(gword x) {
   // eschew mod // PutChar('0' + (gbyte)(x % 10u));
   PutChar('0' + DivMod10(x, &div));
 }
-
+#if 1
 void PutSigned(int x) {
     if (x<0) {
         x = -x;
@@ -98,18 +94,15 @@ void PutSigned(int x) {
     }
     PutDec(x);
 }
-
+#endif
+#if 1
 void Printf(const char* format, ...) {
-    int max = TEXT_STR_MAX;
+    gbyte cc_value = gIrqSaveAndDisable();
+
     va_list ap;
     va_start(ap, format);
 
     for (const char* s = format; *s; s++) {
-        if (max-- <= 0) {
-            PutChar('\\');
-            break;
-        }
-
         if (*s < ' ') {
             PutChar('\n');
         } else if (*s != '%') {
@@ -118,23 +111,29 @@ void Printf(const char* format, ...) {
             s++;
             switch (*s) {
             case 'd':
+#if 0
                 {
                     int x = va_arg(ap, int);
-                    PutDec(x);
+                    PutSigned(x);
                 }
                 break;
+#endif
             case 'u':
                 {
                     gword x = va_arg(ap, gword);
                     PutDec(x);
+                    PutChar('.');
                 }
                 break;
+#if 1
             case 'x':
                 {
                     gword x = va_arg(ap, gword);
+                    PutChar('$');
                     PutHex(x);
                 }
                 break;
+#endif
             case 's':
                 {
                     char* x = va_arg(ap, char*);
@@ -146,13 +145,32 @@ void Printf(const char* format, ...) {
             }; // end switch
        }  // end if
     }
+    gIrqRestore(cc_value);
 }
+#endif
 
-void Text_Init() {
-    // Fill the body of the screen with spaces.
-    for (gword p = TEXT_BEGIN; p < TEXT_BEGIN+512; p+=2) {
-        gPoke2(p, 0x2F2F); // slashes.
+void Console_Init() {
+#if 1
+    Console.cursor = PANE_LIMIT - 32;
+    PutStr(" \n\n");
+    gPoke1(Console.cursor, 0xFF);
+#endif
+    // gPoke2(0, AdvanceCursor);
+
+    // Draw a greenish bar across the top of the Console.
+    for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
+        gPoke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
-    cursor = TEXT_LIMIT - 32;
-    gPoke1(cursor, 0xFF);
+#if 0
+    // Fill the body of the screen with spaces.
+    for (gword p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
+        gPoke2(p, 0x2020);
+    }
+#endif
+    // Draw a blueish bar across the bottom of the Console.
+    for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
+        gPoke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
+    }
+    // Console.cursor = PANE_LIMIT - 32;
+    gPoke1(Console.cursor, 0xFF);
 }

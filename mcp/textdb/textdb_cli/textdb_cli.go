@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/strickyak/nekot-coco-microkernel/mcp/textdb"
+	"github.com/strickyak/nekotos/mcp/textdb"
 )
 
 var DIR = flag.String("dir", ".", "directory where to find database files")

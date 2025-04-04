@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/strickyak/nekot-coco-microkernel/mcp"
-	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
+	"github.com/strickyak/nekotos/mcp"
+	. "github.com/strickyak/nekotos/mcp/util"
 )
 
 var PORT = flag.Int("port", 2321, "Listen on this TCP port (V41)")
@@ -23,7 +23,7 @@ const (
 	CMD_LOG         = 200
 	CMD_DATA        = 204
 	CMD_ECHO        = 217 // reply with CMD_DATA, with high bits toggled.
-	CMD_HELLO_NEKOT = 64
+	CMD_HELLO_NekotOS = 64
 )
 
 func WriteFive(conn net.Conn, cmd byte, n uint, p uint) {
@@ -105,15 +105,15 @@ func ReadFiveLoop(conn net.Conn, hellos map[uint][]byte) {
 			WriteFive(conn, CMD_DATA, n, p)
 			conn.Write(pay)
 
-		case CMD_HELLO_NEKOT:
+		case CMD_HELLO_NekotOS:
 			pay := make([]byte, n)
 			_, err := io.ReadFull(conn, pay)
 			if err != nil {
 				log.Panicf("ReadFive: pay: stopping due to error: %v", err)
 			}
 
-			// For CocoIOr to request Nekot:
-			log.Printf("CMD_HELLO_NEKOT %d: %q", p, pay)
+			// For CocoIOr to request NekotOS:
+			log.Printf("CMD_HELLO_NekotOS %d: %q", p, pay)
 			mcp.MCP(conn, p, pay, hellos)
 
 		default:
@@ -195,8 +195,8 @@ func Serve(conn net.Conn) {
 		log.Panicf("Missing HELLO for 0")
 	}
 
-	if string(greeting) == "bonobo-nekot1" {
-		// For Bonobo to request Nekot:
+	if string(greeting) == "bonobo-nekotos" {
+		// For Bonobo to request NekotOS:
 		log.Printf("GREETING Bonobo %d: %q", 0, greeting)
 		mcp.MCP(conn, 0, nil, hellos)
 		return

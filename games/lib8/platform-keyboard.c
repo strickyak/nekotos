@@ -1,4 +1,4 @@
-#include "nekot1/public.h"
+#include "kernel/public.h"
 #include "platform-keyboard.h"
 
 void PutChar(char ch);

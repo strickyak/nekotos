@@ -1,7 +1,7 @@
 package mcp
 
 import (
-	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
+	. "github.com/strickyak/nekotos/mcp/util"
 )
 
 const MinRoom = 40

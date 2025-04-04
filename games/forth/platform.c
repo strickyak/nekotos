@@ -1,5 +1,5 @@
 // platform.c
-// for NEKOT OS on 6809
+// for NekotOS on 6809
 
 #include "forth.h"
 

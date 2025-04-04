@@ -1,6 +1,6 @@
-// The Master Control Program is the Server that Nekot cocos connect to.
+// The Master Control Program is the Server that NekotOS cocos connect to.
 // At the moment, this is dispatched from the Lemma Server in frobio,
-// upon it receiving a quint with `CMD_HELLO_NEKOT = 64`.
+// upon it receiving a quint with `CMD_HELLO_NEKOTOS = 64`.
 package mcp
 
 import (
@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/strickyak/nekot-coco-microkernel/mcp/transcript"
-	. "github.com/strickyak/nekot-coco-microkernel/mcp/util"
+	"github.com/strickyak/nekotos/mcp/transcript"
+	. "github.com/strickyak/nekotos/mcp/util"
 )
 
 var GAMES_DIR = flag.String("games_dir", "/tmp", "where .games files are located")
@@ -55,7 +55,7 @@ type Gamer struct {
 
 	Level      uint   // Original HELLO `p` parameter
 	Hello      []byte // Original HELLO payload
-	NekotHash  []byte
+	NekotOSHash  []byte
 	ConsAddr   uint
 	MaxPlayers uint
 	GWall      uint
@@ -202,7 +202,7 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 				g.ControlRequestHandler(p.p, p.pay)
 			case N_HELLO:
 				Log("%q HELLO(%d) [%d] % 3x", g, p.p, len(p.pay), p.pay)
-				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:6]) == "nekot1" {
+				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:6]) == "nekotos" {
 					g.ConsAddr = WordFromBytes(p.pay, 8)
 					g.MaxPlayers = WordFromBytes(p.pay, 10)
 					g.GScore = WordFromBytes(p.pay, 12)
@@ -210,8 +210,8 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 					now := g.SendWallTime()
 					log.Printf("HELLO(1) sent Wall Time: %v", now)
 				} else if p.p == 2 && len(p.pay) == 8 {
-					g.NekotHash = p.pay
-					log.Printf("HELLO(2) from NekotHash % 3x", p.pay)
+					g.NekotOSHash = p.pay
+					log.Printf("HELLO(2) from NekotOSHash % 3x", p.pay)
 					g.ConsoleSync()
 				} else {
 					log.Panicf("unknown HELLO(%d): % 3x", p.p, p.pay)
@@ -408,7 +408,7 @@ func (g *Gamer) ExecuteSlashCommand(s string) {
 }
 
 func (g *Gamer) ReadVersionedGameFile(basename string) []byte {
-	filename := Format("%s/%s.%02x.game", *GAMES_DIR, basename, g.NekotHash)
+	filename := Format("%s/%s.%02x.game", *GAMES_DIR, basename, g.NekotOSHash)
 	log.Printf("%v ReadVersionedGameFile: %q", g, filename)
 	return Value(os.ReadFile(filename))
 }

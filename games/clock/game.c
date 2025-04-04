@@ -1,4 +1,4 @@
-#include "nekot1/public.h"
+#include "kernel/public.h"
 
 gSCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
 

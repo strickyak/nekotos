@@ -23,7 +23,7 @@ miniforth_unopt: $(OBJS)
 
 miniforth: $(OBJS)
 	cat *.c > _big.c
-	PATH="$$HOME/coco-shelf/bin:$$PATH" gcc6809 -std=gnu99 -Os -c -f'omit-frame-pointer' -f'whole-program' -I"$$HOME/coco-shelf/nekot-coco-microkernel/" _big.c
+	PATH="$$HOME/coco-shelf/bin:$$PATH" gcc6809 -std=gnu99 -Os -c -f'omit-frame-pointer' -f'whole-program' -I"$$HOME/coco-shelf/nekotos/" _big.c
 	PATH="$$HOME/coco-shelf/bin:$$PATH" lwlink --format=decb _big.o -o'miniforth' -L"$$HOME/coco-shelf/lib/gcc/m6809-unknown/4.6.4/" -lgcc --map='miniforth.map'
 
 .c.o:
