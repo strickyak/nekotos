@@ -4,6 +4,7 @@
 package mcp
 
 import (
+	"bytes"
 	"flag"
 	"log"
 	"net"
@@ -13,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/strickyak/nekotos/data"
 	"github.com/strickyak/nekotos/mcp/transcript"
 	. "github.com/strickyak/nekotos/mcp/util"
 )
@@ -21,14 +23,22 @@ var GAMES_DIR = flag.String("games_dir", "/tmp", "where .games files are located
 var GAME_ZONE = flag.String("zone", "America/New_York", "linux time zone location")
 
 const (
-	N_CLOSED  = 63
-	N_HELLO   = 64
-	N_MEMCPY  = 65
-	N_POKE    = 66
-	N_START   = 68
-	N_KEYSCAN = 69
-	N_CONTROL = 70
-	CMD_LOG   = 200
+	N_CLOSED   = 63
+	N_GREETING = 64
+	N_MEMCPY   = 65
+	N_POKE     = 66
+	N_START    = 68
+	N_KEYSCAN  = 69
+	N_CONTROL  = 70
+	CMD_LOG    = 200
+)
+
+const (
+	// Borrow $FFxx "addresses" for tagging Info
+	HELLO_HANDLE  = 0xFF00
+	HELLO_NAME    = 0xFF01
+	HELLO_ZONE    = 0xFF02
+	HELLO_AIRPORT = 0xFF03
 )
 
 type Gamer struct {
@@ -36,9 +46,13 @@ type Gamer struct {
 	SendMutex sync.Mutex
 	Hellos    map[uint][]byte
 
-	Handle string
-	Name   string
-	Room   *Room
+	Handle   string
+	Name     string
+	Zone     string
+	Airport  string
+	Location *time.Location
+	Special  string // special word sent with HELLO(0)
+	Room     *Room
 
 	// game  *Game
 	// shard *Shard
@@ -54,8 +68,8 @@ type Gamer struct {
 
 	// Console [14][32]byte
 
-	Level       uint   // Original HELLO `p` parameter
-	Hello       []byte // Original HELLO payload
+	Level       uint   // Original GREETING `p` parameter
+	Greeting    []byte // Original GREETING payload
 	NekotOSHash []byte
 	ConsAddr    uint
 	MaxPlayers  uint
@@ -201,21 +215,38 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 				g.KeyScanHandler(p.pay)
 			case N_CONTROL:
 				g.ControlRequestHandler(p.p, p.pay)
-			case N_HELLO:
-				Log("%q HELLO(%d) [%d] % 3x", g, p.p, len(p.pay), p.pay)
+			case N_GREETING:
+				Log("%q GREETING(%d) [%d] % 3x", g, p.p, len(p.pay), p.pay)
+
 				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:7]) == "nekotos" {
+
 					g.ConsAddr = WordFromBytes(p.pay, 8)
 					g.MaxPlayers = WordFromBytes(p.pay, 10)
 					g.GScore = WordFromBytes(p.pay, 12)
 					g.GWall = WordFromBytes(p.pay, 14)
 					now := g.SendWallTime()
-					log.Printf("HELLO(1) sent Wall Time: %v", now)
-				} else if p.p == 2 && len(p.pay) == 8 {
-					g.NekotOSHash = p.pay
-					log.Printf("HELLO(2) from NekotOSHash % 3x", p.pay)
+					log.Printf("GREETING(1) sent Wall Time: %v", now)
+
+					g.PrintPlain("******************************")
+					g.PrintPlain(Format("*** HANDLE = %q", g.Handle))
+					g.PrintPlain(Format("*** NAME = %q", g.Name))
+					g.PrintPlain(Format("*** ZONE = %q", g.Zone))
+					g.PrintPlain(Format("*** AIRPORT = %q", g.Airport))
+					g.PrintPlain(Format("*** (CMSW) = %x %x %x %x", g.ConsAddr, g.MaxPlayers, g.GScore, g.GWall))
+					g.PrintPlain(Format("*** (CARD) = %q", g.Special))
+
 					g.ConsoleSync()
+
+				} else if p.p == 2 && len(p.pay) == 8 {
+
+					g.NekotOSHash = p.pay
+					log.Printf("GREETING(2) from NekotOSHash % 3x", p.pay)
+
+					g.PrintPlain(Format("*** (HASH) = %x", p.pay[:8]))
+					g.ConsoleSync()
+
 				} else {
-					log.Panicf("unknown HELLO(%d): % 3x", p.p, p.pay)
+					log.Panicf("unknown GREETING(%d): % 3x", p.p, p.pay)
 				}
 			default:
 				Log("WUT? default PPI: %v", p)
@@ -421,7 +452,9 @@ func (g *Gamer) ReadVersionedGameFile(gamename string) []byte {
 func (g *Gamer) EnterLine() {
 	s := string(g.Line)
 	log.Printf("GAMER %q LINE %q\n", g.Handle, s)
-	g.PrintLine(transcript.PlainString(s))
+
+	GamerSendChat(g, s)
+	// g.PrintLine(transcript.PlainString(s))
 
 	if strings.HasPrefix(s, "/") {
 		g.ExecuteSlashCommand(s[1:])
@@ -482,6 +515,9 @@ func (g *Gamer) ConsoleSync() {
 	}
 }
 
+func (g *Gamer) PrintPlain(s string) {
+	g.PrintLine(transcript.PlainString(s))
+}
 func (g *Gamer) PrintLine(s string) {
 	g.Trans.AppendString(s)
 	g.ConsoleSync()
@@ -493,12 +529,16 @@ func (gamer *Gamer) Step(inchan chan Packet) {
 
 // SendGameAndLaunch takes the contents of a DECB binary,
 // and pokes it into the Coco.
-func (gamer *Gamer) SendGameAndLaunch(bb []byte) {
+func (gamer *Gamer) SendGameAndLaunch(bb []byte, gamename string) {
 	// Flip back to Shell mode, so you're not executing the old game
 	// while loading the new game.
 	gamer.SendPacket(N_START, 0, nil)
 	gamer.SendInitializedScores()
 	gamer.SendWallTime()
+
+	if len(bb) == 0 {
+		PrintPlain(Format("*** GAME NOT FOUND: %q", gamename))
+	}
 
 	for len(bb) >= 5 {
 		c := bb[0]
@@ -541,10 +581,10 @@ func (gamer *Gamer) WallTimeBytes(now time.Time, addMe time.Duration) []byte {
 	return wall
 }
 func (gamer *Gamer) SendWallTime() time.Time {
-	location, err := time.LoadLocation(*GAME_ZONE)
+	location, err := time.LoadLocation(gamer.Zone)
 	if err != nil {
 		location = time.UTC
-		log.Printf("BAD GAME TIME ZONE %q -- USING UTC INSTEAD", *GAME_ZONE)
+		log.Printf("BAD GAME TIME ZONE %q -- USING UTC INSTEAD", gamer.Zone)
 	}
 	now := time.Now().In(location)
 
@@ -599,40 +639,105 @@ func (gamer *Gamer) Run() {
 	}
 }
 
+func NiceHandle(s string) string {
+	var buf bytes.Buffer
+	s = strings.TrimSpace(s)
+
+	for i := 0; i < 3; i++ {
+		if i < len(s) {
+			c := s[i]
+			if c > 96 {
+				c -= 32 // lower to upper
+			}
+			if 'A' <= c && c <= 'Z' {
+				buf.WriteByte(c)
+			} else {
+				buf.WriteByte('Z')
+			}
+		} else {
+			buf.WriteByte('Z')
+		}
+	}
+	return buf.String()
+}
+
 func MCP(conn net.Conn, p uint, pay []byte, hellos map[uint][]byte) {
+	Log("MCP remote: %q", conn.RemoteAddr().String())
+	Log("MCP p: %d.", p)
+	Log("MCP pay: %q = % 3x", pay, pay)
+	for k, v := range hellos {
+		Log("MCP hello(%04x): %q = % 3x", k, v, v)
+	}
 	var g *Gamer
 
-	if len(pay) > 0 {
-		g = &Gamer{
-			Conn:       conn,
-			Handle:     "YAK",
-			Hellos:     hellos,
-			Name:       "YAK",
-			Level:      p,
-			Hello:      pay,
-			Trans:      transcript.New(),
+	g = &Gamer{
+		Conn:   conn,
+		Hellos: hellos,
+
+		Handle:  "UNK",
+		Name:    "UNKNOWN.NAME",
+		Zone:    *GAME_ZONE,
+		Airport: "ORD",
+
+		Level:    p,
+		Greeting: pay,
+		/*
 			ConsAddr:   WordFromBytes(pay, 8),
 			MaxPlayers: WordFromBytes(pay, 10),
 			GScore:     WordFromBytes(pay, 12),
 			GWall:      WordFromBytes(pay, 14),
-		}
-	} else {
-		g = &Gamer{
-			Conn:   conn,
-			Handle: "YAK",
-			Hellos: hellos,
-			Name:   "YAK",
-			Level:  p,
-			Hello:  pay,
-			Trans:  transcript.New(),
-			// ConsAddr:   WordFromBytes(pay, 8),
-			// MaxPlayers: WordFromBytes(pay, 10),
-			// GWall:      WordFromBytes(pay, 12),
-			// GScore:     WordFromBytes(pay, 14),
+		*/
+	}
+
+	if bb, ok := hellos[0]; ok {
+		g.Special = string(bb)
+	}
+
+	if bb, ok := hellos[HELLO_HANDLE]; ok {
+		g.Handle = NiceHandle(string(bb))
+		g.Name = g.Handle
+	}
+
+	if bb, ok := hellos[HELLO_NAME]; ok {
+		g.Name = strings.ToUpper(string(bb))
+	}
+
+	if bb, ok := hellos[HELLO_AIRPORT]; ok {
+		g.Airport = strings.ToUpper(string(bb))
+	}
+
+	if bb, ok := hellos[HELLO_ZONE]; ok {
+		if len(bb) > 0 {
+			// explicit zone provided
+			g.Zone = string(bb)
+		} else if len(g.Airport) > 0 {
+			// use zone of airport
+			g.Zone = string(bb)
+			if airport, ok := data.AirportMap[g.Airport]; ok {
+				g.Zone = airport.Timezone
+			} else {
+				// Default to Glenside
+				g.Zone = "America/Chicago"
+			}
+		} else {
+			// Default to Glenside
+			g.Zone = "America/Chicago"
 		}
 	}
 
-	Log("MCP: %#v", *g)
+	if location, err := time.LoadLocation(g.Zone); err == nil {
+		g.Location = location
+	}
+	if g.Location == nil {
+		g.Location = Value(time.LoadLocation("America/Chicago"))
+	}
+
+	g.Trans = transcript.New()
+	g.Trans.AppendTime(transcript.PlainString(g.FormatHHMM(time.Now())))
 
 	g.Run()
+}
+
+func (g *Gamer) FormatHHMM(t time.Time) string {
+	return t.In(g.Location).Format("----- 15:04 -----")
 }

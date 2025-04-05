@@ -20,9 +20,9 @@ var PORT = flag.Int("port", 2321, "Listen on this TCP port (V41)")
 const (
 	CMD_HELLO = 1
 
-	CMD_LOG         = 200
-	CMD_DATA        = 204
-	CMD_ECHO        = 217 // reply with CMD_DATA, with high bits toggled.
+	CMD_LOG           = 200
+	CMD_DATA          = 204
+	CMD_ECHO          = 217 // reply with CMD_DATA, with high bits toggled.
 	CMD_HELLO_NekotOS = 64
 )
 

@@ -14,6 +14,8 @@ func Enlist(gamer *Gamer) {
 	}
 	GamerByHandle[handle] = gamer
 
+	KernelSendChat(Format("*** WELCOME %s (%q)", gamer.Handle, gamer.Name))
+
 	Log("@@@@@@@@ Enlisted: %q Now: %s", handle, KeysString(GamerByHandle))
 
 }
@@ -22,5 +24,6 @@ func Discharge(gamer *Gamer) {
 	handle := Str(gamer)
 	delete(GamerByHandle, handle)
 
+	KernelSendChat(Format("*** BYE %s", gamer.Handle))
 	Log("@@@@@@@@ Discharged: %q Now: %s", handle, KeysString(GamerByHandle))
 }

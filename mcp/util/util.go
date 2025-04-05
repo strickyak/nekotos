@@ -10,12 +10,25 @@ import (
 //
 //  Utilities
 
-func Hi(x uint) byte {
-	return 255 & byte(x>>8)
+type Ordered interface {
+	~byte | ~int | ~uint | ~int64 | ~uint64 | ~rune | ~string
+}
+type Integer interface {
+	~int | ~uint
 }
 
-func Lo(x uint) byte {
-	return 255 & byte(x)
+func AssertGE[T Ordered](a, b T) {
+	if !(a >= b) {
+		log.Panicf("FAILED AssertGE(%v, %v)", a, b)
+	}
+}
+
+func Hi[T Integer](x T) byte {
+	return byte(x >> 8)
+}
+
+func Lo[T Integer](x T) byte {
+	return byte(x)
 }
 
 func HiLo(a, b byte) uint {

@@ -1,9 +1,9 @@
 package transcript
 
 import (
-	"time"
+// "time"
 
-	. "github.com/strickyak/nekotos/mcp/util"
+// . "github.com/strickyak/nekotos/mcp/util"
 )
 
 // To begin with, this is specific to the VDG 32x16 Text mode.
@@ -50,10 +50,6 @@ func init() {
 
 func New() *Rec {
 	rec := &Rec{}
-	for i := 0; i < 100; i++ {
-		rec.AppendString(PlainString(Format("This is line %d.", i)))
-	}
-	rec.AppendTime()
 	return rec
 }
 
@@ -77,11 +73,7 @@ func (r *Rec) AppendString(s string) {
 	}
 }
 
-func (r *Rec) AppendTime() {
-	timestamp := PlainString(
-		time.Now().Format("---  15:04  MST  ---"))
-	// TODO: TZ
-
+func (r *Rec) AppendTime(timestamp string) {
 	n := len(timestamp)
 	tmp := BlankLine
 	tmp[0], tmp[W-1] = PlainChar('['), PlainChar(']')
