@@ -1,29 +1,61 @@
 package mcp
 
 import (
+    "sync"
+
 	. "github.com/strickyak/nekotos/mcp/util"
 )
 
-var GamerByHandle = make(map[string]*Gamer)
+var gamerByHandleMutex sync.Mutex
+
+var gamerByHandle = make(map[string]*Gamer)
 
 func Enlist(gamer *Gamer) {
+    //gamerByHandleMutex.Lock()
+    //defer gamerByHandleMutex.Unlock()
+
 	handle := Str(gamer)
-	_, already := GamerByHandle[handle]
+	_, already := gamerByHandle[handle]
 	if already {
 		Panic("Handle %q already enlisted", handle)
 	}
-	GamerByHandle[handle] = gamer
+	gamerByHandle[handle] = gamer
 
-	KernelSendChat(Format("*** WELCOME %s (%q)", gamer.Handle, gamer.Name))
+	KernelSendChatf("*** WELCOME %s (%q)", gamer.Handle, gamer.Name)
 
-	Log("@@@@@@@@ Enlisted: %q Now: %s", handle, KeysString(GamerByHandle))
+	Log("@@@@@@@@ Enlisted: %q Now: %s", handle, KeysString(gamerByHandle))
 
 }
 
 func Discharge(gamer *Gamer) {
-	handle := Str(gamer)
-	delete(GamerByHandle, handle)
+    //gamerByHandleMutex.Lock()
+    //defer gamerByHandleMutex.Unlock()
 
-	KernelSendChat(Format("*** BYE %s", gamer.Handle))
-	Log("@@@@@@@@ Discharged: %q Now: %s", handle, KeysString(GamerByHandle))
+	handle := Str(gamer)
+	delete(gamerByHandle, handle)
+
+	KernelSendChatf("*** BYE %s", gamer.Handle)
+	Log("@@@@@@@@ Discharged: %q Now: %s", handle, KeysString(gamerByHandle))
+}
+
+func CurrentGamers() map[string]*Gamer {
+    //gamerByHandleMutex.Lock()
+    //defer gamerByHandleMutex.Unlock()
+
+    var z = make(map[string]*Gamer)
+    for k, v := range gamerByHandle {
+        z[k] = v
+    }
+    return z
+}
+
+func CommandWho(g *Gamer) {
+    for k, v := range CurrentGamers() {
+        if v.Room != nil {
+            r := v.Room.Number
+            KernelSendChatf("* %3s%2d %q", k, r, v.Name)
+        } else {
+            KernelSendChatf("* %3s   %q", k, v.Name)
+        }
+    }
 }
