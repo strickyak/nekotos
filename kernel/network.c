@@ -176,7 +176,7 @@ struct gamecast* gReceiveCast64() {
 
 void HelloMCP() {
     gbyte hello[] = {
-        'n', 'e', 'k', 'o', 't', '1', '\0', '\0',
+        'n', 'e', 'k', 'o', 't', 'o', 's', '\0',
         DOUBLE_BYTE(Cons),
         DOUBLE_BYTE(gMAX_PLAYERS),
         DOUBLE_BYTE(&gScore),
