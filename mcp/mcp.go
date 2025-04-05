@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -53,13 +54,13 @@ type Gamer struct {
 
 	// Console [14][32]byte
 
-	Level      uint   // Original HELLO `p` parameter
-	Hello      []byte // Original HELLO payload
-	NekotOSHash  []byte
-	ConsAddr   uint
-	MaxPlayers uint
-	GWall      uint
-	GScore     uint
+	Level       uint   // Original HELLO `p` parameter
+	Hello       []byte // Original HELLO payload
+	NekotOSHash []byte
+	ConsAddr    uint
+	MaxPlayers  uint
+	GWall       uint
+	GScore      uint
 }
 
 func (o Gamer) String() string {
@@ -202,7 +203,7 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 				g.ControlRequestHandler(p.p, p.pay)
 			case N_HELLO:
 				Log("%q HELLO(%d) [%d] % 3x", g, p.p, len(p.pay), p.pay)
-				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:6]) == "nekotos" {
+				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:7]) == "nekotos" {
 					g.ConsAddr = WordFromBytes(p.pay, 8)
 					g.MaxPlayers = WordFromBytes(p.pay, 10)
 					g.GScore = WordFromBytes(p.pay, 12)
@@ -255,10 +256,10 @@ func (g *Gamer) ControlRequestHandler(p uint, pay []byte) {
 		if Dont_CausesHangs {
 			g.PrintLine(Format("*** GAME CHAIN TO %s", filename))
 		}
+
 		// Do not g.SendPacket(N_START, 0, nil),
 		// because g.SendGameAndLaunch will do that.
-
-		decb := Value(os.ReadFile(filename))
+		decb := g.ReadVersionedGameFile(filename)
 		g.SendGameAndLaunch(decb)
 
 	case 'o': // Game Over
@@ -407,9 +408,13 @@ func (g *Gamer) ExecuteSlashCommand(s string) {
 	*/
 }
 
-func (g *Gamer) ReadVersionedGameFile(basename string) []byte {
-	filename := Format("%s/%s.%02x.game", *GAMES_DIR, basename, g.NekotOSHash)
+func (g *Gamer) ReadVersionedGameFile(gamename string) []byte {
+	// clean the gamename: remove Dir and .game extension, and lowercase
+	basename := strings.ToLower(strings.TrimSuffix(filepath.Base(gamename), ".game"))
+	// want correct version of game, in the GAMES_DIR
+	filename := filepath.Join(*GAMES_DIR, Format("%s.%02x.game", basename, g.NekotOSHash))
 	log.Printf("%v ReadVersionedGameFile: %q", g, filename)
+	// slurp and return contents
 	return Value(os.ReadFile(filename))
 }
 
