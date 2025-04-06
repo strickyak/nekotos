@@ -1,7 +1,7 @@
 package mcp
 
 import (
-    "sync"
+	"sync"
 
 	. "github.com/strickyak/nekotos/mcp/util"
 )
@@ -11,8 +11,8 @@ var gamerByHandleMutex sync.Mutex
 var gamerByHandle = make(map[string]*Gamer)
 
 func Enlist(gamer *Gamer) {
-    //gamerByHandleMutex.Lock()
-    //defer gamerByHandleMutex.Unlock()
+	//gamerByHandleMutex.Lock()
+	//defer gamerByHandleMutex.Unlock()
 
 	handle := Str(gamer)
 	_, already := gamerByHandle[handle]
@@ -28,8 +28,8 @@ func Enlist(gamer *Gamer) {
 }
 
 func Discharge(gamer *Gamer) {
-    //gamerByHandleMutex.Lock()
-    //defer gamerByHandleMutex.Unlock()
+	//gamerByHandleMutex.Lock()
+	//defer gamerByHandleMutex.Unlock()
 
 	handle := Str(gamer)
 	delete(gamerByHandle, handle)
@@ -39,23 +39,23 @@ func Discharge(gamer *Gamer) {
 }
 
 func CurrentGamers() map[string]*Gamer {
-    //gamerByHandleMutex.Lock()
-    //defer gamerByHandleMutex.Unlock()
+	//gamerByHandleMutex.Lock()
+	//defer gamerByHandleMutex.Unlock()
 
-    var z = make(map[string]*Gamer)
-    for k, v := range gamerByHandle {
-        z[k] = v
-    }
-    return z
+	var z = make(map[string]*Gamer)
+	for k, v := range gamerByHandle {
+		z[k] = v
+	}
+	return z
 }
 
 func CommandWho(g *Gamer) {
-    for k, v := range CurrentGamers() {
-        if v.Room != nil {
-            r := v.Room.Number
-            KernelSendChatf("* %3s%2d %q", k, r, v.Name)
-        } else {
-            KernelSendChatf("* %3s   %q", k, v.Name)
-        }
-    }
+	for k, v := range CurrentGamers() {
+		if v.Room != nil {
+			r := v.Room.Number
+			KernelSendChatf("* %3s%2d %q", k, r, v.Name)
+		} else {
+			KernelSendChatf("* %3s   %q", k, v.Name)
+		}
+	}
 }

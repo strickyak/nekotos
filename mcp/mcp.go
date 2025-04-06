@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -420,23 +421,37 @@ func (g *Gamer) InkeyHandler(ch byte) {
 		g.ConsoleSync()
 	}
 }
-func (g *Gamer) ExecuteSlashCommand(s string) {
-	/*
-	   ww := strings.Split(s, " ")
-	   n := len(ww)
-	   cmd := ww[0]
 
-	   	if strings.HasPrefix(cmd, "J") {
-	   	    if n==2 && ww[1]=="0" {
-	   	        g.LeaveRoom();
-	   	    } else if n==1 {
-	   	        g.LeaveRoom();
-	   	    } else if n==2 {
-	   	        x := strconv.ParseUint(ww[1], 64, 10)
-	   	        g.JoinRoom(int(x))
-	   	    }
-	   	}
-	*/
+func AtoU(s string) uint {
+	return uint(Value(strconv.ParseUint(s, 10, 64)))
+}
+
+func (g *Gamer) ExecuteSlashCommand(s string) {
+	defer func() {
+		r := recover()
+		if r != nil {
+			KernelSendChatf("ERROR: %v", r)
+		}
+	}()
+	ww := strings.Split(s, " ")
+	n := len(ww)
+	cmd := ww[0]
+
+	switch {
+	case strings.HasPrefix(cmd, "J"):
+		switch n {
+		case 1:
+			CommandJoin(g, 0)
+		case 2:
+			CommandJoin(g, AtoU(ww[1]))
+		default:
+			panic("too many args")
+		}
+	case strings.HasPrefix(cmd, "W"):
+		CommandWho(g)
+	default:
+		g.Printf("Unknown slash command: %q")
+	}
 }
 
 func (g *Gamer) ReadVersionedGameFile(gamename string) []byte {
@@ -446,7 +461,24 @@ func (g *Gamer) ReadVersionedGameFile(gamename string) []byte {
 	filename := filepath.Join(*GAMES_DIR, Format("%s.%02x.game", basename, g.NekotOSHash))
 	log.Printf("%v ReadVersionedGameFile: %q", g, filename)
 	// slurp and return contents
-	return Value(os.ReadFile(filename))
+	contents, err := os.ReadFile(filename)
+	if err != nil {
+		return nil
+	}
+	return contents
+}
+
+func (g *Gamer) Printf(format string, args ...any) {
+	g.PrintPlain(Format(format, args...))
+}
+
+func (g *Gamer) LaunchGame(gamename string) {
+	decb := g.ReadVersionedGameFile(gamename)
+	if decb == nil {
+		g.Printf("Game not found: %q", gamename)
+		return
+	}
+	g.SendGameAndLaunch(decb)
 }
 
 func (g *Gamer) EnterLine() {
@@ -454,7 +486,6 @@ func (g *Gamer) EnterLine() {
 	log.Printf("GAMER %q LINE %q\n", g.Handle, s)
 
 	GamerSendChat(g, s)
-	// g.PrintLine(transcript.PlainString(s))
 
 	if strings.HasPrefix(s, "/") {
 		g.ExecuteSlashCommand(s[1:])
@@ -462,29 +493,21 @@ func (g *Gamer) EnterLine() {
 		log.Printf("-> STOP <-")
 		g.SendPacket(N_START, 0, nil)
 	} else if s == "C" {
-		decb := g.ReadVersionedGameFile("clock")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("clock")
 	} else if s == "R" {
-		decb := g.ReadVersionedGameFile("red")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("red")
 	} else if s == "G" {
-		decb := g.ReadVersionedGameFile("green")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("green")
 	} else if s == "B" {
-		decb := g.ReadVersionedGameFile("blue")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("blue")
 	} else if s == "L" {
-		decb := g.ReadVersionedGameFile("life")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("life")
 	} else if s == "8" {
-		decb := g.ReadVersionedGameFile("lib8")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("lib8")
 	} else if s == "4" {
-		decb := g.ReadVersionedGameFile("forth")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("forth")
 	} else if s == "S" {
-		decb := g.ReadVersionedGameFile("spacewar")
-		g.SendGameAndLaunch(decb)
+		g.LaunchGame("spacewar")
 	}
 }
 
@@ -529,16 +552,12 @@ func (gamer *Gamer) Step(inchan chan Packet) {
 
 // SendGameAndLaunch takes the contents of a DECB binary,
 // and pokes it into the Coco.
-func (gamer *Gamer) SendGameAndLaunch(bb []byte, gamename string) {
+func (gamer *Gamer) SendGameAndLaunch(bb []byte) {
 	// Flip back to Shell mode, so you're not executing the old game
 	// while loading the new game.
 	gamer.SendPacket(N_START, 0, nil)
 	gamer.SendInitializedScores()
 	gamer.SendWallTime()
-
-	if len(bb) == 0 {
-		PrintPlain(Format("*** GAME NOT FOUND: %q", gamename))
-	}
 
 	for len(bb) >= 5 {
 		c := bb[0]
@@ -693,13 +712,21 @@ func MCP(conn net.Conn, p uint, pay []byte, hellos map[uint][]byte) {
 		g.Special = string(bb)
 	}
 
-	if bb, ok := hellos[HELLO_HANDLE]; ok {
+	if bb, ok := hellos[HELLO_HANDLE]; ok && len(bb) > 0 {
 		g.Handle = NiceHandle(string(bb))
 		g.Name = g.Handle
+	} else {
+		if bb, ok := hellos[0xDF00]; ok && len(bb) >= 256 {
+			g.Handle = NiceHandle(string(bb[0xE0:0xE8]))
+		}
 	}
 
-	if bb, ok := hellos[HELLO_NAME]; ok {
+	if bb, ok := hellos[HELLO_NAME]; ok && len(bb) > 0 {
 		g.Name = strings.ToUpper(string(bb))
+	} else {
+		if bb, ok := hellos[0xDF00]; ok && len(bb) >= 256 {
+			g.Name = strings.ToUpper(string(bb[0xE0:0xE8]))
+		}
 	}
 
 	if bb, ok := hellos[HELLO_AIRPORT]; ok {
