@@ -16,7 +16,7 @@ static void IncrementSeconds() {
 }
 
 static void IncrementDecis() {
-    SpinRealDecis();
+    // SpinRealDecis();
 
     if (R.decis < 9) {
         ++R.decis;
