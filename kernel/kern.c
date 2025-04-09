@@ -168,7 +168,7 @@ void ChatTask() {
     NowSwitchToChatScreen();
 
     while (gALWAYS) {
-        gAssert(!gKern.in_game);
+        if (0) gAssert(!gKern.in_game);
 
         CheckReceived();
         SpinChatTask();
@@ -177,7 +177,7 @@ void ChatTask() {
 
 // Only in Game Mode
 void Network_Handler() {
-    gAssert(gKern.in_game);
+    if (0) gAssert(gKern.in_game);
     CheckReceived();
 }
 

@@ -3,6 +3,8 @@
 void Network_Handler(void);
 void KeyboardHandler(void);
 
+void NOOP() {}
+
 gfunc Irq_FocusGameSchedule[6] = {
     Network_Handler,
     Breakkey_Handler,
