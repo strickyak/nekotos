@@ -45,7 +45,7 @@ void Irq_Handler() {
     (void) gPeek1(clear_irq);
 
     Real_IncrementTicks();
-    Breakkey_Handler();
+    // Breakkey_Handler();
 
     gAssert(gReal.ticks < 6);
     if (gKern.focus_game) {
