@@ -2,7 +2,10 @@
 #include "nekotos/lib/pmode1.h"
 #include "nekotos/lib/keyscan_arrows_0to7.h"
 
-#define MAX_TANKS 8
+#define BG 0
+#define ME 2
+#define THEM 3
+#define FG 1
 
 // Special Declarations
 gSCREEN(Screen, 12);  // Screen for PMODE1
@@ -12,6 +15,7 @@ struct tank {
   int xvel, yvel;    // x, y velocity: fixed binary point, 8b.8b ;  change in position per Decisecond.
 };
 
+#define MAX_TANKS 8
 struct state {
     struct tank tank[MAX_TANKS];
 } State;
@@ -30,11 +34,6 @@ void Hang() {
     Spin(0);
   }
 }
-
-#define BG 0
-#define ME 1
-#define THEM 3
-#define FG 2
 
 void AdvanceTanks() {
   for (gbyte i = 0; i < gScore.number_of_players; i++) {
@@ -81,7 +80,7 @@ void drawMod96(signed char x, signed char y, gbyte color) {
     PMode1DrawSpotXor(Screen, (gbyte)x, (gbyte)y, color);
 }
 
-void DrawTanks() {
+void XorTanks() {
   for (gbyte i = 0; i < gScore.number_of_players; i++) {
       struct tank* p = &State.tank[i];
       signed char x = (signed char)(p->x >> 8); // Shed fractional 8 bits.
@@ -145,22 +144,22 @@ void setup() {
   PMode1DrawVirt(Screen, PMode1DrawSpot, /*x=*/94, /*y=*/0, /*color=*/FG, /*len=*/96);
   PMode1DrawVirt(Screen, PMode1DrawSpot, /*x=*/95, /*y=*/0, /*color=*/FG, /*len=*/96);
 
-  struct tank* p = &State.tank[gScore.player];
-  p->x = 20<<8;
-  p->y = 40<<8;
-  p->xvel = 27;
-  p->yvel=  7;
+  struct tank* t = &State.tank[gScore.player];
+  t->x = 20<<8;
+  t->y = 40<<8;
+  t->xvel = 27;
+  t->yvel=  7;
 
   PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 20, 65, THEM, &gScore.number_of_players);
   PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 20, 75, ME, &gScore.player);
   PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 10, 60, THEM, gScore.number_of_players);
   PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 10, 70, ME, gScore.player);
-  DrawTanks();
+  XorTanks();
   DrawScores();
 }
 
-gbool been_in_loop_before;
 void loop() {
+  struct tank* t = &State.tank[gScore.player];
   Spin(4);
   gbyte decis = 0;
 
@@ -171,32 +170,54 @@ void loop() {
     // Every 10th of a second.
     decis = gReal.decis;
 
+    if (decis & 1) {
+
     gword keys = ScanArrowsAnd0To7();
-    if (keys) {
-        Spin(1);
-        PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 10, 50, BG);
-        PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 10, 50, ME, keys);
-        PMode1ClearDecimal3x5Unsigned(Screen, PMode1DrawSpot, 50, 50, BG);
-        PMode1DrawDecimal3x5Unsigned(Screen, PMode1DrawSpot, 50, 50, ME, keys);
-        gScore.partial_dirty = gTRUE;
+        if (keys) {
+            Spin(1);
+    #if 0
+            PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 10, 50, BG);
+            PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 10, 50, ME, keys);
+            PMode1ClearDecimal3x5Unsigned(Screen, PMode1DrawSpot, 50, 50, BG);
+            PMode1DrawDecimal3x5Unsigned(Screen, PMode1DrawSpot, 50, 50, ME, keys);
+    #endif
+            gScore.partial_dirty = gTRUE;
 
-        if (keys & ArrowsAnd0To7_0) gScore.partial_scores[0]++;
-        if (keys & ArrowsAnd0To7_1) gScore.partial_scores[1]++;
-        if (keys & ArrowsAnd0To7_2) gScore.partial_scores[2]++;
-        if (keys & ArrowsAnd0To7_3) gScore.partial_scores[3]++;
-        if (keys & ArrowsAnd0To7_4) gScore.partial_scores[4]++;
-        if (keys & ArrowsAnd0To7_5) gScore.partial_scores[5]++;
-        if (keys & ArrowsAnd0To7_6) gScore.partial_scores[6]++;
-        if (keys & ArrowsAnd0To7_7) gScore.partial_scores[7]++;
-    }
-
-    if (been_in_loop_before) {
-        DrawTanks(); // undo old tank
+            if (keys & ArrowsAnd0To7_0) gScore.partial_scores[0]++;
+            if (keys & ArrowsAnd0To7_1) gScore.partial_scores[1]++;
+            if (keys & ArrowsAnd0To7_2) gScore.partial_scores[2]++;
+            if (keys & ArrowsAnd0To7_3) gScore.partial_scores[3]++;
+    #if 0
+            if (keys & ArrowsAnd0To7_4) gScore.partial_scores[4]++;
+            if (keys & ArrowsAnd0To7_5) gScore.partial_scores[5]++;
+            if (keys & ArrowsAnd0To7_6) gScore.partial_scores[6]++;
+            if (keys & ArrowsAnd0To7_7) gScore.partial_scores[7]++;
+    #endif
+#define DV 1
+            if (keys & ArrowsAnd0To7_LEFT) { t->xvel -= DV;
+                            //PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 97, 85, BG);
+                            //PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 97, 85, ME, t->xvel);
+            }
+            if (keys & ArrowsAnd0To7_RIGHT) { t->xvel += DV;
+                            //PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 97, 85, BG);
+                            //PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 97, 85, ME, t->xvel);
+            }
+            if (keys & ArrowsAnd0To7_UP) { t->yvel -= DV;
+                            //PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 102, 91, BG);
+                            //PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 102, 91, ME, t->yvel);
+            }
+            if (keys & ArrowsAnd0To7_DOWN) { t->yvel += DV;
+                            //PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 102, 91, BG);
+                            //PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 102, 91, ME, t->yvel);
+            }
+        }
     } else {
-        been_in_loop_before = gTRUE;
+
+        XorTanks(); // undo old tank
+        AdvanceTanks();
+        XorTanks();  // new position
+
+        if (gScore.total_updated) DrawScores();
     }
-    AdvanceTanks();
-    DrawTanks();  // new position
-    if (gScore.total_updated) DrawScores();
   }
 }
