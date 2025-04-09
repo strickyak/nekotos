@@ -38,7 +38,7 @@ gfunc Irq_FocusShellSchedule[6] = {
 
 void Irq_Handler() {
     gKern.in_irq = gTRUE;
-    SpinIrq();
+    // SpinIrq();
 
     // Clear the VSYNC IRQ by reading PortB output register.
     gword const clear_irq = Pia0PortB;
