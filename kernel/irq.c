@@ -37,28 +37,18 @@ gfunc Irq_FocusShellSchedule[6] = {
 };
 
 void Irq_Handler() {
-    gKern.in_irq = gTRUE;
-    // SpinIrq();
-
     // Clear the VSYNC IRQ by reading PortB output register.
-    gword const clear_irq = Pia0PortB;
-    (void) gPeek1(clear_irq);
+    (void) gPeek1(Pia0PortB);
 
     Real_IncrementTicks();
-    // Breakkey_Handler();
 
-    gAssert(gReal.ticks < 6);
     if (gKern.focus_game) {
-// Console_Printf("F");
         Irq_FocusGameSchedule[gReal.ticks]();
     } else if (gKern.in_game) {
         Irq_PassiveGameSchedule[gReal.ticks]();
     } else {
-// Console_Printf("$");
         Irq_FocusShellSchedule[gReal.ticks]();
     }
-
-    gKern.in_irq = gFALSE;
 }
 
 void Irq_Handler_Wrapper() {

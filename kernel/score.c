@@ -4,7 +4,6 @@ struct score gScore gZEROED;
 
 void SendPartialScores() {
     gAssert(gKern.in_game);
-    gAssert(gKern.in_irq);
 
     if (gScore.partial_dirty) {
         gScore.partial_dirty = gFALSE;

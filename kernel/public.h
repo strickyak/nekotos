@@ -255,7 +255,6 @@ void gModeScreen(gbyte* screen_addr, gword mode_code);
 // to find out what state the Kernel is in.
 //
 // A game should always see `in_game` is gTRUE!
-// A game should always see `in_irq` is gFALSE!
 //
 // The important one is `focus_game`:  If `focus_game`
 // is gTRUE, the game can scan the keyboard (but it must
@@ -302,10 +301,6 @@ struct kern {
     // A game is active.
     // From a game, this should always be seen as gTRUE.
     gbool volatile gCONST in_game;
-
-    // We are currently handling a 60Hz Clock IRQ.
-    // From a game, this should always be seen as gFALSE.
-    gbool volatile gCONST in_irq;
 
     // To determine if setup allocated any low memory.
     // Only used by the kernel.

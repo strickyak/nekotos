@@ -105,7 +105,6 @@ void StartTask(gword entry) {
     gNetworkLog(logit);
 #endif
 
-    gKern.in_irq = gFALSE;
     asm volatile("\n"
         "  ldx   %0      \n"  // entry point
         "  lds   #$01FE  \n"  // Reset the stack
@@ -170,7 +169,6 @@ void ChatTask() {
 
     while (gALWAYS) {
         gAssert(!gKern.in_game);
-        gAssert(!gKern.in_irq);
 
         CheckReceived();
         SpinChatTask();
@@ -186,6 +184,5 @@ void Network_Handler() {
 void Kern_Init() {
     gKern.in_game = gFALSE;
     gKern.focus_game = gFALSE;
-    gKern.in_irq = gFALSE;
     gKern.always_true = gTRUE;
 }
