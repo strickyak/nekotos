@@ -1,5 +1,7 @@
 KERNEL_PRODUCTS = _kernel.decb _kernel_sym.o _game.script
 
+NEKOTOS_OUT_DIR = ../../build-frobio/pizga/Internal/NEKOTOS
+
 all: ${KERNEL_PRODUCTS} ${GAMES}
 	echo ALL OKAY
 
@@ -36,6 +38,9 @@ _kernel.decb: _kernel.o
 	cat _hash.decb $@  > $@.new
 	mv -fv $@.new $@
 	cp -fv $@ _kernel.$$(cat $@.hash).decb
+	test -d $(NEKOTOS_OUT_DIR) || mkdir $(NEKOTOS_OUT_DIR)
+	cp -vf _kernel.decb $(NEKOTOS_OUT_DIR)/kernel.$(TARGET).decb
+	cp -vf $@.hash $(NEKOTOS_OUT_DIR)/kernel.$(TARGET).hash
 	echo OKAY $@
 
 _kernel_sym.s : _kernel.decb

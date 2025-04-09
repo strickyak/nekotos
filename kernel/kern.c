@@ -96,6 +96,14 @@ void StartTask(gword entry) {
 #endif
 
     Alloc64_Init();  // Eight chunks of 64 to be ready.
+#if 0
+    char logit[6] = {64, 64, 64, 64, 64, 0};
+    gNetworkLog(logit);
+    logit[2] += gScore.number_of_players;
+    gNetworkLog(logit);
+    logit[3] += gScore.player;
+    gNetworkLog(logit);
+#endif
 
     gKern.in_irq = gFALSE;
     asm volatile("\n"

@@ -1,5 +1,9 @@
 cd "$(dirname "$0")"
 
+TARGET="$1"
+shift
+echo "TARGET=$TARGET"
+
 # Command line arguments set configuration variables.
 for x
 do
@@ -50,7 +54,7 @@ do
 
     echo "$x.game: ../games/$x/game.c"
 	echo '	python3 ../kernel/n1preprocess.py $<' $x.c
-    echo '	$(GCC) -fwhole-program -S $(GCFLAGS)' -I../games/$x -I.. $x.c
+    echo '	$(GCC) -fwhole-program -S $(GCFLAGS)' -I../games/$x -I.. -I../.. $x.c
 
 	echo '	cat _kernel_sym.s >>' $x.s
 	echo '	$(LWASM)' -o$x.o $x.s --list=$x.o.list --map=$x.o.map --symbol-dump=$x.o.sym
@@ -58,6 +62,7 @@ do
 	echo '	grep "^Section:"' $x.map
 	echo '	cp -vf' $x.game /tmp/$x.game
 	echo '	cp -vf' $x.game /tmp/$x.'$$(cat _kernel.decb.hash).game'
+	echo '	cp -vf' $x.game '$(NEKOTOS_OUT_DIR)'/$x.'$$(cat _kernel.decb.hash).game'
 	echo '	echo OKAY $@'
     echo
 

@@ -184,10 +184,10 @@ void HelloMCP() {
     };
 
     PutChar('[');
-    PutStr(hello);
+    PutStr((const char*)hello);
     SendPacket(CMD_HELLO_NEKOT, 1, hello, sizeof hello);
     PutChar('H');
-    SendPacket(CMD_HELLO_NEKOT, 2, 0x0118, 8);  // Hash of NekotOS
+    SendPacket(CMD_HELLO_NEKOT, 2, (const gbyte*)0x0118, 8);  // Hash of NekotOS
     PutChar(']');
 }
 

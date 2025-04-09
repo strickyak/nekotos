@@ -2,9 +2,6 @@
 
 #include <stdarg.h>
 
-#define SLOW_CONSOLE 0
-gword volatile slow_her_down;
-
 static void AdvanceCursor() {
     ++Console.cursor;
     while (Console.cursor >= PANE_LIMIT) {
@@ -19,12 +16,7 @@ static void AdvanceCursor() {
         // Move cursor back into bottom Pane line.
         Console.cursor -= 32;
     }
-    gPoke1(Console.cursor, 0xFF);
-#if SLOW_CONSOLE
-    for (gword i = 0; i < SLOW_CONSOLE; i++) {
-        slow_her_down++;
-    }
-#endif
+    //NOBOX: gPoke1(Console.cursor, 0xFF);
 }
 
 void PutRawByte(gbyte x) {
@@ -153,24 +145,25 @@ void Console_Init() {
 #if 1
     Console.cursor = PANE_LIMIT - 32;
     PutStr(" \n\n");
-    gPoke1(Console.cursor, 0xFF);
+    //NOBOX: gPoke1(Console.cursor, 0xFF);
 #endif
-    // gPoke2(0, AdvanceCursor);
 
     // Draw a greenish bar across the top of the Console.
     for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
         gPoke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
+
 #if 0
     // Fill the body of the screen with spaces.
     for (gword p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
         gPoke2(p, 0x2020);
     }
 #endif
+
     // Draw a blueish bar across the bottom of the Console.
     for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
         gPoke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
     }
-    // Console.cursor = PANE_LIMIT - 32;
-    gPoke1(Console.cursor, 0xFF);
+    gPoke1(CONSOLE_LIMIT-31, 0xFF);
+    //NOBOX: gPoke1(Console.cursor, 0xFF);
 }

@@ -318,7 +318,12 @@ extern struct kern gKern;
 
 /////////////////////
 //
-//  TODO: Scoring
+//  Scoring
+//
+// The fields in gScore that are set and changed by
+// the MCP are updated roughly once per second.
+// So there may be a second lag until you see total
+// scores updated here.
 
 // gMAX_PLAYERS is the maximum number of active players
 // in a single game shard.
@@ -328,7 +333,7 @@ extern struct kern gKern;
 struct score {
 
 // gScore.number_of_players is the current number of
-// active players in the game.
+// active players in the game.  It will be at least 1.
        gCONST gbyte number_of_players;
 
 // gScore.player tells you your player number
@@ -337,17 +342,29 @@ struct score {
 // and this variable will be 255.
        gCONST gbyte player;
 
-// gScore.partials are contributions to scores from this coco.
+// gScore.partial_scores are contributions to scores from this coco.
 // You change these to add or deduct points to a player.
-       int partials[gMAX_PLAYERS];
+// Whenever you change particals, you must set the
+// partials_dirty bit afterwards.
+       gbool volatile partial_dirty;
+       int volatile partial_scores[gMAX_PLAYERS];
 
-// gScore.totals is the total score, calculated in the MCP.
+// When gScore.total_scores is updated, this is set true.
+// After you process the new totals, you can set it false.
+// When it is true again, you can look at the new total scores.
+       gbool volatile total_updated;
+// gScore.total_scores is the total score, calculated in the MCP.
 // Read Only, set by the OS, the sum of all partial scores.
-       gCONST int totals[gMAX_PLAYERS];
+       gCONST int volatile total_scores[gMAX_PLAYERS];
 
-// Ignore these.  They are for internal use,
-// to determine if the partials have changed.
-       gCONST int old_partials[gMAX_PLAYERS];
+// gScore.seen_ds is how many deciseconds since
+// the player was "seen"; that is, since it sent
+// a GameCast packet up to the MCP.
+// 0 means it has never been seen.
+// 1 is the minimum for a site that has been seen.
+// 255 means 25.5 seconds or more.
+// Read Only, set by the OS.
+       gCONST gbyte volatile seen_ds[gMAX_PLAYERS];
 };
 extern struct score gScore;
 
