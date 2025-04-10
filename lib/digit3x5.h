@@ -135,7 +135,7 @@ void PMode1DrawDecimal3x5(gbyte* fb, SpotDrawer draw, gbyte x, gbyte y, gbyte co
      draw(fb, left-3, y+1, color);
      draw(fb, left-4, y+1, color);
   } else {
-     return PMode1DrawDecimal3x5Unsigned(fb, draw, x+4, y, color, val);
+     (void) PMode1DrawDecimal3x5Unsigned(fb, draw, x+4, y, color, val);
   }
 }
 

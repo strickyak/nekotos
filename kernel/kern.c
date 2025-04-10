@@ -2,6 +2,13 @@
 
 // kern.c
 
+struct kern gKern gZEROED;
+
+gword xPoking(gword addr) {
+    if (addr == 0x3F) gFatal("xPoking", addr);
+    return addr;
+}
+
 void FatalSpin(const char *why) {
     volatile gbyte* p = (volatile gbyte*) Cons;
 
@@ -89,6 +96,7 @@ void StartTask(gword entry) {
 
     // Set SWI Traps at start of memory (scratchpad).
     memset_words(0x0000u, 0x3F3F, 8);
+
     // TODO: between app's low water and high water.
 #if 0
     // Breaks on 16K coco2:

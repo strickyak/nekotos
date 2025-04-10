@@ -25,7 +25,7 @@ void HelloMCP();
 void Network_Init(void);
 
 // Cmd bytes used by Nekot.
-#define CMD_HELLO_NEKOT 64
+#define N_GREETING 64
 #define NEKOT_MEMCPY 65
 #define NEKOT_POKE 66
 #define NEKOT_CALL 67

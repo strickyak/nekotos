@@ -8,8 +8,6 @@
 
 extern gword volatile SavedStackPointer; // in IRQ Handler
 
-struct kern gKern;
-
 void Kern_Init();
 void ChatTask();
 void Network_Handler();

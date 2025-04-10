@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,15 +24,18 @@ import (
 var GAMES_DIR = flag.String("games_dir", "/tmp", "where .games files are located")
 var GAME_ZONE = flag.String("zone", "America/New_York", "linux time zone location")
 
+const StiffLines = 4
+
 const (
 	N_CLOSED   = 63
 	N_GREETING = 64
 	N_MEMCPY   = 65
 	N_POKE     = 66
-	N_CALL     = 67  // for kernel
-	N_START    = 68  // for game
+	N_CALL     = 67 // for kernel
+	N_START    = 68 // for game
 	N_KEYSCAN  = 69
-	N_CONTROL  = 70
+	N_CLIENT   = 70
+	N_GAMECAST = 71
 	CMD_LOG    = 200
 )
 
@@ -42,6 +46,15 @@ const (
 	HELLO_ZONE    = 0xFF02
 	HELLO_AIRPORT = 0xFF03
 )
+
+var Abbrevs = map[string]string{
+	"C": "clock",
+	"R": "red",
+	"L": "life",
+	"F": "forth",
+	"S": "spacewar",
+	"D": "stupid-demo",
+}
 
 type Gamer struct {
 	Conn      net.Conn
@@ -120,6 +133,7 @@ func (o *InputPacketizer) Go() {
 		r := recover()
 		if r != nil {
 			log.Printf("PANIC: user %q error %v", o.gamer.Handle, r)
+			debug.PrintStack()
 			close(o.out)
 			o.Conn.Close()
 		}
@@ -165,7 +179,7 @@ func (o *InputPacketizer) Go() {
 
 func (g *Gamer) SendPacket(c byte, p uint, bb []byte) {
 	n := uint(len(bb))
-	log.Printf("mcp Gamer.SendPacket c=$%x=%d. p=$%x=%d. len=$%x=%d. ( % 3x )", c, c, p, p, n, n, bb)
+	log.Printf("mcp %q SendPacket c=$%x=%d. p=$%x=%d. len=$%x=%d. ( % 3x )", g, c, c, p, p, n, n, bb)
 
 	buf := []byte{c, byte(n >> 8), byte(n), byte(p >> 8), byte(p)}
 	buf = append(buf, bb...)
@@ -215,8 +229,8 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 				Log("N1LOG: %q %q", g.Handle, p.pay)
 			case N_KEYSCAN:
 				g.KeyScanHandler(p.pay)
-			case N_CONTROL:
-				g.ControlRequestHandler(p.p, p.pay)
+			case N_CLIENT:
+				g.HandleClientRequest(p.p, p.pay)
 			case N_GREETING:
 				Log("%q GREETING(%d) [%d] % 3x %q", g, p.p, len(p.pay), p.pay, p.pay)
 
@@ -230,12 +244,12 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 					log.Printf("GREETING(1) sent Wall Time: %v", now)
 
 					g.PrintPlain("******************************")
-					g.PrintPlain(Format("*** HANDLE = %q", g.Handle))
-					g.PrintPlain(Format("*** NAME = %q", g.Name))
-					g.PrintPlain(Format("*** ZONE = %q", g.Zone))
-					g.PrintPlain(Format("*** AIRPORT = %q", g.Airport))
 					g.PrintPlain(Format("*** (CMSW) = %x %x %x %x", g.ConsAddr, g.MaxPlayers, g.GScore, g.GWall))
 					g.PrintPlain(Format("*** (CARD) = %q", g.Special))
+					g.PrintPlain(Format("*** ZONE = %q", g.Zone))
+					g.PrintPlain(Format("*** AIRPORT = %q", g.Airport))
+					g.PrintPlain(Format("*** NAME = %q", g.Name))
+					g.PrintPlain(Format("*** HANDLE = %q", g.Handle))
 
 					g.ConsoleSync()
 
@@ -248,11 +262,11 @@ func (g *Gamer) HandlePackets(inchan chan Packet) {
 					g.ConsoleSync()
 
 				} else if p.p == 16 {
-                    // Feed bonobo.
+					// Feed bonobo.
 					g.PrintPlain("==============================")
 					g.PrintPlain("******************************")
 					g.PrintPlain(Format("*** LAUNCHKERNEL: %s", p.pay))
-                    g.LaunchKernel(string(p.pay))
+					g.LaunchKernel(string(p.pay))
 
 				} else {
 					log.Panicf("unknown GREETING(%d): % 3x", p.p, p.pay)
@@ -280,7 +294,7 @@ func ExtractCString(bb []byte) string {
 
 const Dont_CausesHangs = false
 
-func (g *Gamer) ControlRequestHandler(p uint, pay []byte) {
+func (g *Gamer) HandleClientRequest(p uint, pay []byte) {
 	switch p {
 	case 'a': // Game Abort
 		why := ExtractCString(pay)
@@ -296,7 +310,7 @@ func (g *Gamer) ControlRequestHandler(p uint, pay []byte) {
 		if Dont_CausesHangs {
 			g.PrintLine(Format("*** GAME CHAIN TO %s", filename))
 		}
-        g.LaunchGame(filename);
+		g.LaunchGame(filename)
 
 	case 'o': // Game Over
 		why := ExtractCString(pay)
@@ -309,21 +323,64 @@ func (g *Gamer) ControlRequestHandler(p uint, pay []byte) {
 	case 'L': // Logging
 		Log("N1Log: %q logs %q", g.Handle, pay)
 
-	case 'S': // Partial Scoring
-		// Handle Partial Scores
-		Log("N1: %q scores % 3x", g.Handle, pay)
-        
-        if g.Room == nil || len(g.Room.Members) == 1 {
-            // all alone, so Partials are Totals.
-            var bb []byte
-            bb = append(bb, 1) // totals_updated
-            bb = append(bb, pay...)
-            // TODO: seen_ds
-	        g.SendPokeMemory(g.GScore + 3 + 2*g.MaxPlayers, bb)
-            // TODO : wait and send it on the second.
-        } else {
-	        panic("TODO") // TODO
-        }
+	case 'S': // Partial Scoring inbound
+		Log("N1: %q partial % 3x", g.Handle, pay)
+
+		r := g.Room
+		if r == nil {
+			// all alone, so Partials are Totals.
+			var bb []byte
+			bb = append(bb, 1) // totals_updated
+			bb = append(bb, pay...)
+			// TODO: seen_ds
+			g.SendPokeMemory(g.GScore+3+2*g.MaxPlayers, bb)
+			// TODO : wait and send it on the second.
+		} else {
+			player := r.PlayerNumber(g)
+			if player < MaxPlayers {
+				n := len(pay) / 2
+				for i := 0; i < n; i++ {
+					hi, lo := pay[2*i+0], pay[2*i+1]
+					a := (uint16(hi) << 8) | uint16(lo)
+					r.Partials[player][i] = int16(a) // unsigned to signed
+				}
+				totals := []byte{1} // gScore.totals_updated is 1
+				for i := 0; i < n; i++ {
+					t := int16(0)
+					for j := 0; j < n; j++ {
+						t += r.Partials[j][i]
+					}
+					hi, lo := byte(uint(t)>>8), byte(uint(t)) // signed to unsigned
+					totals = append(totals, hi, lo)
+				}
+
+				mm := r.Members()
+				for _, peer := range mm {
+					peer.SendPokeMemory(g.GScore+3+2*g.MaxPlayers, totals)
+				}
+			}
+		}
+
+	case 'G': // Game Cast inbound
+		if len(pay) > 2 && len(pay) <= 62 {
+			r := g.Room
+			if r == nil {
+				pay[0] = 0 // the only player is player 0
+				g.SendPacket(N_GAMECAST, 0, pay)
+			} else {
+				mm := r.Members()
+				player := r.PlayerNumber(g)
+				if player < MaxPlayers {
+					pay[0] = player
+					// Redistribute it to all.
+					for _, peer := range mm {
+						peer.SendPacket(N_GAMECAST, 0, pay)
+					}
+				}
+			}
+		} else {
+			Log("BAD N_GAMECAST from %q: len=%d.", g, len(pay))
+		}
 
 	default:
 		panic(p)
@@ -454,6 +511,8 @@ func (g *Gamer) ExecuteSlashCommand(s string) {
 	cmd := ww[0]
 
 	switch {
+	case strings.HasPrefix(cmd, "R"):
+		CommandRun(g, ww[1:])
 	case strings.HasPrefix(cmd, "J"):
 		switch n {
 		case 1:
@@ -490,7 +549,7 @@ func (g *Gamer) Printf(format string, args ...any) {
 
 func (g *Gamer) LaunchKernel(target string) {
 	basename := strings.ToLower(filepath.Base(filepath.Clean(target)))
-	filename := filepath.Join(*GAMES_DIR, Format("kernel.%s.decb", basename));
+	filename := filepath.Join(*GAMES_DIR, Format("kernel.%s.decb", basename))
 	log.Printf("GAMER %q LaunchKernel Filename %q\n", g.Handle, filename)
 	decb := Value(os.ReadFile(filename))
 
@@ -499,12 +558,16 @@ func (g *Gamer) LaunchKernel(target string) {
 }
 
 func (g *Gamer) LaunchGame(gamename string) {
+	if newname, ok := Abbrevs[gamename]; ok {
+		gamename = newname
+	}
+
 	decb := g.ReadVersionedGameFile(gamename)
 	if decb == nil {
-        msg := Format("Game not found: %q", gamename)
-		g.PrintPlain(msg);
-        kmsg := Format("%q: Game not found: %q", g, gamename)
-        KernelSendChat(kmsg);
+		msg := Format("Game not found: %q", gamename)
+		g.PrintPlain(msg)
+		kmsg := Format("%q: Game not found: %q", g, gamename)
+		KernelSendChat(kmsg)
 		return
 	}
 	g.SendDecbAndJump(decb, N_START)
@@ -521,24 +584,11 @@ func (g *Gamer) EnterLine() {
 	} else if s == "0" {
 		log.Printf("-> STOP <-")
 		g.SendPacket(N_START, 0, nil)
-	} else if s == "C" {
-		g.LaunchGame("clock")
-	} else if s == "R" {
-		g.LaunchGame("red")
-	} else if s == "G" {
-		g.LaunchGame("green")
-	} else if s == "B" {
-		g.LaunchGame("blue")
-	} else if s == "L" {
-		g.LaunchGame("life")
-	} else if s == "8" {
-		g.LaunchGame("lib8")
-	} else if s == "F" {
-		g.LaunchGame("forth")
-	} else if s == "S" {
-		g.LaunchGame("spacewar")
-	} else if s == "D" {
-		g.LaunchGame("stupid-demo")
+	} else if len(s) == 1 {
+		// Quick commands
+		if newname, ok := Abbrevs[s]; ok {
+			CommandRun(g, []string{newname})
+		}
 	}
 }
 
@@ -565,7 +615,7 @@ func (g *Gamer) ConsoleSync() {
 	w := len(scr[0])
 
 	for i := 0; i < n; i++ {
-		g.SendPokeMemory(0x0420+uint(i*w), scr[i][:])
+		g.SendPokeMemory(0x0420+32*StiffLines+uint(i*w), scr[i][:])
 	}
 }
 
@@ -587,11 +637,11 @@ func (gamer *Gamer) Step(inchan chan Packet) {
 func (gamer *Gamer) SendDecbAndJump(bb []byte, jump byte) {
 	// Flip back to Shell mode, so you're not executing the old game
 	// while loading the new game.
-    if (jump == N_START) {
-        gamer.SendPacket(N_START, 0, nil)
-        gamer.SendInitializedScores()
-        gamer.SendWallTime()
-    }
+	if jump == N_START {
+		gamer.SendPacket(N_START, 0, nil)
+		gamer.SendInitializedScores()
+		gamer.SendWallTime()
+	}
 
 	for len(bb) >= 5 {
 		c := bb[0]
@@ -651,18 +701,25 @@ func (gamer *Gamer) SendWallTime() time.Time {
 }
 
 func (gamer *Gamer) SendInitializedScores() {
-	bb := []byte{
-		1, 0, // One player, player 0.
+	r := gamer.Room
+	count := byte(0)
+	player := byte(0)
+	if r != nil {
+		mems := r.Members()
+		count = byte(len(mems))
+		player = r.PlayerNumber(gamer)
 	}
-	bb = append(bb, 0)  // partials_dirty
+
+	bb := []byte{count, player}
+	bb = append(bb, 0)                                   // partials_dirty
 	bb = append(bb, make([]byte, 2*gamer.MaxPlayers)...) // partials
-	bb = append(bb, 0)  // totals_updated
+	bb = append(bb, 0)                                   // totals_updated
 	bb = append(bb, make([]byte, 2*gamer.MaxPlayers)...) // totals
-	bb = append(bb, 15)  // seen_ds
+	bb = append(bb, 15)                                  // seen_ds
 	log.Printf("SendInitializedScores $%04x: len=%d. [% 3x]", gamer.GScore, len(bb), bb)
-    if gamer.GScore != 0 {
-	    gamer.SendPacket(N_POKE, gamer.GScore, bb)
-    }
+	if gamer.GScore != 0 {
+		gamer.SendPacket(N_POKE, gamer.GScore, bb)
+	}
 }
 
 func (gamer *Gamer) Run() {

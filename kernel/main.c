@@ -100,8 +100,6 @@ void Delay(gword n) {
 
 // ColdPrint is for printing progress during bootup.
 void ColdPrint(const char* s) {
-    // PutStr("\xF5 ");
-    PutStr("*** ");
     PutStr(s);  
     PutChar('\n');
 
@@ -264,6 +262,10 @@ void Splash() {
 void setup(void) {
     // static char SETUP_STRING_INIT[] gSETUP_DATA = "INIT";
     memset_words(0x0000, 0, 0x40); // .bss
+
+    // TRY TO CATCH THE STRAY WRITE TO $003F
+    Vdg.sacrificial_lamb = 123;
+
     for (struct pia_reset_sequence *p = pia_reset_sequence; p->addr; p++) {
         gPoke1(p->addr, p->value);
     }
@@ -357,7 +359,10 @@ void setup(void) {
 
     // gPeek1(KEYBOARD_PROBE);  // Clear VSYNC IRQ // TODO
     gPoke1(0xFF03, 0x35);    // +1: Enable VSYNC (FS) IRQ
+    SetupPrint(VSYNC);
 
+    SetupPrint(TU_);
+    PutHex( & gScore.total_updated );
     SetupPrint(Ready);
 }
 

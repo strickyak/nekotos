@@ -2,42 +2,21 @@
 
 #include <stdarg.h>
 
-static void AdvanceCursor() {
-    ++Console.cursor;
-    while (Console.cursor >= PANE_LIMIT) {
-        // Scroll Pane upward
-        for (gword p = PANE_BEGIN; p < PANE_LIMIT-32; p+=2) {
-            gPoke2(p, gPeek2(p+32));
-        }
-        // Clear bottom Pane line
-        for (gword p = PANE_LIMIT-32; p < PANE_LIMIT; p+=2) {
-            gPoke2(p, 0x2020);
-        }
-        // Move cursor back into bottom Pane line.
-        Console.cursor -= 32;
-    }
-    //NOBOX: gPoke1(Console.cursor, 0xFF);
-}
-
 void PutRawByte(gbyte x) {
-    gPoke1(Console.cursor, x);
-    AdvanceCursor();
+    memcpy_words(STIFF_BEGIN, STIFF_BEGIN+1, STIFF_LEN/2);
+    gPoke1(STIFF_LIMIT-2, x);
+    gPoke1(STIFF_LIMIT-1, 0xEF);
 }
 void PutChar(char c) {
-    gPoke1(Console.cursor, 0x20);
-
     gbyte x = (gbyte)c; // Unsigned!
-    if (x == '\n') {
-            while (Console.cursor < PANE_LIMIT-1) {
-                PutChar(' ');
-            }
-            PutChar(' ');
-    } else if (x < 32) {
-        // Ingore other control chars.
+    if (x < 32) {
+        PutChar(' ');
+    } else if (x < 64) {
+            PutRawByte(64 + x);  // Upper case.
     } else if (x < 96) {
-            PutRawByte(63&x);  // Upper case.
+            PutRawByte(x);  // Upper case.
     } else if (x < 128) {
-            PutRawByte(x-96); // Lower case.
+            PutRawByte(x-32); // Lower case.
     } else {
             PutRawByte(x);  // Semigraphics.
     }
@@ -47,6 +26,7 @@ void PutStr(const char* s) {
     for (; *s; s++) {
         PutChar(*s);
     }
+    PutChar(' ');
 }
 
 #if 1
@@ -87,7 +67,7 @@ void PutSigned(int x) {
     PutDec(x);
 }
 #endif
-#if 1
+#if 0
 void Printf(const char* format, ...) {
     gbyte cc_value = gIrqSaveAndDisable();
 
@@ -142,28 +122,17 @@ void Printf(const char* format, ...) {
 #endif
 
 void Console_Init() {
-#if 1
-    Console.cursor = PANE_LIMIT - 32;
-    PutStr(" \n\n");
-    //NOBOX: gPoke1(Console.cursor, 0xFF);
-#endif
-
     // Draw a greenish bar across the top of the Console.
     for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
         gPoke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
     }
 
-#if 0
-    // Fill the body of the screen with spaces.
-    for (gword p = PANE_BEGIN; p < PANE_LIMIT; p+=2) {
-        gPoke2(p, 0x2020);
-    }
-#endif
+    // Fill the stiff part.
+    memset_words(CONSOLE_BEGIN+32, 0xEFEF, 16*STIFF_LINES);
 
     // Draw a blueish bar across the bottom of the Console.
     for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
         gPoke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
     }
     gPoke1(CONSOLE_LIMIT-31, 0xFF);
-    //NOBOX: gPoke1(Console.cursor, 0xFF);
 }

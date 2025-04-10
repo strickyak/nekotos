@@ -38,6 +38,12 @@ gfunc Irq_FocusShellSchedule[6] = {
     Breakkey_Handler,
 };
 
+void CheckLamb() {
+    if (Vdg.sacrificial_lamb != 123) {
+        gFatal("LAMB", Vdg.sacrificial_lamb);
+    }
+}
+
 void Irq_Handler() {
     // Clear the VSYNC IRQ by reading PortB output register.
     (void) gPeek1(Pia0PortB);

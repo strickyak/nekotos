@@ -16,7 +16,9 @@ func KernelSendChat(s string) {
 
 	msg := transcript.PlainString(s)
 	for _, g := range CurrentGamers() {
-		g.PrintLine(msg)
+		Try(func() {
+			g.PrintLine(msg)
+		})
 	}
 }
 
@@ -27,6 +29,8 @@ func GamerSendChat(g *Gamer, s string) {
 		Format("%3s> %s", g.Handle, s))
 
 	for _, g := range CurrentGamers() {
-		g.PrintLine(msg)
+		Try(func() {
+			g.PrintLine(msg)
+		})
 	}
 }

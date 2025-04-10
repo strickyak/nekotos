@@ -23,6 +23,8 @@ static void DoBreak(void) {
 // For Coco1, 2, or 3 keyboard.
 #define BREAKKEY_PROBE_BIT 0x04
 #define BREAKKEY_SENSE_BIT 0x40
+#define CLEARKEY_PROBE_BIT 0x02
+#define CLEARKEY_SENSE_BIT 0x40
 
 // Break_Handler is called on interrupt.
 void Breakkey_Handler(void) {
@@ -45,4 +47,21 @@ void Breakkey_Handler(void) {
         // BREAK KEY UP
         Breakkey.break_key_was_down = gFALSE;
     }
+
+    //////////////////////////////
+    //
+    //   Clear Key
+
+    const gbyte c_probe = ~(gbyte)CLEARKEY_PROBE_BIT;
+    gPoke1(Pia0PortB, c_probe);
+
+    // Read the sense port and check the bit.
+    gbyte c_sense = gPeek1(Pia0PortA);
+    if ((c_sense & CLEARKEY_SENSE_BIT) == 0) {
+        // CLEAR KEY DOWN
+        // Devious hack to lock the VDG Text screen, on CLEAR key.
+        Vdg.stiff_debug = 1;
+        NowSwitchDisplayMode(0, 0, 0);
+    }
+
 }

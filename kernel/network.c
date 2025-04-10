@@ -3,17 +3,28 @@
 // SendPacket sends a Quint Header and a payload
 // of 0 to 64 bytes.
 void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
+    gPoke1(0x5FF0, '$');
+if(0)PutChar('W');
     size = (size > 64) ? 64 : size;
-
+    gPoke1(0x5FF1, 'A');
+if(0)PutChar('A');
     gbyte qbuf[5];
     qbuf[0] = cmd;
     gPoke2(qbuf+1, size);
     gPoke2(qbuf+3, p);
 
+    gPoke1(0x5FF1, 'B');
+if(0)PutChar('B');
     gbyte cc_value = gIrqSaveAndDisable();
+    gPoke1(0x5FF1, 'C');
+if(0)PutChar('C');
     NET_Send(qbuf, 5);
+if(0)PutChar('D');
     NET_Send(pay, size);
+if(0)PutChar('E');
     gIrqRestore(cc_value);
+if(0)PutChar('F');
+    gPoke1(0x5FF1, 'D');
 }
 
 // gSendCast is used by games to send gamecasts to other cocos
@@ -33,13 +44,16 @@ void gSendCast(const struct gamecast* pay, gbyte size) {
 // Games call this indirectly to send control packets
 // to the MCP.
 void xSendControlPacket(gword p, const gbyte* pay, gword size) {
+if(0)PutChar('Z');
     SendPacket(NEKOT_CONTROL, p, pay, size);
 }
 
 // Games can log a message with the network.
 // Dont spam it too badly!
 void gNetworkLog(const char* s) {
+    #if 0
     SendPacket(CMD_LOG, 0, (const gbyte*)s, strlen(s));
+    #endif
 }
 
 gbool need_recv_payload;
@@ -183,15 +197,16 @@ void HelloMCP() {
         DOUBLE_BYTE(&gWall),
     };
 
-    PutChar('[');
-    PutStr((const char*)hello);
-    SendPacket(CMD_HELLO_NEKOT, 1, hello, sizeof hello);
-    PutChar('H');
-    SendPacket(CMD_HELLO_NEKOT, 2, (const gbyte*)0x0118, 8);  // Hash of NekotOS
-    PutChar(']');
+    ColdPrint("G11");
+    SendPacket(N_GREETING, 1, hello, sizeof hello);
+    ColdPrint("G12");
+    SendPacket(N_GREETING, 1, hello, sizeof hello);
+    ColdPrint("G2");
+    SendPacket(N_GREETING, 2, (const gbyte*)0x0118, 8);  // Hash of NekotOS
+    ColdPrint("G0");
 }
 
 void Network_Init() {
     NET_Init();
-    PutChar('N');
+    if(0)PutChar('N');
 }

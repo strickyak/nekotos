@@ -1,6 +1,6 @@
 #include "kernel/private.h"
 
-struct wall gWall;
+struct wall gWall gZEROED;
 
 #define  W  gWall
 

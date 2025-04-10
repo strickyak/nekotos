@@ -2,7 +2,7 @@
 #define _NEKOTOS_LIB_FORMAT_H_
 
 #include "kernel/public.h"
-#include "platform-text.h"
+// #include "platform-text.h"
 
 #include <stdarg.h>
 
@@ -10,7 +10,7 @@
 
 #define EMIT(CHAR) do { *p++ = (CHAR); } while(0)
 
-char* PutStr(char* p, const char* s) {
+char* PPutStr(char* p, const char* s) {
     int max = TEXT_STR_MAX;
     for (; *s; s++) {
         EMIT(*s);
@@ -22,17 +22,17 @@ char* PutStr(char* p, const char* s) {
     return p;
 }
 
-const char HexAlphabet[] = "0123456789ABCDEF";
+const char PHexAlphabet[] = "0123456789ABCDEF";
 
-char* PutHex(char* p, gword x) {
+char* PPutHex(char* p, gword x) {
   if (x > 15u) {
-    p = PutHex(p, x >> 4u);
+    p = PPutHex(p, x >> 4u);
   }
-  EMIT(HexAlphabet[15u & x]);
+  EMIT(PHexAlphabet[15u & x]);
   return p;
 }
 
-gbyte DivMod10(gword x, gword* out_div) {  // returns mod
+gbyte PDivMod10(gword x, gword* out_div) {  // returns mod
   gword div = 0;
   while (x >= 10000) x -= 10000, div += 1000;
   while (x >= 1000) x -= 1000, div += 100;
@@ -41,30 +41,28 @@ gbyte DivMod10(gword x, gword* out_div) {  // returns mod
   *out_div = div;
   return (gbyte)x;
 }
-char* PutDec(char* p, gword x) {
+char* PPutDec(char* p, gword x) {
   gword div;
   if (x > 9u) {
-    // eschew div // PutDec(x / 10u);
-    DivMod10(x, &div);
-    p = PutDec(p, div);
+    // eschew div // PPutDec(x / 10u);
+    PDivMod10(x, &div);
+    p = PPutDec(p, div);
   }
   // eschew mod // PutChar('0' + (gbyte)(x % 10u));
-  EMIT('0' + DivMod10(x, &div));
+  EMIT('0' + PDivMod10(x, &div));
   return p;
 }
 
-char* p PutSigned(char* p, int x) {
+char* PPutSigned(char* p, int x) {
     if (x<0) {
         x = -x;
         EMIT('-');
     }
-    returt PutDec(p, x);
+    return PPutDec(p, x);
 }
 
-char* Sprintf(char* p, const char* format, ...) {
+char* Vprintf(char* p, const char* format, va_list ap) {
     int max = TEXT_STR_MAX;
-    va_list ap;
-    va_start(ap, format);
 
     for (const char* s = format; *s; s++) {
         if (max-- <= 0) {
@@ -82,25 +80,25 @@ char* Sprintf(char* p, const char* format, ...) {
             case 'd':
                 {
                     int x = va_arg(ap, int);
-                    p = PutDec(p, x);
+                    p = PPutSigned(p, x);
                 }
                 break;
             case 'u':
                 {
                     gword x = va_arg(ap, gword);
-                    p = PutDec(p, x);
+                    p = PPutDec(p, x);
                 }
                 break;
             case 'x':
                 {
                     gword x = va_arg(ap, gword);
-                    p = PutHex(p, x);
+                    p = PPutHex(p, x);
                 }
                 break;
             case 's':
                 {
                     char* x = va_arg(ap, char*);
-                    p = PutStr(p, x);
+                    p = PPutStr(p, x);
                 }
                 break;
             default:
@@ -108,7 +106,13 @@ char* Sprintf(char* p, const char* format, ...) {
             }; // end switch
        }  // end if
     }
+    *p = '\0';
     return p;
+}
+char* Sprintf(char* p, const char* format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    return Vprintf(p, format, ap);
 }
 
 #endif // _NEKOTOS_LIB_FORMAT_H_

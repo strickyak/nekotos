@@ -86,11 +86,14 @@ typedef union gWordOrBytes {
 
 #include <stdarg.h>  // You can write functions like `printf` with `...` args.
 
+// Ignore xxxPoking.
+#define xxxPoking(ADDR) (ADDR)  // Was for debugging.
+
 #define gPeek1(ADDR) (*(volatile gbyte*)(gword)(ADDR))
-#define gPoke1(ADDR,VALUE) (*(volatile gbyte*)(gword)(ADDR) = (gbyte)(VALUE))
+#define gPoke1(ADDR,VALUE) (*(volatile gbyte*)(gword)xxxPoking(ADDR) = (gbyte)(VALUE))
 
 #define gPeek2(ADDR) (*(volatile gword*)(gword)(ADDR))
-#define gPoke2(ADDR,VALUE) (*(volatile gword*)(gword)(ADDR) = (gword)(VALUE))
+#define gPoke2(ADDR,VALUE) (*(volatile gword*)(gword)xxxPoking(ADDR) = (gword)(VALUE))
 
 // These do a gPeek1, some bit manipulaton, and a gPoke1.
 #define gPAND(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) &= (gbyte)(X))
@@ -211,9 +214,9 @@ void gTextScreen(gbyte* screen_addr, gbyte colorset);
 // gPMode1Screen sets the VDG screen mode for game play to PMode1 graphics.
 void gPMode1Screen(gbyte* screen_addr, gbyte colorset);
 
-// gModeScreen sets the VDG screen mode for game play to the given mode_code.
-// TODO: document mode_code.
-void gModeScreen(gbyte* screen_addr, gword mode_code);
+// gModeScreen sets the VDG screen mode for game play to the given modes.
+// TODO: document modes.
+void gModeScreen(gbyte* screen_addr, gbyte vdg_mode, gbyte sam_mode);
 
 /////////////////////
 //

@@ -7,7 +7,7 @@ import (
 )
 
 // To begin with, this is specific to the VDG 32x16 Text mode.
-const Stride = 14 // Skip top and bottom lines
+const Stride = 10 // Was 14 // Skip top and bottom lines
 const W = 32
 
 type Line [W]byte

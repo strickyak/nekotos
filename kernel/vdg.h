@@ -1,10 +1,13 @@
 #ifndef _KERNEL_VDG_H_
 #define _KERNEL_VDG_H_
 
-struct vdg {
-    gword  game_mode;
+extern struct vdg {
+    gbyte  sacrificial_lamb;  // Something keeps clearing $3F.
+    gbyte  game_vdg_mode;
+    gbyte  game_sam_mode;
     gbyte* game_framebuffer;
     gbyte shadow_pia1portb;
+    gbool  stiff_debug;
 } Vdg;
 
 // These are for setting the Game Mode.
@@ -16,12 +19,7 @@ void gPMode1Screen(gbyte* screen_addr, gbyte colorset);
 // written to the VDG via the top five bits 
 // of $FF22, and the three V2, V1, V0
 // "FFC0 - FFC5 Video display mode" bits for the SAM chip.
-// Mode_code contains both of those.
-// The top five bits of $FF22 are the top five bits
-// (in the high gbyte) of mode_code.
-// The V2, V1, V0 bits are the low three bits
-// (in the low gbyte) of mode_code.
-void gModeScreen(gbyte* screen_addr, gword mode_code);
+void gModeScreen(gbyte* screen_addr, gbyte vdg_mode, gbyte sam_mode);
 
 #define COLORSET_GREEN  0
 #define COLORSET_ORANGE 1
@@ -30,5 +28,8 @@ void gModeScreen(gbyte* screen_addr, gword mode_code);
 void NowSwitchToChatScreen();
 void NowSwitchToGameScreen();
 void Vdg_Init(void);
+
+// For CLEAR key for stiff_debug.
+void NowSwitchDisplayMode(gbyte* fb, gbyte vdg_mode, gbyte sam_mode);
 
 #endif // _KERNEL_VDG_H_

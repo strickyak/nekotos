@@ -51,11 +51,13 @@ func CurrentGamers() map[string]*Gamer {
 
 func CommandWho(g *Gamer) {
 	for k, v := range CurrentGamers() {
-		if v.Room != nil {
-			r := v.Room.Number
-			KernelSendChatf("* %3s%2d %q", k, r, v.Name)
+		r := v.Room
+		if r == nil {
+			KernelSendChatf("* %3s    %q", k, v.Name)
 		} else {
-			KernelSendChatf("* %3s   %q", k, v.Name)
+			rnum := r.Number
+			pnum := r.PlayerNumber(v)
+			KernelSendChatf("* %3s %2d:%d %q", k, rnum, pnum, v.Name)
 		}
 	}
 }
