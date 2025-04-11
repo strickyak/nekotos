@@ -26,10 +26,10 @@ void Debug(const char* fmt, ...) { }
 struct body {
   gword x, y;
   int r, s;
-  int score;
+  // int score;
   gbyte direction;
   gbyte ttl;
-  gword dings[NUM_SHIPS];
+  // gword dings[NUM_SHIPS];
 };
 
 gbyte mode;
@@ -38,7 +38,7 @@ struct body TheMissiles[NUM_SHIPS] gZEROED;
 
 // Temporary
 int displayed_score[NUM_SHIPS] gZEROED;
-int logbuf gZEROED;
+//char logbuf[64] gZEROED;
 
 ////////////////////////////////////////////////////////
 
@@ -217,14 +217,14 @@ struct spacewar_msg {
   gbyte magic_aa;
   gbyte ship_num;
   struct body ship, missile;
-  gword dings[NUM_SHIPS];
+  // gword dings[NUM_SHIPS];
 };
 
 struct gamecast send_me gZEROED;
 
 void BroadcastShip(int ship_num) {
-  Sprintf(logbuf, "SW B %x", ship_num);
-  gNetworkLog(logbuf);
+  //Sprintf(logbuf, "SW B %x", ship_num);
+  //gNetworkLog(logbuf);
 
   if (mode == 'S') return;
 
@@ -351,7 +351,7 @@ void DrawDigit(gbyte* fb, gbyte x, gbyte y, gbyte color, gbyte digit) {
     for (int j = 0; j < 3; j++) {
       char spot = *pattern++;
       if (spot != ' ') {
-        DrawSpot(fb, x + j, i + y, (color < 4) ? color : (i<2) ? 3 : (i<3) ? 2 : 1);
+        DrawSpotXor(fb, x + j, i + y, (color < 4) ? color : (i<2) ? 3 : (i<3) ? 2 : 1);
       }
     }
   }
@@ -363,9 +363,9 @@ gbyte DrawDecimal(gbyte* fb, gbyte x, gbyte y, gbyte color, int val) {
   gbyte left_most = 255;
   if (val < 0) {
      gbyte left = DrawDecimal(fb, x, y, color, -val);
-     DrawSpot(fb, left-2, y+1, 2);
-     DrawSpot(fb, left-3, y+1, 2);
-     DrawSpot(fb, left-4, y+1, 2);
+     DrawSpotXor(fb, left-2, y+1, 2);
+     DrawSpotXor(fb, left-3, y+1, 2);
+     DrawSpotXor(fb, left-4, y+1, 2);
      return left-4;
   }
   while (val >= 10000) {
@@ -415,11 +415,11 @@ void DrawSpot2(gbyte* fb, int x, int y, gbyte color) {
 	while (y<0) x += 96;
 	while (x>128) x -= 128;
 	while (y>96) x -= 96;
-	DrawSpot(fb, x, y, color);
+	DrawSpotXor(fb, x, y, color);
 }
 
 void DrawShip(gbyte* fb, struct body* p, gword ship, gbool isaMissile) {
-  if (!p->ttl) return;
+  // if (!p->ttl) return;
 
   gbyte mask = 0xFF;  // four of color "11": 11111111
   switch (ship) {
@@ -523,11 +523,15 @@ void ClearScreen(gbyte* fb, gbyte color) {
     }
 }
 
-#if 0
 void WaitFor60HzTick() {
     gbyte t = gPeek1(&gReal.ticks);
     while (gPeek1(&gReal.ticks) == t) {}
 }
+void WaitFor10HzTick() {
+    gbyte t = gPeek1(&gReal.decis);
+    while (gPeek1(&gReal.decis) == t) {}
+}
+#if 0
 void WaitForKeyPressArrowsAnd0To7() {
    gwob w;
    do { w = ScanArrowsAnd0To7(); }
@@ -550,9 +554,9 @@ void FireMissile(gbyte who) {
 gbool DetectHits(struct body* my_missile, gbyte my_num) {
   gbool z = gFALSE;
   for (gbyte i = 0; i < NUM_SHIPS; i++) {
-    if (i == my_num) continue;  // dont count self-hits
+    // SELF // if (i == my_num) continue;  // dont count self-hits
     struct body* p = TheShips + i;
-    if (!p->ttl) continue;  // that ship does not exist
+    // if (!p->ttl) continue;  // that ship does not exist
     gword dx = (my_missile->x > p->x) ? (my_missile->x - p->x)
                                      : (p->x - my_missile->x);
     gword dy = (my_missile->y > p->y) ? (my_missile->y - p->y)
@@ -560,8 +564,11 @@ gbool DetectHits(struct body* my_missile, gbyte my_num) {
     gword dist = dx + dy;
 #define NEARBY 0x0400
     if (dist < NEARBY) {
-      TheShips[my_num].score+=3;  // Give me a point.
-      TheShips[my_num].dings[i]+=2;  // Ding the victim.
+      // TheShips[my_num].score+=3;  // Give me a point.
+      if (i != my_num) gScore.partial_scores[my_num] += 3;
+      // TheShips[my_num].dings[i]+=2;  // Ding the victim.
+      gScore.partial_scores[i] -= 2;
+      gScore.partial_dirty = gTRUE;
       my_missile->ttl = 0;  // expire the missile.
       z = gTRUE;
       // continue to hit other ships simultaneously!
@@ -612,6 +619,7 @@ void AdvanceBody(struct body* p, int ship, gbool useGravity) {
 
 void DrawScores() {
   for (gbyte i = 0; i < NUM_SHIPS; i++) {
+#if 0
     struct body* p = TheShips + i;
     int score = p->score;  // My claimed score.
 
@@ -620,6 +628,9 @@ void DrawScores() {
       score -= q->dings[i];
     }
     // if (score<0) score=0;  // Be kind.
+#else
+    int score = gScore.total_scores[i];
+#endif
 
     if (score != displayed_score[i]) {
       DrawDecimal(Screen, /*x=*/100, /*y=*/i << 3, /*color=*/i + 1,
@@ -652,14 +663,13 @@ void ProcessPacket(struct gamecast* chunk) {
   struct spacewar_msg* msg =
           (struct spacewar_msg*) chunk->payload;
 
-  Sprintf(logbuf, "SW PP %x %x", msg->magic_aa, msg->ship_num);
-  gNetworkLog(logbuf);
+  //Sprintf(logbuf, "SW PP %x %x", msg->magic_aa, msg->ship_num);
+  //gNetworkLog(logbuf);
 
   if (msg->magic_aa != 0xAA) return;
   gbyte n = msg->ship_num;
   if (n >= NUM_SHIPS) return;
 
-  // TODO: is `->score` ignored?
   TheShips[n] = msg->ship;
   TheMissiles[n] = msg->missile;
 }
@@ -709,15 +719,15 @@ void setup() {
     p->y = ((i+1) << 12) + ((i+1) << 10);
     p->r = 30;  // 31+7*i;
     p->s = 0;  // 17+3*i;
-    p->ttl = (i == my_num) ? 255 : 0;
-    p->ttl = 255;
+    // p->ttl = (i == my_num) ? 255 : 0;
+    // p->ttl = 255;
 
     if (mode == 'S' || i == my_num) {
     	FireMissile(i);
     }
 
-    displayed_score[i] = p->score;
-    DrawDecimal(Screen, 100, i << 3, i + 1, p->score);
+    displayed_score[i] = gScore.total_scores[my_num];
+    DrawDecimal(Screen, 100, i << 3, i + 1, gScore.total_scores[my_num]);
   }
 }
 
@@ -740,7 +750,9 @@ void loop() {
 	     my->y = H/2 - 1 - my->y;
 	     my->r = - my->r;
 	     my->s = - my->s;
-	     my->score--;
+	     // my->score--;
+         gScore.partial_scores[my_num]--;
+         gScore.partial_dirty = gTRUE;
       }
 
       if (keys & KEY_LEFT) my->direction = (my->direction + 1) & 15;
@@ -787,12 +799,20 @@ void loop() {
     DrawAll(Screen);
     DrawScores();
 
-  WORK: {
+  WORK:
+  {
+#if 0
     if ((mode != 'S') && ((g & 15) == 0)) {
       BroadcastShip(my_num);
     } else {
       Delay(1000);
     }
+#else
+    if ((mode != 'S') && (gReal.decis == 5)) {
+      BroadcastShip(my_num);
+    }
+    WaitFor10HzTick();
+#endif
 
     if ((g & 3) == 0) {
       DrawSun(Screen, g);
@@ -806,6 +826,7 @@ void loop() {
     CheckIncomingPackets();
 
   DEPRECIATE:
+#if 0
     if (mode == 'S') {
       for (gbyte i = 0; i < NUM_SHIPS; i++) {
         TheShips[i].ttl = 255;  // keep everyone alive!
@@ -820,6 +841,7 @@ void loop() {
         }
       }
     }
+#endif
     for (gbyte i = 0; i < NUM_SHIPS; i++) {
       if (TheMissiles[i].ttl) TheMissiles[i].ttl--;
     }
