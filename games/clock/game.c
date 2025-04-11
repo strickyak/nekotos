@@ -1,4 +1,6 @@
 #include "kernel/public.h"
+//
+#include "lib/format.h"
 
 gSCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
 
@@ -138,13 +140,13 @@ void Junk() {
 }
 
 void WaitForATick() {
-    int now = gReal.ticks;
-    while (now == gReal.ticks) { Junk(); }
+    int now = gMono.ticks;
+    while (now == gMono.ticks) { Junk(); }
 }
 
 void WaitForASecond() {
-    int now = gReal.seconds;
-    while (now == gReal.seconds) { Junk(); }
+    int now = gMono.seconds;
+    while (now == gMono.seconds) { Junk(); }
 }
 
 gbyte DivMod10(gword x, gword* out_div) {  // returns mod
@@ -157,35 +159,58 @@ gbyte DivMod10(gword x, gword* out_div) {  // returns mod
   return (gbyte)x;
 }
 
+char old_date_buf[30];
+char date_buf[30];
+void FormatDate(struct wall *w, char* p) {
+    Sprintf(p, "%s %d %s %d", w->dow, w->day, w->moy, w->year2000 + 2000);
+}
+
+char old_time_buf[16];
 char time_buf[16];
-void FormatTime() {
+void FormatTime(struct wall *w, char* p) {
     gbyte mod;
     gword div;
-    char* p = time_buf;
 
-    mod = DivMod10(gWall.hour, &div);
+    mod = DivMod10(w->hour, &div);
     *p++ = '0' + div;
     *p++ = '0' + mod;
     *p++ = ':';
-    mod = DivMod10(gWall.minute, &div);
+    mod = DivMod10(w->minute, &div);
     *p++ = '0' + div;
     *p++ = '0' + mod;
     *p++ = ':';
-    mod = DivMod10(gWall.second, &div);
+    mod = DivMod10(w->second, &div);
     *p++ = '0' + div;
     *p++ = '0' + mod;
     *p = '\0';
 }
 
-void loop() {
-    ClearGraf(G, 0);
+void PrintAt(gbyte x, gbyte y, const char* s, const char* t) {
+    do {
+        if (!s || !*s) s=0;
+        if (!t || !*t) t=0;
+        if (!s || !t || *s!=*t) {
+          if (s) DrawChar(*s, x, y, Blue0);
+          if (t) DrawChar(*t, x, y, Blue0);
+        }
+        if (s) s++;
+        if (t) t++;
+        x += 8;
+    } while (s || t);
+}
 
-    FormatTime();
-    gbyte x = 3;
-    for (const char* s = time_buf; *s; s++) {
-        DrawChar(*s, x, 30, Blue0);
-        x += 9;
-    }
+void loop() {
+
+    memset(time_buf, 0, sizeof time_buf);
+    FormatTime(&gWall, time_buf);
+    PrintAt(3, 30, time_buf, old_time_buf);
+    memcpy(old_time_buf, time_buf, sizeof time_buf);
+
+    memset(date_buf, 0, sizeof date_buf);
+    FormatDate(&gWall, date_buf);
+    PrintAt(3, 50, date_buf, old_date_buf);
+    memcpy(old_date_buf, date_buf, sizeof date_buf);
+
     WaitForASecond();
 }
 
