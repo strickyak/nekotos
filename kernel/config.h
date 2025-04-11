@@ -3,4 +3,4 @@
 
 extern struct config gConfig;
 
-#endif // _KERNEL_CONFIG_H_
+#endif  // _KERNEL_CONFIG_H_

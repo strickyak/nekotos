@@ -1,5 +1,3 @@
-#include "kernel/private.h"
-
 #include "kernel/alloc64.c"
 #include "kernel/bonobo.c"
 #include "kernel/breakkey.c"
@@ -11,6 +9,7 @@
 #include "kernel/main.c"
 #include "kernel/network.c"
 #include "kernel/prelude.c"
+#include "kernel/private.h"
 #include "kernel/real.c"
 #include "kernel/score.c"
 #include "kernel/vdg.c"

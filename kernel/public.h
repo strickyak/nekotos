@@ -61,39 +61,47 @@
 //  Fundamental Types and Definitions.
 
 typedef unsigned char gbool;  // Recommended for true/false 1/0 values.
-typedef unsigned char gbyte;  // Recommended for a 8-bit machine gbyte.  Unsigned!
-typedef unsigned int gword;   // Recommended for a 16-bit machine gword.  Unsigned!
+typedef unsigned char
+    gbyte;  // Recommended for a 8-bit machine gbyte.  Unsigned!
+typedef unsigned int
+    gword;  // Recommended for a 16-bit machine gword.  Unsigned!
 
-// We hope this union is both an efficient and an expressive word joiner/splitter.
+// We hope this union is both an efficient and an expressive word
+// joiner/splitter.
 typedef union gWordOrBytes {
-    gword w;        // Access as a 2-Byte word, or
-    gbyte b[2];     // access as two bytes (b[0] & b[1]).
-    struct gHL { gbyte h, l; } hl;  // access as two bytes (hl.h & hl.l).
+  gword w;     // Access as a 2-Byte word, or
+  gbyte b[2];  // access as two bytes (b[0] & b[1]).
+  struct gHL {
+    gbyte h, l;
+  } hl;  // access as two bytes (hl.h & hl.l).
 } gwob;
 
 #define gTRUE ((gbool)1)
 #define gFALSE ((gbool)0)
 #define gNULL ((void*)0)
-#define gALWAYS (gKern.always_true)  // For working around GCC infinite loop bugs.
+#define gALWAYS \
+  (gKern.always_true)  // For working around GCC infinite loop bugs.
 
 #ifndef gCONST
-#define gCONST const   // For variables the Kernel changes, but Games must not.
+#define gCONST const  // For variables the Kernel changes, but Games must not.
 #endif
 
 // You should not use things directly from "kernel/friend.h";
 // they are required for some "kernel/public.h" macros to work.
-#include "kernel/friend.h"
-
 #include <stdarg.h>  // You can write functions like `printf` with `...` args.
+
+#include "kernel/friend.h"
 
 // Ignore xxxPoking.
 #define xxxPoking(ADDR) (ADDR)  // Was for debugging.
 
 #define gPeek1(ADDR) (*(volatile gbyte*)(gword)(ADDR))
-#define gPoke1(ADDR,VALUE) (*(volatile gbyte*)(gword)xxxPoking(ADDR) = (gbyte)(VALUE))
+#define gPoke1(ADDR, VALUE) \
+  (*(volatile gbyte*)(gword)xxxPoking(ADDR) = (gbyte)(VALUE))
 
 #define gPeek2(ADDR) (*(volatile gword*)(gword)(ADDR))
-#define gPoke2(ADDR,VALUE) (*(volatile gword*)(gword)xxxPoking(ADDR) = (gword)(VALUE))
+#define gPoke2(ADDR, VALUE) \
+  (*(volatile gword*)(gword)xxxPoking(ADDR) = (gword)(VALUE))
 
 // These do a gPeek1, some bit manipulaton, and a gPoke1.
 #define gPAND(ADDR, X) ((*(volatile gbyte*)(gword)(ADDR)) &= (gbyte)(X))
@@ -103,14 +111,15 @@ typedef union gWordOrBytes {
 // If your ".bss" allocation of 128 bytes in Page 0 (the direct page)
 // fills up, you can mark some of the global variable definitions with
 // this attribute, to move those variables into a larger section.
-#define gZEROED      __attribute__ ((section (".data.more")))
+#define gZEROED __attribute__((section(".data.more")))
 
-#define gAssert(COND) if (!(COND)) gFatal(__FILE__, __LINE__)
+#define gAssert(COND) \
+  if (!(COND)) gFatal(__FILE__, __LINE__)
 
 void gFatal(const char* s, gword value);
 
 #define gDisableIrq() asm volatile("  orcc #$10")
-#define gEnableIrq()   asm volatile("  andcc #^$10")
+#define gEnableIrq() asm volatile("  andcc #^$10")
 gbyte gIrqSaveAndDisable();
 void gIrqRestore(gbyte cc_value);
 
@@ -130,11 +139,11 @@ void gIrqRestore(gbyte cc_value);
 
 // gSCREEN(Name,NumPages) declares Name to be the address of
 // a reserved framebuffer of the specified number of 256-byte pages.
-#define gSCREEN(Name,NumPages)  // LIKE: extern gbyte Name[NumPages*256];
+#define gSCREEN(Name, NumPages)  // LIKE: extern gbyte Name[NumPages*256];
 
 // gREGION(Name,Type) declares Name to be a global variable
 // of the specified type.
-#define gREGION(Name,Type)      // LIKE: extern Type Name;
+#define gREGION(Name, Type)  // LIKE: extern Type Name;
 
 // Example:
 //
@@ -175,10 +184,10 @@ void gFree64(void* ptr);
 // singly-linked lists of messages, if you need to.
 
 struct gamecast {
-    gbyte sender;
-    gbyte flags;  // must be zero.
-    gbyte payload[60];
-    struct gamecast *next;
+  gbyte sender;
+  gbyte flags;  // must be zero.
+  gbyte payload[60];
+  struct gamecast* next;
 };
 
 // gSendCast attempts to send a GameCast message of 0 to 60
@@ -224,21 +233,22 @@ void gModeScreen(gbyte* screen_addr, gbyte vdg_mode, gbyte sam_mode);
 
 // Normal end of game.  Scores are valid and may be published
 // by the kernel.
-#define gGameOver(WHY)  xSendControlPacket('o', (gbyte*)(WHY), 64)
+#define gGameOver(WHY) xSendControlPacket('o', (gbyte*)(WHY), 64)
 
 // Abnormal end of game.  Scores are invalid and will be ignored
 // by the kernel.
 // This is less drastic than calling gFatal(),
 // because the kernel keeps running, but it also
 // indicates something went wrong that should be fixed.
-#define gGameAbort(WHY)  xSendControlPacket('a', (gbyte*)(WHY), 64)
+#define gGameAbort(WHY) xSendControlPacket('a', (gbyte*)(WHY), 64)
 
 // Replace the current game with the named game.
 // This can be used to write different "levels" or
 // interstitial screens as a chain of games.
 // Carry scores forward to the new game.
 // Common pre-allocated regions are also kept in memory.
-#define gGameChain(NEXT_GAME_NAME)  xSendControlPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
+#define gGameChain(NEXT_GAME_NAME) \
+  xSendControlPacket('c', (gbyte*)(NEXT_GAME_NAME), 64)
 
 // gPin(f) will pin down function f, so GCC doesn't erase it.
 // Sometimes if you are using inline assembly language
@@ -246,13 +256,13 @@ void gModeScreen(gbyte* screen_addr, gbyte vdg_mode, gbyte sam_mode);
 // that the function is needed even if it isn't ever
 // explicitly called.  Your `loop` function is a good place
 // to use gPin.
-#define gPin(THING)  gPoke2(0, &(THING))
+#define gPin(THING) gPoke2(0, &(THING))
 
 // Global variables or data tables that are only used
 // by setup code can be marked with the attribute
 // gSETUP_DATA.  They will be freed when you call
 // gAfterMain().
-#define gSETUP_DATA   __attribute__ ((section (".data.startup")))
+#define gSETUP_DATA __attribute__((section(".data.startup")))
 
 // The following gKern variables can be read by the game
 // to find out what state the Kernel is in.
@@ -275,42 +285,42 @@ void gModeScreen(gbyte* screen_addr, gbyte vdg_mode, gbyte sam_mode);
 // due to bugs in our version of GCC.
 
 struct kern {
-    // TODO: memory curtains are not ready yet.
-    // If your game wants to make raw allocations of memory
-    // at runtime, the memory betweens these two curtains
-    // is free.  If you take memory from the low part of
-    // this region, increase the low_memory_curtain appropriately.
-    // If you take memory from the high part of this region,
-    // decrease the high_memory_curtain appropriately.
-    // It is possible to write a library like malloc() and free()
-    // that uses this memory.
-    gword low_memory_curtain;
-    gword high_memory_curtain;
+  // TODO: memory curtains are not ready yet.
+  // If your game wants to make raw allocations of memory
+  // at runtime, the memory betweens these two curtains
+  // is free.  If you take memory from the low part of
+  // this region, increase the low_memory_curtain appropriately.
+  // If you take memory from the high part of this region,
+  // decrease the high_memory_curtain appropriately.
+  // It is possible to write a library like malloc() and free()
+  // that uses this memory.
+  gword low_memory_curtain;
+  gword high_memory_curtain;
 
-    // When a game is active and focused, it owns and can scan the keyboard
-    // (except for the BREAK key), and the game's screen
-    // is being shown.   If a game is active but
-    // focus_game is gFALSE, the game must ignore the
-    // keyboard (not scan it!) and the game's screen is
-    // not visible -- the Chat screen is shown, instead.
-    gbool volatile focus_game;
+  // When a game is active and focused, it owns and can scan the keyboard
+  // (except for the BREAK key), and the game's screen
+  // is being shown.   If a game is active but
+  // focus_game is gFALSE, the game must ignore the
+  // keyboard (not scan it!) and the game's screen is
+  // not visible -- the Chat screen is shown, instead.
+  gbool volatile focus_game;
 
-    // gKern.always_true must always be set to 1.
-    // Sampled by gALWAYS.
-    gbool volatile gCONST always_true;
+  // gKern.always_true must always be set to 1.
+  // Sampled by gALWAYS.
+  gbool volatile gCONST always_true;
 
-    // ---- The following fields are not needed by games: ----
+  // ---- The following fields are not needed by games: ----
 
-    // A game is active.
-    // From a game, this should always be seen as gTRUE.
-    gbool volatile gCONST in_game;
+  // A game is active.
+  // From a game, this should always be seen as gTRUE.
+  gbool volatile gCONST in_game;
 
-    // To determine if setup allocated any low memory.
-    // Only used by the kernel.
-    gword gCONST old_low_memory_curtain_before_setup;
+  // To determine if setup allocated any low memory.
+  // Only used by the kernel.
+  gword gCONST old_low_memory_curtain_before_setup;
 
-    // Internal.
-    gword volatile saved_stack_pointer;
+  // Internal.
+  gword volatile saved_stack_pointer;
 };
 extern struct kern gKern;
 
@@ -329,40 +339,39 @@ extern struct kern gKern;
 
 // TODO: Scoring does not work yet.
 struct score {
+  // gScore.number_of_players is the current number of
+  // active players in the game.  It will be at least 1.
+  gCONST gbyte number_of_players;
 
-// gScore.number_of_players is the current number of
-// active players in the game.  It will be at least 1.
-       gCONST gbyte number_of_players;
+  // gScore.player tells you your player number
+  // (from 0 to gMAX_PLAYERS-1) if you are active in the game.
+  // If you are just a viewer, you are not an active player,
+  // and this variable will be 255.
+  gCONST gbyte player;
 
-// gScore.player tells you your player number
-// (from 0 to gMAX_PLAYERS-1) if you are active in the game.
-// If you are just a viewer, you are not an active player,
-// and this variable will be 255.
-       gCONST gbyte player;
+  // gScore.partial_scores are contributions to scores from this coco.
+  // You change these to add or deduct points to a player.
+  // Whenever you change particals, you must set the
+  // partials_dirty bit afterwards.
+  gbool volatile partial_dirty;
+  int volatile partial_scores[gMAX_PLAYERS];
 
-// gScore.partial_scores are contributions to scores from this coco.
-// You change these to add or deduct points to a player.
-// Whenever you change particals, you must set the
-// partials_dirty bit afterwards.
-       gbool volatile partial_dirty;
-       int volatile partial_scores[gMAX_PLAYERS];
+  // When gScore.total_scores is updated, this is set true.
+  // After you process the new totals, you can set it false.
+  // When it is true again, you can look at the new total scores.
+  gbool volatile total_updated;
+  // gScore.total_scores is the total score, calculated in the MCP.
+  // Read Only, set by the OS, the sum of all partial scores.
+  gCONST int volatile total_scores[gMAX_PLAYERS];
 
-// When gScore.total_scores is updated, this is set true.
-// After you process the new totals, you can set it false.
-// When it is true again, you can look at the new total scores.
-       gbool volatile total_updated;
-// gScore.total_scores is the total score, calculated in the MCP.
-// Read Only, set by the OS, the sum of all partial scores.
-       gCONST int volatile total_scores[gMAX_PLAYERS];
-
-// gScore.seen_ds is how many deciseconds since
-// the player was "seen"; that is, since it sent
-// a GameCast packet up to the MCP.
-// 0 means it has never been seen.
-// 1 is the minimum for a site that has been seen.
-// 255 means 25.5 seconds or more.
-// Read Only, set by the OS.
-       gCONST gbyte volatile seen_ds[gMAX_PLAYERS];
+  // gScore.seen_ds is how many deciseconds since
+  // the player was "seen"; that is, since it sent
+  // a GameCast packet up to the MCP.
+  // 0 means it has never been seen.
+  // 1 is the minimum for a site that has been seen.
+  // 255 means 25.5 seconds or more.
+  // Read Only, set by the OS.
+  gCONST gbyte volatile seen_ds[gMAX_PLAYERS];
 };
 extern struct score gScore;
 
@@ -379,9 +388,9 @@ extern struct score gScore;
 // seconds wraps back to zero.
 
 struct real {
-    gbyte volatile ticks;  // Changes at 60Hz:  0 to 5
-    gbyte volatile decis;  // Tenths of a second: 0 to 9
-    gword volatile seconds;  // 0 to 65535
+  gbyte volatile ticks;    // Changes at 60Hz:  0 to 5
+  gbyte volatile decis;    // Tenths of a second: 0 to 9
+  gword volatile seconds;  // 0 to 65535
 };
 extern gCONST struct real gReal;
 
@@ -397,51 +406,51 @@ extern gCONST struct real gReal;
 // trying to solve.
 
 struct wall {
-    gbyte volatile second; // 0 to 59
-    gbyte volatile minute; // 0 to 59
-    gbyte volatile hour;  // 0 to 23
+  gbyte volatile second;  // 0 to 59
+  gbyte volatile minute;  // 0 to 59
+  gbyte volatile hour;    // 0 to 23
 
-    gbyte volatile day;   // 1 to 31
-    gbyte volatile month; // 1 to 12
-    gbyte volatile year2000;  // e.g. 25 means 2025
-    gbyte volatile dow[4];  // e.g. Mon\0
-    gbyte volatile moy[4];  // e.g. Jan\0
+  gbyte volatile day;       // 1 to 31
+  gbyte volatile month;     // 1 to 12
+  gbyte volatile year2000;  // e.g. 25 means 2025
+  gbyte volatile dow[4];    // e.g. Mon\0
+  gbyte volatile moy[4];    // e.g. Jan\0
 
-    // If hour rolls over from 23 to 0,
-    // these values are copied to day, month, etc.
-    // These are preset by the server, so the kernel does not
-    // need to understand the Gregorian Calendar.
-    gbyte next_day;
-    gbyte next_month;
-    gbyte next_year2000;
-    gbyte next_dow[4];
-    gbyte next_moy[4];
+  // If hour rolls over from 23 to 0,
+  // these values are copied to day, month, etc.
+  // These are preset by the server, so the kernel does not
+  // need to understand the Gregorian Calendar.
+  gbyte next_day;
+  gbyte next_month;
+  gbyte next_year2000;
+  gbyte next_dow[4];
+  gbyte next_moy[4];
 };
 extern gCONST struct wall gWall;
 
 ///////////////////////////////////////////////////////
-// 
+//
 //  Nekot Kernel Configuration
 
 struct config {
-    gword ram_limit;
-    const char* net_type;
+  gword ram_limit;
+  const char* net_type;
 };
 extern gCONST struct config gConfig;
 
 typedef unsigned int size_t;
 ///////////////////////////////////////////////////////
-// 
+//
 //  Standard Library Support
 
 typedef unsigned int size_t;
-void *memcpy(void* dest, const void* src, size_t n);
-void *memset(void* s, int c, size_t n);
+void* memcpy(void* dest, const void* src, size_t n);
+void* memset(void* s, int c, size_t n);
 int strlen(const char* s);
 
 // Nekot varients:
 // Optimized for larger blocks.
-void gMemcpy(void *dest, const void *src, gword count);
+void gMemcpy(void* dest, const void* src, gword count);
 void gMemset(void* dest, gbyte value, gword count);
 
-#endif // _KERNEL_PUBLIC_H_
+#endif  // _KERNEL_PUBLIC_H_

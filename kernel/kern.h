@@ -3,10 +3,10 @@
 
 // kern.h
 
-#define GAME_BSS_BEGIN  0x0080
-#define GAME_BSS_LIMIT  0x0100
+#define GAME_BSS_BEGIN 0x0080
+#define GAME_BSS_LIMIT 0x0100
 
-extern gword volatile SavedStackPointer; // in IRQ Handler
+extern gword volatile SavedStackPointer;  // in IRQ Handler
 
 void Kern_Init();
 void ChatTask();
@@ -43,7 +43,7 @@ never to return.
 So Game starts at the same place as Kernel's ".text.startup":
     ".data", ".text", ".text.startup"
 
-63  End page working backward:  
+63  End page working backward:
     Declared SCREEN memory.
     Declared COMMON regions.
     High Water Mark
@@ -52,4 +52,4 @@ So Game starts at the same place as Kernel's ".text.startup":
     Game.
 */
 
-#endif // _KERNEL_KERN_H_
+#endif  // _KERNEL_KERN_H_

@@ -10,9 +10,9 @@
 // command.  n is the number of bytes to
 // immediately follow for the payload.
 struct quint {
-    gbyte cmd;
-    gword n;
-    gword p;
+  gbyte cmd;
+  gword n;
+  gword p;
 };
 
 void gNetworkLog(const char* s);
@@ -32,9 +32,9 @@ void Network_Init(void);
 #define NEKOT_LAUNCH 68
 
 // Cmd bytes from coco to MCP.
-#define NEKOT_KEYSCAN  69
-#define NEKOT_CONTROL  70
-#define NEKOT_GAMECAST  71
+#define NEKOT_KEYSCAN 69
+#define NEKOT_CONTROL 70
+#define NEKOT_GAMECAST 71
 
 // Cmd bytes inherited from Lemma.
 #define CMD_LOG 200
@@ -42,15 +42,15 @@ void Network_Init(void);
 #define CMD_ECHO 217
 
 #if NET_TYPE_cocoio
-  #define  NET_Send         WizSend
-  #define  NET_RecvChunkTry WizRecvChunkTry
-  #define  NET_Init         Wiznet_Init
+#define NET_Send WizSend
+#define NET_RecvChunkTry WizRecvChunkTry
+#define NET_Init Wiznet_Init
 #endif
 
 #if NET_TYPE_bonobo
-  #define  NET_Send          BonoboSend
-  #define  NET_RecvChunkTry  BonoboRecvChunkTry
-  #define  NET_Init          Bonobo_Init
+#define NET_Send BonoboSend
+#define NET_RecvChunkTry BonoboRecvChunkTry
+#define NET_Init Bonobo_Init
 #endif
 
-#endif // _KERNEL_NETWORK_H_
+#endif  // _KERNEL_NETWORK_H_

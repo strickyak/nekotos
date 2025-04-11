@@ -5,4 +5,4 @@
 // It is used by some public macros.
 void xSendControlPacket(gword p, const gbyte* pay, gword size);
 
-#endif //  _KERNEL_FRIEND_H_
+#endif  //  _KERNEL_FRIEND_H_

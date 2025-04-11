@@ -1,7 +1,6 @@
 #if NET_TYPE_cocoio
 
 #include "kernel/private.h"
-
 #include "kernel/w5100s_defs.h"
 
 // How to talk to the four hardware ports.
@@ -12,7 +11,7 @@ struct wiz_port {
 };
 
 // Axiom uses Socket 1 (of 0 thru 3).
-#define B 0x0500u   // Socket Base
+#define B 0x0500u  // Socket Base
 #define T 0x4800u  // Transmit ring
 #define R 0x6800u  // Receive ring
 
@@ -63,17 +62,17 @@ gbool ValidateWizPort(struct wiz_port* p) {
 }
 
 void FindWizPort() {
-    struct wiz_port* p = (void*)0xFF68;
-    if (ValidateWizPort(p)) {
-        Wiznet.wiz_port = p;
-        return;
-    }
-    p = (void*)0xFF78;
-    if (ValidateWizPort(p)) {
-        Wiznet.wiz_port = p;
-        return;
-    }
-    Wiznet.wiz_port = 0;
+  struct wiz_port* p = (void*)0xFF68;
+  if (ValidateWizPort(p)) {
+    Wiznet.wiz_port = p;
+    return;
+  }
+  p = (void*)0xFF78;
+  if (ValidateWizPort(p)) {
+    Wiznet.wiz_port = p;
+    return;
+  }
+  Wiznet.wiz_port = 0;
 }
 
 //////////////////////////////////////////
@@ -93,12 +92,11 @@ void WizWaitStatus(gbyte want) {
   } while (status != want);
 }
 
-
 ////////////////////////////////////////
 ////////////////////////////////////////
 
 // returns tx_ptr
-tx_ptr_t WizReserveToSend( gword n) {
+tx_ptr_t WizReserveToSend(gword n) {
   // PrintH("ResTS %d;", n);
   // Wait until free space is available.
   gword free_size;
@@ -110,8 +108,7 @@ tx_ptr_t WizReserveToSend( gword n) {
   return WizGet2(B + SK_TX_WR0) & RING_MASK;
 }
 
-tx_ptr_t WizDataToSend( tx_ptr_t tx_ptr,
-                       const char* data, gword n) {
+tx_ptr_t WizDataToSend(tx_ptr_t tx_ptr, const char* data, gword n) {
   gword begin = tx_ptr;   // begin: Beneath RING_SIZE.
   gword end = begin + n;  // end:  Sum may not be beneath RING_SIZE.
 
@@ -125,12 +122,11 @@ tx_ptr_t WizDataToSend( tx_ptr_t tx_ptr,
   }
   return (n + tx_ptr) & RING_MASK;
 }
-tx_ptr_t WizBytesToSend( tx_ptr_t tx_ptr,
-                        const gbyte* data, gword n) {
+tx_ptr_t WizBytesToSend(tx_ptr_t tx_ptr, const gbyte* data, gword n) {
   return WizDataToSend(tx_ptr, (char*)data, n);
 }
 
-void WizFinalizeSend( gword n) {
+void WizFinalizeSend(gword n) {
   gword tx_wr = WizGet2(B + SK_TX_WR0);
   tx_wr += n;
   WizPut2(B + SK_TX_WR0, tx_wr);
@@ -139,7 +135,7 @@ void WizFinalizeSend( gword n) {
 
 errnum WizCheck() {
   gbyte ir = WizGet1(B + SK_IR);  // Socket Interrupt Register.
-  if (ir & SK_IR_TOUT) {         // Timeout?
+  if (ir & SK_IR_TOUT) {          // Timeout?
     return SK_IR_TOUT;
   }
   if (ir & SK_IR_DISC) {  // Disconnect?
@@ -147,7 +143,7 @@ errnum WizCheck() {
   }
   return OKAY;
 }
-errnum WizSendChunk( char* data, gword n) {
+errnum WizSendChunk(char* data, gword n) {
   // PrintH("Ax WizSendChunk %d@%d : %d %d %d %d %d", n, data, data[0], data[1],
   // data[2], data[3], data[4]);
   errnum e = WizCheck();
@@ -161,16 +157,16 @@ errnum WizSendChunk( char* data, gword n) {
 }
 
 void WizSend(const gbyte* addr, gword size) {
-    gbyte cc_value = gIrqSaveAndDisable();
+  gbyte cc_value = gIrqSaveAndDisable();
 
   errnum e = WizCheck();
   if (e) gFatal("WizSend.WizCheck", e);
 
-    tx_ptr_t t = WizReserveToSend(size);
-    t = WizBytesToSend(t, addr, size);
-    WizFinalizeSend(size);
+  tx_ptr_t t = WizReserveToSend(size);
+  t = WizBytesToSend(t, addr, size);
+  WizFinalizeSend(size);
 
-    gIrqRestore(cc_value);
+  gIrqRestore(cc_value);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -183,9 +179,9 @@ errnum WizRecvGetBytesWaiting(gword* bytes_waiting_out) {
   return OKAY;
 }
 
-errnum WizRecvChunkTry( gbyte* buf, gword n) {
+errnum WizRecvChunkTry(gbyte* buf, gword n) {
   gword bytes_waiting = 0;
-  errnum e = WizRecvGetBytesWaiting(& bytes_waiting);
+  errnum e = WizRecvGetBytesWaiting(&bytes_waiting);
   if (e) return e;
   if (bytes_waiting < n) return NOTYET;
 
@@ -207,7 +203,7 @@ errnum WizRecvChunkTry( gbyte* buf, gword n) {
   return OKAY;
 }
 
-errnum WizRecvChunk( gbyte* buf, gword n) {
+errnum WizRecvChunk(gbyte* buf, gword n) {
   // PrintH("WizRecvChunk %d...", n);
   errnum e;
   do {
@@ -217,24 +213,22 @@ errnum WizRecvChunk( gbyte* buf, gword n) {
   // buf[4]);
   return e;
 }
-errnum WizRecvChunkBytes( gbyte* buf, gword n) {
-  return WizRecvChunk(buf, n);
-}
+errnum WizRecvChunkBytes(gbyte* buf, gword n) { return WizRecvChunk(buf, n); }
 
 ////////////////////////////////////////
 ////////////////////////////////////////
 
 void Wiznet_Init() {
-    volatile gbyte* p = Cons + WIZNET_BAR_LOCATION;
-    p[-1] = 'W';
-    FindWizPort();
-    if ((gword)Wiznet.wiz_port == 0xFF68u) {
-         p[0] = '6';
-    } else if ((gword)Wiznet.wiz_port == 0xFF78u) {
-         p[0] = '7';
-    }
-    PutChar('W');
-    PutChar(p[0]);
+  volatile gbyte* p = Cons + WIZNET_BAR_LOCATION;
+  p[-1] = 'W';
+  FindWizPort();
+  if ((gword)Wiznet.wiz_port == 0xFF68u) {
+    p[0] = '6';
+  } else if ((gword)Wiznet.wiz_port == 0xFF78u) {
+    p[0] = '7';
+  }
+  PutChar('W');
+  PutChar(p[0]);
 }
 
-#endif // NET_TYPE_cocoio
+#endif  // NET_TYPE_cocoio

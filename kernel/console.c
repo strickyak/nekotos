@@ -1,32 +1,32 @@
-#include "kernel/private.h"
-
 #include <stdarg.h>
 
+#include "kernel/private.h"
+
 void PutRawByte(gbyte x) {
-    memcpy_words(STIFF_BEGIN, STIFF_BEGIN+1, STIFF_LEN/2);
-    gPoke1(STIFF_LIMIT-2, x);
-    gPoke1(STIFF_LIMIT-1, 0xEF);
+  memcpy_words(STIFF_BEGIN, STIFF_BEGIN + 1, STIFF_LEN / 2);
+  gPoke1(STIFF_LIMIT - 2, x);
+  gPoke1(STIFF_LIMIT - 1, 0xEF);
 }
 void PutChar(char c) {
-    gbyte x = (gbyte)c; // Unsigned!
-    if (x < 32) {
-        PutChar(' ');
-    } else if (x < 64) {
-            PutRawByte(64 + x);  // Upper case.
-    } else if (x < 96) {
-            PutRawByte(x);  // Upper case.
-    } else if (x < 128) {
-            PutRawByte(x-32); // Lower case.
-    } else {
-            PutRawByte(x);  // Semigraphics.
-    }
+  gbyte x = (gbyte)c;  // Unsigned!
+  if (x < 32) {
+    PutChar(' ');
+  } else if (x < 64) {
+    PutRawByte(64 + x);  // Upper case.
+  } else if (x < 96) {
+    PutRawByte(x);  // Upper case.
+  } else if (x < 128) {
+    PutRawByte(x - 32);  // Lower case.
+  } else {
+    PutRawByte(x);  // Semigraphics.
+  }
 }
 
 void PutStr(const char* s) {
-    for (; *s; s++) {
-        PutChar(*s);
-    }
-    PutChar(' ');
+  for (; *s; s++) {
+    PutChar(*s);
+  }
+  PutChar(' ');
 }
 
 #if 1
@@ -60,11 +60,11 @@ void PutDec(gword x) {
 }
 #if 1
 void PutSigned(int x) {
-    if (x<0) {
-        x = -x;
-        PutChar('-');
-    }
-    PutDec(x);
+  if (x < 0) {
+    x = -x;
+    PutChar('-');
+  }
+  PutDec(x);
 }
 #endif
 #if 0
@@ -122,17 +122,17 @@ void Printf(const char* format, ...) {
 #endif
 
 void Console_Init() {
-    // Draw a greenish bar across the top of the Console.
-    for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p+=2) {
-        gPoke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
-    }
+  // Draw a greenish bar across the top of the Console.
+  for (gword p = CONSOLE_BEGIN; p < PANE_BEGIN; p += 2) {
+    gPoke2(p, 0x8C8C);  // greenish (in RGB or Composite) top bar
+  }
 
-    // Fill the stiff part.
-    memset_words(CONSOLE_BEGIN+32, 0xEFEF, 16*STIFF_LINES);
+  // Fill the stiff part.
+  memset_words(CONSOLE_BEGIN + 32, 0xEFEF, 16 * STIFF_LINES);
 
-    // Draw a blueish bar across the bottom of the Console.
-    for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p+=2) {
-        gPoke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
-    }
-    gPoke1(CONSOLE_LIMIT-31, 0xFF);
+  // Draw a blueish bar across the bottom of the Console.
+  for (gword p = PANE_LIMIT; p < CONSOLE_LIMIT; p += 2) {
+    gPoke2(p, 0xA3A3);  // blueish (in RGB or Composite) bottom bar
+  }
+  gPoke1(CONSOLE_LIMIT - 31, 0xFF);
 }

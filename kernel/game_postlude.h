@@ -2,18 +2,18 @@
 
 // You shall have no other mains before Me.
 int main() {
-    asm volatile(".globl __n1pre_entry");
-    gPoke2(0, &_n1pre_entry);
+  asm volatile(".globl __n1pre_entry");
+  gPoke2(0, &_n1pre_entry);
 
-    asm volatile(".globl __n1pre_final");
-    gPoke2(0, &_n1pre_final);
+  asm volatile(".globl __n1pre_final");
+  gPoke2(0, &_n1pre_final);
 
-    asm volatile(".globl __n1pre_final_startup");
-    gPoke2(0, &_n1pre_final_startup);
+  asm volatile(".globl __n1pre_final_startup");
+  gPoke2(0, &_n1pre_final_startup);
 
-    setup();
+  setup();
 
-    xAfterSetup(loop, &_n1pre_final, &_n1pre_final_startup);
+  xAfterSetup(loop, &_n1pre_final, &_n1pre_final_startup);
 }
 
 int const _n1pre_screens = _nPRE_SCREENS;
@@ -23,7 +23,7 @@ int const _n1pre_regions = _nPRE_REGIONS;
 // might simplify finding the entry?
 // TODO: does this really help?
 struct _n1pre_entry const _n1pre_entry
-    __attribute__ ((section (".text.entry"))) = {
+    __attribute__((section(".text.entry"))) = {
         0x7E,  // = JMP extended
         (int)main,
 };

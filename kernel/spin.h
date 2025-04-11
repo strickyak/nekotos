@@ -9,13 +9,11 @@
 // on the bar, to mnemonically identify the spinor.
 
 inline void Spin(char c, gbyte b) {
-    Cons[b]++;
-    volatile gbyte* p = (volatile gbyte*)0x3FE0;  // last graphics line
-    p[b]++;
-}   
-inline void Spin_Mark(char c, gbyte b) {
-    Cons[b-1] = c;
+  Cons[b]++;
+  volatile gbyte* p = (volatile gbyte*)0x3FE0;  // last graphics line
+  p[b]++;
 }
+inline void Spin_Mark(char c, gbyte b) { Cons[b - 1] = c; }
 
 inline void SpinChatTask() { Spin('C', 14); }
 inline void SpinKeyboardScan() { Spin('K', 18); }
@@ -27,12 +25,12 @@ inline void SpinRealSeconds() { Spin('S', 24); }
 inline void SpinBreakkey() { Spin('B', 30); }
 
 inline void Spin_Init() {
-     Spin_Mark('C', 14);
-     Spin_Mark('K', 18);
-     Spin_Mark('Q', 22);
-     Spin_Mark('B', 30);
+  Spin_Mark('C', 14);
+  Spin_Mark('K', 18);
+  Spin_Mark('Q', 22);
+  Spin_Mark('B', 30);
 }
 
 #define WIZNET_BAR_LOCATION 10
 
-#endif // _KERNEL_SPIN_H_
+#endif  // _KERNEL_SPIN_H_

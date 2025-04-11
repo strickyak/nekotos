@@ -2,7 +2,6 @@
 
 // config.c
 
-
 struct config gConfig = {
     .ram_limit = RAM_LIMIT,
 #if NET_TYPE_cocoio

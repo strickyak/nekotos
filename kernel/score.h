@@ -4,4 +4,4 @@
 // private:
 void SendPartialScores();  // on the Real.seconds.
 
-#endif // _KERNEL_SCORE_H_
+#endif  // _KERNEL_SCORE_H_

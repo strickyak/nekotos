@@ -20,4 +20,4 @@ void Reset64();
 
 void Alloc64_Init();
 
-#endif // _KERNEL_ALLOC64_H_
+#endif  // _KERNEL_ALLOC64_H_
