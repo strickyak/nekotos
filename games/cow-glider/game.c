@@ -58,11 +58,9 @@ void AdvanceTanks() {
   for (gbyte i = 0; i < NumberOfPlayers; i++) {
       struct tank* t = &State.tank[i];
 
+      // Advance positions based on velocity.
       t->x += t->xvel;
       t->y += t->yvel;
-
-  // Sprintf(logbuf, "Adv [%d] %x,%x %x,%x", i, t->x, t->y, t->xvel, t->yvel);
-  // gNetworkLog(logbuf);
 
       // Wrap to stay on torus.
       while (t->x < 0) {
