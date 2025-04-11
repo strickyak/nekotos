@@ -17,10 +17,7 @@ LWLINK = ../../bin/lwlink --format=decb  \
       -L'../../lib/gcc/m6809-unknown/4.6.4/'
 
 _kernel.c: $(CFILES)
-	for x in $(CFILES); do \
-            echo "#line 1 \"kernel/$$(basename $$x)\""; \
-            cat $$x; \
-        done > _kernel.c
+	cat ../kernel/kernel.c > _kernel.c
 
 _kernel.s: _kernel.c
 	$(GCC) -f'whole-program' -S $(GCFLAGS) $<
