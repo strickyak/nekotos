@@ -41,10 +41,13 @@ void Reset64() {
     root64 = gNULL;
 }
 
+// Chunks only exist while in a game.
+// When no game, this space is in an unknown state.
+// (There may have been chunks allocated when the game died.)
 void Alloc64_Init() {
-    memset_words(0x0200, 0x3F3F, 256);
+    memset_words(CHUNKS_BEGIN, 0x3F3F, (CHUNKS_LIMIT-CHUNKS_BEGIN)/2);
     Reset64();
-     for (gword p = 0x0200; p < 0x0400; p+=64) {
+     for (gword p = CHUNKS_BEGIN; p < CHUNKS_LIMIT; p+=64) {
         gFree64((void*)p);
      }
 }

@@ -48,10 +48,10 @@ void Breakkey_Handler(void) {
         Breakkey.break_key_was_down = gFALSE;
     }
 
+#if ALSO_SCAN_CLEAR_KEY
     //////////////////////////////
     //
     //   Clear Key
-
     const gbyte c_probe = ~(gbyte)CLEARKEY_PROBE_BIT;
     gPoke1(Pia0PortB, c_probe);
 
@@ -63,5 +63,5 @@ void Breakkey_Handler(void) {
         Vdg.stiff_debug = 1;
         NowSwitchDisplayMode(0, 0, 0);
     }
-
+#endif
 }

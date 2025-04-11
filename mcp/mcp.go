@@ -53,7 +53,7 @@ var Abbrevs = map[string]string{
 	"L": "life",
 	"F": "forth",
 	"S": "spacewar",
-	"D": "stupid-demo",
+	"G": "cow-glider",
 }
 
 type Gamer struct {
@@ -221,62 +221,104 @@ func (g *Gamer) WaitOnPacket(inchan chan Packet) (p Packet, ok bool) {
 	return
 }
 
+func (g *Gamer) HandleGamecast(param uint, pay []byte) {
+	if len(pay) < 3 || len(pay) > 62 {
+		Log("BAD N_GAMECAST from %q: len=%d.", g, len(pay))
+		return
+	}
+
+	r := g.Room
+	if r == nil {
+		pay[0] = 0 // the only player is player 0
+		g.SendPacket(N_GAMECAST, param, pay)
+	} else {
+		mm := r.Members()
+		player := r.PlayerNumber(g)
+		if player < MaxPlayers {
+			pay[0] = player
+			// Redistribute it to all.
+			for _, peer := range mm {
+				peer.SendPacket(N_GAMECAST, param, pay)
+			}
+		}
+	}
+}
+
+func (gamer *Gamer) Step(inchan chan Packet) {
+	gamer.HandlePackets(inchan) // doesn't return until Error
+}
+
 func (g *Gamer) HandlePackets(inchan chan Packet) {
 	for {
 		if p, ok := g.WaitOnPacket(inchan); ok {
-			switch p.c {
-			case CMD_LOG:
-				Log("N1LOG: %q %q", g.Handle, p.pay)
-			case N_KEYSCAN:
-				g.KeyScanHandler(p.pay)
-			case N_CLIENT:
-				g.HandleClientRequest(p.p, p.pay)
-			case N_GREETING:
-				Log("%q GREETING(%d) [%d] % 3x %q", g, p.p, len(p.pay), p.pay, p.pay)
-
-				if p.p == 1 && len(p.pay) == 16 && string(p.pay[:7]) == "nekotos" {
-
-					g.ConsAddr = WordFromBytes(p.pay, 8)
-					g.MaxPlayers = WordFromBytes(p.pay, 10)
-					g.GScore = WordFromBytes(p.pay, 12)
-					g.GWall = WordFromBytes(p.pay, 14)
-					now := g.SendWallTime()
-					log.Printf("GREETING(1) sent Wall Time: %v", now)
-
-					g.PrintPlain("******************************")
-					g.PrintPlain(Format("*** (CMSW) = %x %x %x %x", g.ConsAddr, g.MaxPlayers, g.GScore, g.GWall))
-					g.PrintPlain(Format("*** (CARD) = %q", g.Special))
-					g.PrintPlain(Format("*** ZONE = %q", g.Zone))
-					g.PrintPlain(Format("*** AIRPORT = %q", g.Airport))
-					g.PrintPlain(Format("*** NAME = %q", g.Name))
-					g.PrintPlain(Format("*** HANDLE = %q", g.Handle))
-
-					g.ConsoleSync()
-
-				} else if p.p == 2 && len(p.pay) == 8 {
-
-					g.NekotOSHash = p.pay
-					log.Printf("GREETING(2) from NekotOSHash % 3x", p.pay)
-
-					g.PrintPlain(Format("*** (HASH) = %x", p.pay[:8]))
-					g.ConsoleSync()
-
-				} else if p.p == 16 {
-					// Feed bonobo.
-					g.PrintPlain("==============================")
-					g.PrintPlain("******************************")
-					g.PrintPlain(Format("*** LAUNCHKERNEL: %s", p.pay))
-					g.LaunchKernel(string(p.pay))
-
-				} else {
-					log.Panicf("unknown GREETING(%d): % 3x", p.p, p.pay)
-				}
-			default:
-				Log("WUT? default PPI: %v", p)
-			}
+			g.HandlePacket(p)
 		} else {
 			break
 		}
+	}
+}
+
+func (g *Gamer) HandlePacket(p Packet) {
+
+	defer func() {
+		r := recover()
+		if r != nil {
+			KernelSendChat(Format("%q: ERROR: %v", g, r))
+            Log("HP ERROR {%v} WITH %q (%d.) % 3x", r, g, p.p, p.pay)
+		}
+	}()
+
+	switch p.c {
+	case CMD_LOG:
+		Log("N1LOG: %q %q", g.Handle, p.pay)
+	case N_KEYSCAN:
+		g.KeyScanHandler(p.pay)
+	case N_CLIENT:
+		g.HandleClientRequest(p.p, p.pay)
+	case N_GAMECAST:
+		g.HandleGamecast(p.p, p.pay)
+	case N_GREETING:
+		Log("%q GREETING(%d) [%d] % 3x %q", g, p.p, len(p.pay), p.pay, p.pay)
+
+		if p.p == 1 && len(p.pay) == 16 && string(p.pay[:7]) == "nekotos" {
+
+			g.ConsAddr = WordFromBytes(p.pay, 8)
+			g.MaxPlayers = WordFromBytes(p.pay, 10)
+			g.GScore = WordFromBytes(p.pay, 12)
+			g.GWall = WordFromBytes(p.pay, 14)
+			now := g.SendWallTime()
+			log.Printf("GREETING(1) sent Wall Time: %v", now)
+
+			g.PrintPlain("******************************")
+			g.PrintPlain(Format("*** (CMSW) = %x %x %x %x", g.ConsAddr, g.MaxPlayers, g.GScore, g.GWall))
+			g.PrintPlain(Format("*** (CARD) = %q", g.Special))
+			g.PrintPlain(Format("*** ZONE = %q", g.Zone))
+			g.PrintPlain(Format("*** AIRPORT = %q", g.Airport))
+			g.PrintPlain(Format("*** NAME = %q", g.Name))
+			g.PrintPlain(Format("*** HANDLE = %q", g.Handle))
+
+			g.ConsoleSync()
+
+		} else if p.p == 2 && len(p.pay) == 8 {
+
+			g.NekotOSHash = p.pay
+			log.Printf("GREETING(2) from NekotOSHash % 3x", p.pay)
+
+			g.PrintPlain(Format("*** (HASH) = %x", p.pay[:8]))
+			g.ConsoleSync()
+
+		} else if p.p == 16 {
+			// Feed bonobo.
+			g.PrintPlain("==============================")
+			g.PrintPlain("******************************")
+			g.PrintPlain(Format("*** LAUNCHKERNEL: %s", p.pay))
+			g.LaunchKernel(string(p.pay))
+
+		} else {
+			log.Panicf("unknown GREETING(%d): % 3x", p.p, p.pay)
+		}
+	default:
+		Log("WUT? default PPI: %v", p)
 	}
 }
 
@@ -359,27 +401,6 @@ func (g *Gamer) HandleClientRequest(p uint, pay []byte) {
 					peer.SendPokeMemory(g.GScore+3+2*g.MaxPlayers, totals)
 				}
 			}
-		}
-
-	case 'G': // Game Cast inbound
-		if len(pay) > 2 && len(pay) <= 62 {
-			r := g.Room
-			if r == nil {
-				pay[0] = 0 // the only player is player 0
-				g.SendPacket(N_GAMECAST, 0, pay)
-			} else {
-				mm := r.Members()
-				player := r.PlayerNumber(g)
-				if player < MaxPlayers {
-					pay[0] = player
-					// Redistribute it to all.
-					for _, peer := range mm {
-						peer.SendPacket(N_GAMECAST, 0, pay)
-					}
-				}
-			}
-		} else {
-			Log("BAD N_GAMECAST from %q: len=%d.", g, len(pay))
 		}
 
 	default:
@@ -627,14 +648,12 @@ func (g *Gamer) PrintLine(s string) {
 	g.ConsoleSync()
 }
 
-func (gamer *Gamer) Step(inchan chan Packet) {
-	gamer.HandlePackets(inchan) // doesn't return until Error
-}
-
 // SendDecbAndJump takes the contents of a DECB binary,
 // and pokes it into the Coco.
 // Jump is N_START or N_CALL.
 func (gamer *Gamer) SendDecbAndJump(bb []byte, jump byte) {
+	log.Printf("SendDecbAndJump: (len=%d) jump=%d.", len(bb), jump)
+
 	// Flip back to Shell mode, so you're not executing the old game
 	// while loading the new game.
 	if jump == N_START {
@@ -647,7 +666,7 @@ func (gamer *Gamer) SendDecbAndJump(bb []byte, jump byte) {
 		c := bb[0]
 		n := (uint(bb[1]) << 8) | uint(bb[2])
 		p := (uint(bb[3]) << 8) | uint(bb[4])
-		log.Printf("SendDecbAndJump: %x %x %x (len=%d) jump=%d.", c, n, p, len(bb), jump)
+		log.Printf("SendDecbAndJump: file quint %x %x %x", c, n, p)
 		bb = bb[5:]
 
 		switch c {
@@ -702,8 +721,8 @@ func (gamer *Gamer) SendWallTime() time.Time {
 
 func (gamer *Gamer) SendInitializedScores() {
 	r := gamer.Room
-	count := byte(0)
-	player := byte(0)
+	count := byte(1)  // If no room, there is 1 player,
+	player := byte(0) // and that player is number 0.
 	if r != nil {
 		mems := r.Members()
 		count = byte(len(mems))

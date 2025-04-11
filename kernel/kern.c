@@ -98,20 +98,8 @@ void StartTask(gword entry) {
     memset_words(0x0000u, 0x3F3F, 8);
 
     // TODO: between app's low water and high water.
-#if 0
-    // Breaks on 16K coco2:
-    memset_words(0x4000u, 0x3F3F, (0xFE00u - 0x4000u)>>1);
-#endif
 
     Alloc64_Init();  // Eight chunks of 64 to be ready.
-#if 0
-    char logit[6] = {64, 64, 64, 64, 64, 0};
-    gNetworkLog(logit);
-    logit[2] += gScore.number_of_players;
-    gNetworkLog(logit);
-    logit[3] += gScore.player;
-    gNetworkLog(logit);
-#endif
 
     asm volatile("\n"
         "  ldx   %0      \n"  // entry point

@@ -1,6 +1,9 @@
 #ifndef _KERNEL_ALLOC64_H_
 #define _KERNEL_ALLOC64_H_
 
+#define CHUNKS_BEGIN 0x0200
+#define CHUNKS_LIMIT 0x0400
+
 // gAlloc64 returns a pointer to a 64-gbyte
 // chunk of memory, or it returns gNULL
 // (the zero pointer).  You can gAssert the

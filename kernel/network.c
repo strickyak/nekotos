@@ -51,9 +51,7 @@ if(0)PutChar('Z');
 // Games can log a message with the network.
 // Dont spam it too badly!
 void gNetworkLog(const char* s) {
-    #if 0
     SendPacket(CMD_LOG, 0, (const gbyte*)s, strlen(s));
-    #endif
 }
 
 gbool need_recv_payload;
@@ -104,35 +102,42 @@ void ExecuteReceivedCommand(const gbyte* quint) {
     } else if (cmd == NEKOT_GAMECAST) { // 71
         gbyte cc_value = gIrqSaveAndDisable();
 
-        struct gamecast* chunk = (struct gamecast*) gAlloc64();
+        struct gamecast* chunk;
+        if (gKern.in_game) {
+            chunk = (struct gamecast*) gAlloc64();
+        } else {
+            // Chunks don't exist when not in a game.
+            chunk = (struct gamecast*)CHUNKS_BEGIN;  // Borrow a buffer in the chunk space.
+        }
+
         if (!chunk) {
             gFatal("RECV CAST NOMEM", 0);
         }
         gAssert(2 <= n);   // two mandatory header bytes, and
         gAssert(n <= 62);  // up to 60 payload bytes.
 
-        errnum e4 = NET_RecvChunkTry(chunk->payload, n);
+        errnum e4 = NET_RecvChunkTry(chunk, n);
         if (e4==NOTYET) {
+            gFree64(chunk);
             gIrqRestore(cc_value);
             return;  // do not let need_recv_payload get falsified.
         }
         if (e4) gFatal("E-C",e4);
 
-        // Need to append the chunk to the end of the chain!
-        chunk->next = gNULL;
-        if (recvcast_root) {
-            struct gamecast* ptr;
-            // Find the end of the chain, which has no ->next.
-            for (ptr = recvcast_root; ptr->next; ptr = ptr->next) {}
-            // The new chunk is now the ->next.
-            ptr->next = chunk;
-        } else {
-            // No chunks in the list yet, so we become the first.
-            recvcast_root = chunk;
+        if (gKern.in_game) {
+            // Need to append the chunk to the end of the chain!
+            chunk->next = gNULL;
+            if (recvcast_root) {
+                struct gamecast* ptr;
+                // Find the end of the chain, which has no ->next.
+                for (ptr = recvcast_root; ptr->next; ptr = ptr->next) {}
+                // The new chunk is now the ->next.
+                ptr->next = chunk;
+            } else {
+                // No chunks in the list yet, so we become the first.
+                recvcast_root = chunk;
+            }
         }
-
-        chunk->next = recvcast_root;
-        recvcast_root = chunk;
 
         gIrqRestore(cc_value);
     } else {
@@ -142,12 +147,12 @@ void ExecuteReceivedCommand(const gbyte* quint) {
     need_recv_payload = gFALSE;
 }
 
+gbyte RecvQuint[5];
 void CheckReceived() {
     gbyte cc_value = gIrqSaveAndDisable();
-    gbyte quint[5];
 
     if (!need_recv_payload) {
-        gbyte err = NET_RecvChunkTry(quint, 5);
+        gbyte err = NET_RecvChunkTry(RecvQuint, 5);
         if (err==NOTYET) goto RESTORE;
         if (err) gFatal("RECV", err);
         need_recv_payload = gTRUE;
@@ -156,7 +161,7 @@ void CheckReceived() {
 #if NETWORK_CLICK
     gPoke1(0xFF22, Vdg.shadow_pia1portb | 0x02);  // 1-bit click
 #endif
-    ExecuteReceivedCommand(quint);
+    ExecuteReceivedCommand(RecvQuint);
 #if NETWORK_CLICK
     gPoke1(0xFF22, Vdg.shadow_pia1portb | 0x00);  // 1-bit click
 #endif
