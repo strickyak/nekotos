@@ -168,7 +168,7 @@ gword PinDownGlobalNames[] gSETUP_DATA = {
     (gword)&_Final,
     (gword)&_Final_Startup,
     (gword)&gScore,
-    (gword)&gReal,
+    (gword)&gMono,
     (gword)&gWall,
     (gword)&gConfig,
 };

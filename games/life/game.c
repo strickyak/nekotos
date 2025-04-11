@@ -71,7 +71,7 @@ void setup() {
     for (gword y = 2; y < H*3/4; y++) {
         for (gword x = 2; x < W*3/4; x++) {
             gbyte z = (gbyte)x & (gbyte)y;
-            gbyte c = gReal.ticks + gReal.decis + gReal.seconds;
+            gbyte c = gMono.ticks + gMono.decis + gMono.seconds;
             gbyte b = 1;
             for (gword i = 0; i<8; i++) {
                 if ((b&z) != 0) c++;

@@ -19,8 +19,8 @@ inline void SpinChatTask() { Spin('C', 14); }
 inline void SpinKeyboardScan() { Spin('K', 18); }
 
 inline void SpinIrq() { Spin('Q', 22); }
-inline void SpinRealDecis() { Spin('D', 23); }
-inline void SpinRealSeconds() { Spin('S', 24); }
+inline void SpinMonoDecis() { Spin('D', 23); }
+inline void SpinMonoSeconds() { Spin('S', 24); }
 
 inline void SpinBreakkey() { Spin('B', 30); }
 

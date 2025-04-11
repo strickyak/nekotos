@@ -375,8 +375,9 @@ struct score {
 };
 extern struct score gScore;
 
-/////////////////////
-// Real Time
+///////////////////////////////////////
+//
+// Monotonically Increasing Time
 
 // Your game may watch these variables, and when
 // they change, you can do some action that you want to
@@ -387,12 +388,12 @@ extern struct score gScore;
 // reliably increment.  After about 18.2 hours,
 // seconds wraps back to zero.
 
-struct real {
+struct mono {
   gbyte volatile ticks;    // Changes at 60Hz:  0 to 5
   gbyte volatile decis;    // Tenths of a second: 0 to 9
   gword volatile seconds;  // 0 to 65535
 };
-extern gCONST struct real gReal;
+extern gCONST struct mono gMono;
 
 ////////////////////////////
 //

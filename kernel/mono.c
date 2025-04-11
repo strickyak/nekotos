@@ -1,13 +1,13 @@
 #include "kernel/private.h"
 
-struct real gReal;
+struct mono gMono;
 
-#define R gReal
+#define M gMono
 
 static void IncrementSeconds() {
-  SpinRealSeconds();
+  SpinMonoSeconds();
 
-  ++R.seconds;
+  ++M.seconds;
 
   if (gKern.in_game) SendPartialScores();
 
@@ -16,23 +16,23 @@ static void IncrementSeconds() {
 }
 
 static void IncrementDecis() {
-  // SpinRealDecis();
+  // SpinMonoDecis();
 
-  if (R.decis < 9) {
-    ++R.decis;
+  if (M.decis < 9) {
+    ++M.decis;
   } else {
-    R.decis = 0;
+    M.decis = 0;
     IncrementSeconds();
   }
 }
 
-void Real_IncrementTicks() {
-  if (R.ticks < 5) {
-    ++R.ticks;
+void Mono_IncrementTicks() {
+  if (M.ticks < 5) {
+    ++M.ticks;
   } else {
-    R.ticks = 0;
+    M.ticks = 0;
     IncrementDecis();
   }
 }
 
-#undef R
+#undef M

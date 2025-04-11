@@ -229,15 +229,15 @@ gbyte counter = 0;
 void loop() {
   ++loops;
 
-  if (gReal.decis != decis) {
+  if (gMono.decis != decis) {
     ++counter;
 
-    if (!(loops < 20 || gReal.decis == decis+1 || (gReal.decis == 0 && decis == 9))) {
+    if (!(loops < 20 || gMono.decis == decis+1 || (gMono.decis == 0 && decis == 9))) {
         Spin(4);
     }
 
     // Every 10th of a second.
-    decis = gReal.decis;
+    decis = gMono.decis;
 
     if (decis == 0) {
         // Once per second, send GameCast of State.

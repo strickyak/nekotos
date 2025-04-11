@@ -39,14 +39,14 @@ void Irq_Handler() {
   // Clear the VSYNC IRQ by reading PortB output register.
   (void)gPeek1(Pia0PortB);
 
-  Real_IncrementTicks();
+  Mono_IncrementTicks();
 
   if (gKern.focus_game) {
-    Irq_FocusGameSchedule[gReal.ticks]();
+    Irq_FocusGameSchedule[gMono.ticks]();
   } else if (gKern.in_game) {
-    Irq_PassiveGameSchedule[gReal.ticks]();
+    Irq_PassiveGameSchedule[gMono.ticks]();
   } else {
-    Irq_FocusShellSchedule[gReal.ticks]();
+    Irq_FocusShellSchedule[gMono.ticks]();
   }
 }
 

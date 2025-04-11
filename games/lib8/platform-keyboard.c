@@ -96,8 +96,8 @@ int ScanKeyboard() {
 }
 
 void WaitForTick() {
-    gbyte a = gReal.ticks;
-    while (a == gReal.ticks) {}
+    gbyte a = gMono.ticks;
+    while (a == gMono.ticks) {}
 }
 
 int prev_code;

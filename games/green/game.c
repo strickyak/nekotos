@@ -145,13 +145,13 @@ void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
 }
 
 void WaitForATick() {
-    int now = gReal.ticks;
-    while (now == gReal.ticks) {}
+    int now = gMono.ticks;
+    while (now == gMono.ticks) {}
 }
 
 void WaitForASecond() {
-    int now = gReal.seconds;
-    while (now == gReal.seconds) {}
+    int now = gMono.seconds;
+    while (now == gMono.seconds) {}
 }
 
 volatile gbyte TRUE = 1;
