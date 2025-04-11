@@ -1,16 +1,11 @@
 all: \
-  binaries \
+  BINARY \
   for-16k-cocoio \
   for-16k-bonobo \
   ##
 
-binaries:
-	rm -f ../bin/tether
-	cd ../copico-bonobo && GOBIN=$$PWD/../bin go install -x v2.4/tether/tether.go
-	rm -f ../bin/mcp-bonobo-only
-	GOBIN=$$PWD/../bin go install -x mcp/mcp-bonobo-only/mcp-bonobo-only.go
-	ls -l ../bin/tether
-	ls -l ../bin/mcp-bonobo-only
+BINARY:
+	make -C mcp/mcp-bonobo-only all
 
 for-16k-cocoio:
 	rm -rf build-$@/*
