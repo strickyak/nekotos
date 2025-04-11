@@ -1,4 +1,6 @@
 #include "kernel/public.h"
+//
+#include "lib/format.h"
 
 gSCREEN(Screen, 12);  // Screen for PMODE1
 
@@ -36,6 +38,7 @@ struct body TheMissiles[NUM_SHIPS] gZEROED;
 
 // Temporary
 int displayed_score[NUM_SHIPS] gZEROED;
+int logbuf gZEROED;
 
 ////////////////////////////////////////////////////////
 
@@ -198,8 +201,12 @@ gbyte RelevantKeysDown() {
   const gbyte row3 = (1 << 3);
   gbyte z = 0;
   for (gbyte b = 0x80; b; b >>= 1) {
+
+    gDisableIrq();
     gPoke1(0xFF02, 0xFF ^ b);  // Key sense is active low.
     gbyte c = gPeek1(0xFF00);
+    gEnableIrq();
+
     if ((c & row3) == 0) z |= b;
   }
   gPoke1(0xFF02, 0xFF);  // turn off the current.
@@ -213,9 +220,12 @@ struct spacewar_msg {
   gword dings[NUM_SHIPS];
 };
 
-struct gamecast send_me;
+struct gamecast send_me gZEROED;
 
 void BroadcastShip(int ship_num) {
+  Sprintf(logbuf, "SW B %x", ship_num);
+  gNetworkLog(logbuf);
+
   if (mode == 'S') return;
 
   //struct body* ptr_ship = TheShips + ship_num;
@@ -229,7 +239,7 @@ void BroadcastShip(int ship_num) {
   msg->ship = TheShips[ship_num];
   msg->missile = TheMissiles[ship_num];
 
-  gSendCast(&send_me, 2 + sizeof *msg);
+  gSendCast(&send_me, sizeof *msg);
 }
 
 gbyte Ships[] = {
@@ -513,6 +523,7 @@ void ClearScreen(gbyte* fb, gbyte color) {
     }
 }
 
+#if 0
 void WaitFor60HzTick() {
     gbyte t = gPeek1(&gReal.ticks);
     while (gPeek1(&gReal.ticks) == t) {}
@@ -522,6 +533,7 @@ void WaitForKeyPressArrowsAnd0To7() {
    do { w = ScanArrowsAnd0To7(); }
    while (w.w == 0);
 }
+#endif
 
 void FireMissile(gbyte who) {
   struct body* s = TheShips + who;
@@ -629,14 +641,19 @@ void DrawAll(gbyte* fb) {
 }
 
 void ProcessPacket(struct gamecast* chunk) {
-  // struct broadcast_payload {
-  // 	gbyte magic_aa;
-  // 	gbyte ship_num;
-  // 	word score;
-  // 	struct body ship, missile;
+
+  // struct spacewar_msg {
+  //   gbyte magic_aa;
+  //   gbyte ship_num;
+  //   struct body ship, missile;
+  //   gword dings[NUM_SHIPS];
   // };
+
   struct spacewar_msg* msg =
           (struct spacewar_msg*) chunk->payload;
+
+  Sprintf(logbuf, "SW PP %x %x", msg->magic_aa, msg->ship_num);
+  gNetworkLog(logbuf);
 
   if (msg->magic_aa != 0xAA) return;
   gbyte n = msg->ship_num;
@@ -658,12 +675,14 @@ void CheckIncomingPackets() {
     }
 }
 
+gbyte my_num;
 void setup() {
-  gPMode1Screen(Screen, 0);
   ClearScreen(Screen, 0);
+  gPMode1Screen(Screen, 0);
   gNetworkLog("Spacewar Running");
 
-  gbyte my_num = mode == 0; // TODO: gScore.player (had problems)
+  my_num = gScore.player;
+  mode = '1' + gScore.player;
   // struct body* my_missile = TheMissiles + my_num;
 
   // Draw a constellation around the Strong Gravity Zone.
@@ -691,6 +710,7 @@ void setup() {
     p->r = 30;  // 31+7*i;
     p->s = 0;  // 17+3*i;
     p->ttl = (i == my_num) ? 255 : 0;
+    p->ttl = 255;
 
     if (mode == 'S' || i == my_num) {
     	FireMissile(i);
@@ -701,13 +721,11 @@ void setup() {
   }
 }
 
+gword g = 0;
+gword embargo = 0;
 void loop() {
-  gbyte my_num = mode == 0; // TODO: gScore.player (had problems)
   struct body* my = TheShips + my_num;
-  gword g = 0;
-  gword embargo = 0;
 
-  while (gALWAYS) {
     if (gTRUE || g & 1) {  // every time was to toucy.
       // Check keyboard.
       gbyte keys = RelevantKeysDown();
@@ -769,9 +787,9 @@ void loop() {
     DrawAll(Screen);
     DrawScores();
 
-  WORK : {
+  WORK: {
     if ((mode != 'S') && ((g & 15) == 0)) {
-      BroadcastShip(mode - '1');
+      BroadcastShip(my_num);
     } else {
       Delay(1000);
     }
@@ -797,7 +815,8 @@ void loop() {
         if (mode - '1' == i) {
           TheShips[i].ttl = 255;  // keep myself alive!
         } else {
-          if (TheShips[i].ttl) TheShips[i].ttl--;  // depreciate others.
+          // if (TheShips[i].ttl) TheShips[i].ttl--;  // depreciate others.
+          TheShips[i].ttl = 255;  // keep all alive!
         }
       }
     }
@@ -816,5 +835,4 @@ void loop() {
 	      case 40:	TheShips[2].direction = (TheShips[0].direction + 13) & 15;
 	    }
     }
-  }
 }
