@@ -3,28 +3,29 @@
 // SendPacket sends a Quint Header and a payload
 // of 0 to 64 bytes.
 void SendPacket(gbyte cmd, gword p, const gbyte* pay, gbyte size) {
-  gPoke1(0x5FF0, '$');
-  if (0) PutChar('W');
-  size = (size > 64) ? 64 : size;
-  gPoke1(0x5FF1, 'A');
-  if (0) PutChar('A');
+  if (size > 64) {
+    gFatal("SPSZ", size);
+  }
+
   gbyte qbuf[5];
   qbuf[0] = cmd;
   gPoke2(qbuf + 1, size);
   gPoke2(qbuf + 3, p);
 
-  gPoke1(0x5FF1, 'B');
-  if (0) PutChar('B');
   gbyte cc_value = gIrqSaveAndDisable();
-  gPoke1(0x5FF1, 'C');
-  if (0) PutChar('C');
+#if DEBUG
+  PutChar('S');
+  PutHex(cmd);
+  PutChar(',');
+  PutHex(size);
+  PutChar(',');
+  PutHex(p);
+  PutChar(' ');
+#endif
   NET_Send(qbuf, 5);
-  if (0) PutChar('D');
   NET_Send(pay, size);
-  if (0) PutChar('E');
+
   gIrqRestore(cc_value);
-  if (0) PutChar('F');
-  gPoke1(0x5FF1, 'D');
 }
 
 // gSendCast is used by games to send gamecasts to other cocos
@@ -158,6 +159,16 @@ void CheckReceived() {
     if (err == NOTYET) goto RESTORE;
     if (err) gFatal("RECV", err);
     need_recv_payload = gTRUE;
+
+#if DEBUG
+    PutChar('R');
+    PutHex(RecvQuint[0]);
+    PutChar(',');
+    PutHex(((gword)(RecvQuint[1]) << 8) | RecvQuint[2]);
+    PutChar(',');
+    PutHex(((gword)(RecvQuint[3]) << 8) | RecvQuint[4]);
+    PutChar(' ');
+#endif
   }
 
 #if NETWORK_CLICK

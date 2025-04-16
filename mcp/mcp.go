@@ -6,6 +6,7 @@ package mcp
 import (
 	"bytes"
 	"flag"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -24,10 +25,9 @@ import (
 var GAMES_DIR = flag.String("games_dir", "/tmp", "where .games files are located")
 var GAME_ZONE = flag.String("zone", "America/New_York", "linux time zone location")
 
-const StiffLines = 4
+const StiffLines = 14 - transcript.Stride
 
 const (
-	N_CLOSED   = 63
 	N_GREETING = 64
 	N_MEMCPY   = 65
 	N_POKE     = 66
@@ -36,6 +36,7 @@ const (
 	N_KEYSCAN  = 69
 	N_CLIENT   = 70
 	N_GAMECAST = 71
+	N_PANIC    = 72 // MCP panics
 	CMD_LOG    = 200
 )
 
@@ -79,6 +80,7 @@ type Gamer struct {
 	Keys     [8]byte
 	Line     []byte
 	Trans    *transcript.Rec
+	Screen   [transcript.Stride][32]byte
 	ChatPage int // 0 for normal bottom.  Positive from top.
 
 	// Console [14][32]byte
@@ -133,10 +135,18 @@ func (o *InputPacketizer) Go() {
 		r := recover()
 		if r != nil {
 			log.Printf("PANIC: user %q error %v", o.gamer.Handle, r)
+			o.out <- Packet{0, 0, 0, nil} // End Sentinel
 			debug.PrintStack()
-			close(o.out)
-			o.Conn.Close()
+			Try(func() {
+				KernelSendChatf("MCP->%s: PANIC: %q", o.gamer.Handle, r)
+			})
 		}
+		Try(func() {
+			close(o.out)
+		})
+		Try(func() {
+			o.Conn.Close()
+		})
 	}()
 
 	log.Printf("InputPacketizer GO...")
@@ -144,36 +154,35 @@ func (o *InputPacketizer) Go() {
 		// Get Header
 		var header [5]byte
 
-		n, err := o.Conn.Read(header[:])
+		n, err := io.ReadFull(o.Conn, header[:])
 		if err != nil {
-			log.Printf("InputPacketizer %q cannot Read header: %v", o.gamer, err)
+			log.Panicf("prob InputPacketizer %q cannot Read header: %v", o.gamer, err)
 			break
 		}
 		if n != 5 {
-			log.Printf("InputPacketizer %q got %d bytes, wanted 5 byte header", o.gamer, n)
+			log.Panicf("prob InputPacketizer %q got %d bytes, wanted 5 byte header", o.gamer, n)
 			break
 		}
 		log.Printf("Input: %q got header % 3x", o.gamer, header[:])
 
 		p := Packet{header[0], MkWord(header[1:3]), MkWord(header[3:5]), nil}
 		if p.n > 256 {
-			log.Panicf("InputPacketizer %q packet too big: % 3x", o.gamer, header[:])
+			log.Panicf("prob InputPacketizer %q packet too big: % 3x", o.gamer, header[:])
 		}
 		p.pay = make([]byte, p.n)
 
-		n, err = o.Conn.Read(p.pay)
+		n, err = io.ReadFull(o.Conn, p.pay)
 		if err != nil {
-			log.Printf("InputPacketizer %q cannot Read %d byte payload: %v", o.gamer, n, err)
+			log.Panicf("prob InputPacketizer %q cannot Read %d byte payload: %v", o.gamer, n, err)
 			break
 		}
 		if uint(n) != p.n {
-			log.Printf("InputPacketizer %q got %d bytes, wanted %d byte payload", o.gamer, n, p.n)
+			log.Panicf("prob InputPacketizer %q got %d bytes, wanted %d byte payload", o.gamer, n, p.n)
 			break
 		}
 		log.Printf("    %q Payload % 3x", o.gamer, p.pay)
 		o.out <- p
 	}
-	o.out <- Packet{0, 0, 0, nil} // End Sentinel
 	close(o.out)
 }
 
@@ -264,7 +273,7 @@ func (g *Gamer) HandlePacket(p Packet) {
 		r := recover()
 		if r != nil {
 			KernelSendChat(Format("%q: ERROR: %v", g, r))
-            Log("HP ERROR {%v} WITH %q (%d.) % 3x", r, g, p.p, p.pay)
+			Log("HP ERROR {%v} WITH %q (%d.) % 3x", r, g, p.p, p.pay)
 		}
 	}()
 
@@ -635,8 +644,32 @@ func (g *Gamer) ConsoleSync() {
 	n := len(scr)
 	w := len(scr[0])
 
-	for i := 0; i < n; i++ {
+	// See how many lines are fixed by just scrolling with memcpy
+	memCopyLines := 0
+	for i := 0; i < n-1; i++ {
+		haveNext := g.Screen[i+1]
+		wanted := scr[i]
+		if wanted == haveNext {
+			g.Screen[i] = wanted
+			memCopyLines++
+		} else {
+			break
+		}
+	}
+
+	// Create an N_MEMCPY packet to do that scrolling
+	if memCopyLines > 0 {
+		dest, src, num := 0x0420+32*StiffLines, 0x0440+32*StiffLines, 32*memCopyLines
+		dHi, dLo := byte(uint(dest)>>8), byte(dest)
+		sHi, sLo := byte(uint(src)>>8), byte(src)
+		nHi, nLo := byte(uint(num)>>8), byte(num)
+		g.SendPacket(N_MEMCPY, 0, []byte{dHi, dLo, sHi, sLo, nHi, nLo})
+	}
+
+	// Poke the remaining lines.
+	for i := memCopyLines; i < n; i++ {
 		g.SendPokeMemory(0x0420+32*StiffLines+uint(i*w), scr[i][:])
+		g.Screen[i] = scr[i]
 	}
 }
 
@@ -651,12 +684,12 @@ func (g *Gamer) PrintLine(s string) {
 // SendDecbAndJump takes the contents of a DECB binary,
 // and pokes it into the Coco.
 // Jump is N_START or N_CALL.
-func (gamer *Gamer) SendDecbAndJump(bb []byte, jump byte) {
-	log.Printf("SendDecbAndJump: (len=%d) jump=%d.", len(bb), jump)
+func (gamer *Gamer) SendDecbAndJump(bb []byte, jump_cmd byte) {
+	log.Printf("SendDecbAndJump: (len=%d) jump_cmd=%d.", len(bb), jump_cmd)
 
 	// Flip back to Shell mode, so you're not executing the old game
 	// while loading the new game.
-	if jump == N_START {
+	if jump_cmd == N_START {
 		gamer.SendPacket(N_START, 0, nil)
 		gamer.SendInitializedScores()
 		gamer.SendWallTime()
@@ -675,7 +708,7 @@ func (gamer *Gamer) SendDecbAndJump(bb []byte, jump byte) {
 			bb = bb[n:]
 
 		case 255:
-			gamer.SendPacket(jump, p, nil) // jump is N_START or N_CALL.
+			gamer.SendPacket(jump_cmd, p, nil) // jump is N_START or N_CALL.
 
 		default:
 			panic(bb[0])
@@ -757,7 +790,8 @@ func (gamer *Gamer) Run() {
 	defer func() {
 		r := recover()
 		if r != nil {
-			log.Printf("GAMER RUN %v EXITING, CAUGHT %v", gamer, r)
+			log.Printf("Gamer.Run: PANIC: GAMER %v, CAUGHT: %v", gamer, r)
+			debug.PrintStack()
 		}
 		Try(func() { Discharge(gamer) })
 		Try(func() { close(inchan) })

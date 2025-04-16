@@ -249,9 +249,11 @@
 #define SK_RX_WR0 0x002A    /* Socket K RX Write Pointer 0 */
 #define SK_RX_WR1 0x002B    /* Socket K RX Write Pointer 1 */
 #define SK_IMR 0x002C       /* Socket K Interrupt Mask Register */
-#define SK_FRAGR0 0x002D  /* Socket K Fragment Offset in IP Header Register 0 \
-                           */
-#define SK_FRAGR1 0x002E  /* Socket K Fragment Offset in IP Header Register 1 \
+#define SK_FRAGR0                                            \
+  0x002D /* Socket K Fragment Offset in IP Header Register 0 \
+          */
+#define SK_FRAGR1                                                             \
+  0x002E                  /* Socket K Fragment Offset in IP Header Register 1 \
                            */
 #define SK_MR2 0x002F     /* Socket K Mode 2 Register */
 #define SK_KPALVTR 0x0030 /* Socket K Keep-alive Timer Register */

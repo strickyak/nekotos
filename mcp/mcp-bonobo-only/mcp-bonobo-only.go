@@ -182,11 +182,11 @@ func Serve(conn net.Conn) {
 		conn.Close()
 	}()
 
-    // TODO, Launch once or twice?
-    temp := mcp.Gamer{ // Temporary Gamer, just to Launch Kernel.
-        Conn: conn,
-    }
-    temp.LaunchKernel("bonobo-nekotos") // Becomes GAMES_DIR/"kernel.bonobo-nekotos.decb"
+	// TODO, Launch once or twice?
+	temp := mcp.Gamer{ // Temporary Gamer, just to Launch Kernel.
+		Conn: conn,
+	}
+	temp.LaunchKernel("bonobo-nekotos") // Becomes GAMES_DIR/"kernel.bonobo-nekotos.decb"
 
 	// You have 10 seconds to say Hello.
 	timeoutDuration := 10 * time.Second

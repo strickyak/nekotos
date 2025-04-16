@@ -31,7 +31,7 @@ void gFatal(const char* why, gword arg) {
   PutStr(": ");
   PutStr(why);
   PutStr("\n$");
-
+#if 0
   const gbyte* p = (const gbyte*)gPeek2(4);
   PutHex((gword)p);
   PutStr(": ");
@@ -42,6 +42,7 @@ void gFatal(const char* why, gword arg) {
     PutChar(' ');
   }
   PutChar('$');
+#endif
   FatalSpin(why);
 }
 
