@@ -155,29 +155,33 @@ func (o *InputPacketizer) Go() {
 		var header [5]byte
 
 		n, err := io.ReadFull(o.Conn, header[:])
+		if err == io.EOF {
+			log.Printf("prob InputPacketizer %q : got EOF", o.gamer)
+			break
+		}
 		if err != nil {
-			log.Panicf("prob InputPacketizer %q cannot Read header: %v", o.gamer, err)
+			log.Printf("prob InputPacketizer %q cannot Read header: %v", o.gamer, err)
 			break
 		}
 		if n != 5 {
-			log.Panicf("prob InputPacketizer %q got %d bytes, wanted 5 byte header", o.gamer, n)
+			log.Printf("prob InputPacketizer %q got %d bytes, wanted 5 byte header", o.gamer, n)
 			break
 		}
 		log.Printf("Input: %q got header % 3x", o.gamer, header[:])
 
 		p := Packet{header[0], MkWord(header[1:3]), MkWord(header[3:5]), nil}
 		if p.n > 256 {
-			log.Panicf("prob InputPacketizer %q packet too big: % 3x", o.gamer, header[:])
+			log.Printf("prob InputPacketizer %q packet too big: % 3x", o.gamer, header[:])
 		}
 		p.pay = make([]byte, p.n)
 
 		n, err = io.ReadFull(o.Conn, p.pay)
 		if err != nil {
-			log.Panicf("prob InputPacketizer %q cannot Read %d byte payload: %v", o.gamer, n, err)
+			log.Printf("prob InputPacketizer %q cannot Read %d byte payload: %v", o.gamer, n, err)
 			break
 		}
 		if uint(n) != p.n {
-			log.Panicf("prob InputPacketizer %q got %d bytes, wanted %d byte payload", o.gamer, n, p.n)
+			log.Printf("prob InputPacketizer %q got %d bytes, wanted %d byte payload", o.gamer, n, p.n)
 			break
 		}
 		log.Printf("    %q Payload % 3x", o.gamer, p.pay)
