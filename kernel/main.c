@@ -171,6 +171,12 @@ gword PinDownGlobalNames[] gSETUP_DATA = {
     (gword)&gMono,
     (gword)&gWall,
     (gword)&gConfig,
+
+    (gword)&WrapNMI,
+
+#ifdef NET_TYPE_bonobo
+    (gword)&gBonoboStartNMI,
+#endif
 };
 
 void PlaceOpcodeJMP(gword at, gfunc to) {
@@ -187,7 +193,7 @@ gword coco3_relays[] gSETUP_DATA = {
 };
 gfunc handlers[] gSETUP_DATA = {
     gFatalSWI3,        gFatalSWI2, gFatalFIRQ,
-    Irq_Handler_entry, gFatalSWI1, gFatalNMI,
+    Irq_Handler_entry, gFatalSWI1, HandleNMI,
 };
 
 void SplashRestore(int x, int y) {

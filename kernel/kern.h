@@ -14,8 +14,10 @@ void Network_Handler();
 void gFatalSWI1();
 void gFatalSWI2();
 void gFatalSWI3();
-void gFatalNMI();
 void gFatalFIRQ();
+
+void WrapNMI();
+void HandleNMI();
 
 void StartTask(gword entry);
 void xAfterSetup(gfunc loop, gword* final_, gword* final_startup);

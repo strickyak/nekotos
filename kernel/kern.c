@@ -58,13 +58,16 @@ void gFatalSWI3() {
   asm volatile("sts %0" ::"m"(gKern.saved_stack_pointer));
   gFatal("SWI3", gKern.saved_stack_pointer);
 }
-void gFatalNMI() {
-  asm volatile("sts %0" ::"m"(gKern.saved_stack_pointer));
-  gFatal("NMI", gKern.saved_stack_pointer);
-}
 void gFatalFIRQ() {
   asm volatile("sts %0" ::"m"(gKern.saved_stack_pointer));
   gFatal("FIRQ", gKern.saved_stack_pointer);
+}
+
+// volatile gbool OnceNMI;
+void WrapNMI() {
+  asm volatile("\n_HandleNMI:");
+  gPoke2(Cons+2, 1+gPeek2(Cons+2));
+  asm volatile("rti");
 }
 
 // StartTask begins the given function entry,

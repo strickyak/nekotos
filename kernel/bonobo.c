@@ -89,6 +89,15 @@ void BonoboSend(const gbyte* addr, gword n) {
   gIrqRestore(cc_value);
 }
 
+void gBonoboStartNMI() {
+  gbyte cc_value = gIrqSaveAndDisable();
+
+  bSendControl(249);  // TimerStart (2000 Hz NMI)
+  PutStr("+NMI ");
+
+  gIrqRestore(cc_value);
+}
+
 void Bonobo_Init() {
   bSendControl(252);  // Probe for Bonobo Hardware
   PutChar('B');
