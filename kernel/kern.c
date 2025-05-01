@@ -66,7 +66,7 @@ void gFatalFIRQ() {
 // volatile gbool OnceNMI;
 void WrapNMI() {
   asm volatile("\n_HandleNMI:");
-  gPoke2(Cons+2, 1+gPeek2(Cons+2));
+  gPoke2(Cons + 2, 1 + gPeek2(Cons + 2));
   asm volatile("rti");
 }
 
