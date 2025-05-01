@@ -4,6 +4,8 @@
 #include "nekotos/lib/keyscan_arrows_0to7.h"
 #include "nekotos/lib/pmode1.h"
 
+#define GAME_DURATION 200
+
 // There are only 4 colors.  How to use them?
 #define BG 0
 #define ME 2    // My ship
@@ -232,6 +234,14 @@ void InitializeScreen() {
                  /*len=*/96);
 }
 
+void DrawTimer(gword t) {
+  PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 100, 88, /*color=*/BG);
+  PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 100, 88, /*color=*/FG,
+                       /*value=*/t);
+}
+
+gword start_seconds;
+
 void setup() {
   my = &ShipState.ship[PLAYER];  // shortcut to my own ship
   InitializeScreen();
@@ -251,6 +261,7 @@ void setup() {
   OldShipState = ShipState;
   XorOldShips();  // draws ships for the first time
   DrawScores();
+  start_seconds = gMono.seconds;
 }
 
 gbyte decis = 0;
@@ -265,6 +276,14 @@ void loop() {
     if (decis == 0) {
       // Once per second, send our location and velocity.
       SendCastOurShip();
+      gword t = GAME_DURATION - (gMono.seconds - start_seconds);
+
+      // TODO: add gGameOver()
+      if (t > 65000)
+        while (gALWAYS) {
+        }  // Freeze here after timer hits zero.
+
+      DrawTimer(t);
     } else {
       // On other 9 decis per second, scan keyboard.
       ScanAndHandleKeys();
