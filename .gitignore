@@ -6,10 +6,10 @@ _*
 .*.un~
 .*.swp
 build-*/
+OLD/
 
 *.list
 *.sym
 *.s
 *.o
 *.map
-
