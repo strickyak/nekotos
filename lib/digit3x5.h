@@ -1,6 +1,7 @@
 #ifndef _NEKOTOS_LIB_DIGIT3X5_H_
 #define _NEKOTOS_LIB_DIGIT3X5_H_
 
+#include "nekotos/lib/drawline.h"
 #include "nekotos/lib/drawspot.h"
 
 char Digit3x5CharGen[] =

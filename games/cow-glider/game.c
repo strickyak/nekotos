@@ -14,23 +14,24 @@
 gSCREEN(Screen, 12);  // Screen for PMODE1
 
 #define MAX_SHIPS 8
-#define XWRAP (96 << 8)
-#define YWRAP (96 << 8)
 
-#define NumberOfPlayers gScore.number_of_players
-#define Player gScore.player
+#define NPLAYERS gScore.number_of_players
+#define PLAYER gScore.player
 
-char logbuf[66] gZEROED;
+struct gamecast Packet;
 
 struct ship {
   int x, y;        // x, y position: fixed binary point, 8b.8b ;  modulo 96, 96
   int xvel, yvel;  // x, y velocity: fixed binary point, 8b.8b ;  change in
                    // position per Decisecond.
 };
+#define DELTA_VEL 16  // Added by each arrow.
 
 struct state {
   struct ship ship[MAX_SHIPS];
-} State gZEROED, OldState gZEROED;
+} ShipState gZEROED, OldShipState gZEROED;
+
+struct ship* my;  // shortcut to my ship
 
 #define NUM_COWS (MAX_SHIPS * 4)
 
@@ -67,43 +68,39 @@ void InitCows() {
 void CheckForKills(gbyte x, gbyte y) {
   for (gbyte i = 0; i < NUM_COWS; i++) {
     if (!Cows[i].x) continue;  // 0 for x means already killed.
-    if (Cows[i].x == x && Cows[i].y == y) {
-      // Kill that cow.
-      // Simplify: allow multiple kills on same cow if all are done
-      // simultaneously, before any kill packets some back.
-      static struct gamecast packet;
-      struct kill_payload* pay = (struct kill_payload*)packet.payload;
 
-      packet.flags = 0;
-      pay->type = PT_KILL;  // Payload Type
-      pay->cow_num = i;     // copy entire struct
-      gSendCast(&packet, sizeof *pay);
+    signed char dx = Cows[i].x - x;
+    if (dx < 0) dx = (-dx);
 
-      // Claim a point.
-      gScore.partial_scores[Player]++;
-      gScore.partial_dirty = gTRUE;
+    signed char dy = Cows[i].y - y;
+    if (dy < 0) dy = (-dy);
 
-      // Use Xor to un-draw the cow.
-      PMode1DrawSpotXor(Screen, Cows[i].x, Cows[i].y, FG);
-    }
+    if (dx + dy > 1) continue;
+
+    // Kill that cow.
+    // Simplify: allow multiple kills on same cow if all are done
+    // simultaneously, before any kill packets some back.
+    struct kill_payload* pay = (struct kill_payload*)Packet.payload;
+
+    Packet.flags = 0;
+    pay->type = PT_KILL;  // Payload Type
+    pay->cow_num = i;     // copy entire struct
+    gSendCast(&Packet, sizeof *pay);
+
+    // Claim a point.
+    gScore.partial_scores[PLAYER]++;
+    gScore.partial_dirty = gTRUE;
+
+    // Use Xor to un-draw the cow.
+    PMode1DrawSpotXor(Screen, Cows[i].x, Cows[i].y, FG);
   }
 }
 
-void Spin(gbyte offset) {
-  gword southwest = 0x3FE0;
-  gword p = southwest + offset;
-  gPoke1(p, 1 + gPeek1(p));
-}
-
-void Hang() {
-  while (gALWAYS) {
-    Spin(0);
-  }
-}
-
+#define XWRAP (96 << 8)
+#define YWRAP (96 << 8)
 void AdvanceShips() {
-  for (gbyte i = 0; i < NumberOfPlayers; i++) {
-    struct ship* t = &State.ship[i];
+  for (gbyte i = 0; i < NPLAYERS; i++) {
+    struct ship* t = &ShipState.ship[i];
 
     // Advance positions based on velocity.
     t->x += t->xvel;
@@ -126,19 +123,17 @@ void AdvanceShips() {
 }
 
 void DrawScores() {
-  gScore.total_updated = gFALSE;
-
   int y = 2;
-  for (gbyte i = 0; i < NumberOfPlayers; i++) {
+  for (gbyte i = 0; i < NPLAYERS; i++) {
     PMode1ClearDecimal3x5(Screen, PMode1DrawSpot, 100, y, /*color=*/BG);
-    gbyte color = (i == Player) ? ME : THEM;
+    gbyte color = (i == PLAYER) ? ME : THEM;
     PMode1DrawDecimal3x5(Screen, PMode1DrawSpot, 100, y, /*color=*/color,
                          /*value=*/gScore.total_scores[i]);
     y += 7;
   }
 }
 
-void drawMod96(signed char x, signed char y, gbyte color) {
+void drawMod96Xor(signed char x, signed char y, gbyte color) {
   if (x < 0) x += 96;
   if (y < 0) x += 96;
   if (x >= 96) x -= 96;
@@ -148,17 +143,17 @@ void drawMod96(signed char x, signed char y, gbyte color) {
 }
 
 void XorOldShips() {
-  for (gbyte i = 0; i < NumberOfPlayers; i++) {
-    struct ship* p = &OldState.ship[i];
+  for (gbyte i = 0; i < NPLAYERS; i++) {
+    struct ship* p = &OldShipState.ship[i];
     signed char x = (signed char)(p->x >> 8);  // Shed fractional 8 bits.
     signed char y = (signed char)(p->y >> 8);  // Shed fractional 8 bits.
 
-    gbyte color = (i == Player) ? ME : THEM;
-    drawMod96(x, y, color);
-    drawMod96(x - 1, y, color);
-    drawMod96(x + 1, y, color);
-    drawMod96(x, y - 1, color);
-    drawMod96(x, y + 1, color);
+    gbyte color = (i == PLAYER) ? ME : THEM;
+    drawMod96Xor(x, y, color);
+    drawMod96Xor(x - 1, y, color);
+    drawMod96Xor(x + 1, y, color);
+    drawMod96Xor(x, y - 1, color);
+    drawMod96Xor(x, y + 1, color);
   }
 }
 
@@ -167,8 +162,8 @@ void ProcessPacket(struct gamecast* packet) {
     case PT_STATE: {
       struct ship_payload* p = (struct ship_payload*)packet->payload;
       // Only copy the update if it is from another player.
-      if (packet->sender != Player) {
-        memcpy(&State.ship[packet->sender], &p->ship, sizeof p->ship);
+      if (packet->sender != PLAYER) {
+        memcpy(&ShipState.ship[packet->sender], &p->ship, sizeof p->ship);
       }
     } break;
     case PT_KILL: {
@@ -178,38 +173,45 @@ void ProcessPacket(struct gamecast* packet) {
   }
 }
 
-void CheckIncomingPackets(gbyte n) {
-  for (gbyte i = 0; i < n; i++) {
-    struct gamecast* packet = gReceiveCast64();
-    if (!packet) {
-      break;
-    }
+void CheckIncomingPacket() {
+  struct gamecast* packet = gReceiveCast64();
+  if (packet) {
     ProcessPacket(packet);
     gFree64(packet);
   }
 }
 
-struct ship* my;
+void SendCastOurShip() {
+  // Once per second, send GameCast of ShipState.
+  struct ship_payload* pay = (struct ship_payload*)Packet.payload;
 
-void setup() {
+  Packet.flags = 0;
+  pay->type = PT_STATE;  // Payload Type
+  pay->ship = *my;       // copy entire struct
+  gSendCast(&Packet, sizeof *pay);
+}
+
+void ScanAndHandleKeys() {
+  gword keys = ScanArrowsAnd0To7();
+  if (keys) {
+    if (keys & ArrowsAnd0To7_LEFT) {
+      my->xvel -= DELTA_VEL;
+    }
+    if (keys & ArrowsAnd0To7_RIGHT) {
+      my->xvel += DELTA_VEL;
+    }
+    if (keys & ArrowsAnd0To7_UP) {
+      my->yvel -= DELTA_VEL;
+    }
+    if (keys & ArrowsAnd0To7_DOWN) {
+      my->yvel += DELTA_VEL;
+    }
+  }
+}
+
+void InitializeScreen() {
   PMode1ClearScreen(Screen, /*color=*/BG);
   gPMode1Screen(Screen, /*colorset=*/0);
-
-  my = &State.ship[Player];
-
-  // TODO: everyone in the shard needs the same seed,
-  // but it should be different in each round of the game.
-  RandomSeedString("TODO fix me later");
-  InitCows();
-  memset(&State, 0, sizeof State);
-
-  for (gbyte i = 0; i < NumberOfPlayers; i++) {
-    struct ship* t = &State.ship[i];
-    t->x = 20 << 8;
-    t->y = (10 * i + 5) << 8;
-    t->xvel = 0;
-    t->yvel = 0;
-  }
 
   PMode1DrawHorz(Screen, PMode1DrawSpot, /*x=*/0, /*y=*/0, /*color=*/FG,
                  /*len=*/96);
@@ -228,102 +230,56 @@ void setup() {
                  /*len=*/96);
   PMode1DrawVirt(Screen, PMode1DrawSpot, /*x=*/95, /*y=*/0, /*color=*/FG,
                  /*len=*/96);
+}
 
-  OldState = State;
-  XorOldShips();
+void setup() {
+  my = &ShipState.ship[PLAYER];  // shortcut to my own ship
+  InitializeScreen();
+
+  // TODO: everyone in the shard needs the same seed,
+  // but it should be different in each round of the game.
+  RandomSeedString("TODO fix me later");
+  InitCows();
+
+  // Initial location of ships.
+  for (gbyte i = 0; i < NPLAYERS; i++) {
+    struct ship* t = &ShipState.ship[i];
+    t->x = 20 << 8;
+    t->y = (10 * i + 5) << 8;
+  }
+
+  OldShipState = ShipState;
+  XorOldShips();  // draws ships for the first time
   DrawScores();
 }
 
-gword loops;
 gbyte decis = 0;
-gbyte counter = 0;
 
 void loop() {
-  ++loops;
+  CheckIncomingPacket();
 
   if (gMono.decis != decis) {
-    ++counter;
-
-    if (!(loops < 20 || gMono.decis == decis + 1 ||
-          (gMono.decis == 0 && decis == 9))) {
-      Spin(4);
-    }
-
     // Every 10th of a second.
     decis = gMono.decis;
 
     if (decis == 0) {
-      // Once per second, send GameCast of State.
-      static struct gamecast packet;
-      struct ship_payload* pay = (struct ship_payload*)packet.payload;
-
-      packet.flags = 0;
-      pay->type = PT_STATE;  // Payload Type
-      pay->ship = *my;       // copy entire struct
-      gSendCast(&packet, sizeof *pay);
+      // Once per second, send our location and velocity.
+      SendCastOurShip();
     } else {
-      // On other 9 decis per second, receive packets and scan keyboard.
-
-      CheckIncomingPackets(2);
-
-      gword keys = ScanArrowsAnd0To7();
-      if (keys) {
-        if (keys & ArrowsAnd0To7_0) {
-          gScore.partial_scores[0]++;
-          gScore.partial_dirty = gTRUE;
-        }
-        if (keys & ArrowsAnd0To7_1) {
-          gScore.partial_scores[1]++;
-          gScore.partial_dirty = gTRUE;
-        }
-        if (keys & ArrowsAnd0To7_2) {
-          gScore.partial_scores[2]++;
-          gScore.partial_dirty = gTRUE;
-        }
-        if (keys & ArrowsAnd0To7_3) {
-          gScore.partial_scores[3]++;
-          gScore.partial_dirty = gTRUE;
-        }
-        if (keys & ArrowsAnd0To7_4) {
-          gScore.partial_scores[4]++;
-          gScore.partial_dirty = gTRUE;
-        }
-        if (keys & ArrowsAnd0To7_5) {
-          gScore.partial_scores[5]++;
-          gScore.partial_dirty = gTRUE;
-        }
-        if (keys & ArrowsAnd0To7_6) {
-          gScore.partial_scores[6]++;
-          gScore.partial_dirty = gTRUE;
-        }
-        if (keys & ArrowsAnd0To7_7) {
-          gScore.partial_scores[7]++;
-          gScore.partial_dirty = gTRUE;
-        }
-
-#define DELTA_VEL 16
-        if (keys & ArrowsAnd0To7_LEFT) {
-          my->xvel -= DELTA_VEL;
-        }
-        if (keys & ArrowsAnd0To7_RIGHT) {
-          my->xvel += DELTA_VEL;
-        }
-        if (keys & ArrowsAnd0To7_UP) {
-          my->yvel -= DELTA_VEL;
-        }
-        if (keys & ArrowsAnd0To7_DOWN) {
-          my->yvel += DELTA_VEL;
-        }
-      }
+      // On other 9 decis per second, scan keyboard.
+      ScanAndHandleKeys();
     }
 
-    XorOldShips();  // undo old ship
     AdvanceShips();
-    OldState = State;
+    XorOldShips();  // undo old ship
+    OldShipState = ShipState;
     XorOldShips();  // new position
 
     CheckForKills(my->x >> 8, my->y >> 8);
 
-    if (gScore.total_updated) DrawScores();
+    if (gScore.total_updated) {
+      gScore.total_updated = gFALSE;
+      DrawScores();
+    }
   }
 }
