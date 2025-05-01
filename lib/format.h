@@ -8,18 +8,21 @@
 
 #define TEXT_STR_MAX 30
 
-#define EMIT(CHAR) do { *p++ = (CHAR); } while(0)
+#define EMIT(CHAR) \
+  do {             \
+    *p++ = (CHAR); \
+  } while (0)
 
 char* PPutStr(char* p, const char* s) {
-    int max = TEXT_STR_MAX;
-    for (; *s; s++) {
-        EMIT(*s);
-        if (max-- <= 0) {
-            EMIT('\\');
-            return p;
-        }
+  int max = TEXT_STR_MAX;
+  for (; *s; s++) {
+    EMIT(*s);
+    if (max-- <= 0) {
+      EMIT('\\');
+      return p;
     }
-    return p;
+  }
+  return p;
 }
 
 const char PHexAlphabet[] = "0123456789ABCDEF";
@@ -54,65 +57,57 @@ char* PPutDec(char* p, gword x) {
 }
 
 char* PPutSigned(char* p, int x) {
-    if (x<0) {
-        x = -x;
-        EMIT('-');
-    }
-    return PPutDec(p, x);
+  if (x < 0) {
+    x = -x;
+    EMIT('-');
+  }
+  return PPutDec(p, x);
 }
 
 char* Vprintf(char* p, const char* format, va_list ap) {
-    int max = TEXT_STR_MAX;
+  int max = TEXT_STR_MAX;
 
-    for (const char* s = format; *s; s++) {
-        if (max-- <= 0) {
-            EMIT('\\');
-            break;
-        }
-
-        if (*s < ' ') {
-            EMIT('\n');
-        } else if (*s != '%') {
-            EMIT(*s);
-        } else {
-            s++;
-            switch (*s) {
-            case 'd':
-                {
-                    int x = va_arg(ap, int);
-                    p = PPutSigned(p, x);
-                }
-                break;
-            case 'u':
-                {
-                    gword x = va_arg(ap, gword);
-                    p = PPutDec(p, x);
-                }
-                break;
-            case 'x':
-                {
-                    gword x = va_arg(ap, gword);
-                    p = PPutHex(p, x);
-                }
-                break;
-            case 's':
-                {
-                    char* x = va_arg(ap, char*);
-                    p = PPutStr(p, x);
-                }
-                break;
-            default:
-                EMIT(*s);
-            }; // end switch
-       }  // end if
+  for (const char* s = format; *s; s++) {
+    if (max-- <= 0) {
+      EMIT('\\');
+      break;
     }
-    *p = '\0';
-    return p;
+
+    if (*s < ' ') {
+      EMIT('\n');
+    } else if (*s != '%') {
+      EMIT(*s);
+    } else {
+      s++;
+      switch (*s) {
+        case 'd': {
+          int x = va_arg(ap, int);
+          p = PPutSigned(p, x);
+        } break;
+        case 'u': {
+          gword x = va_arg(ap, gword);
+          p = PPutDec(p, x);
+        } break;
+        case 'x': {
+          gword x = va_arg(ap, gword);
+          p = PPutHex(p, x);
+        } break;
+        case 's': {
+          char* x = va_arg(ap, char*);
+          p = PPutStr(p, x);
+        } break;
+        default:
+          EMIT(*s);
+      };  // end switch
+    }  // end if
+  }
+  *p = '\0';
+  return p;
 }
 char* Sprintf(char* p, const char* format, ...) {
-    va_list ap;
-    va_start(ap, format);
-    return Vprintf(p, format, ap);
+  va_list ap;
+  va_start(ap, format);
+  return Vprintf(p, format, ap);
 }
 
-#endif // _NEKOTOS_LIB_FORMAT_H_
+#endif  // _NEKOTOS_LIB_FORMAT_H_

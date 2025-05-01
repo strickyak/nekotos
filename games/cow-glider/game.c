@@ -4,10 +4,11 @@
 #include "nekotos/lib/keyscan_arrows_0to7.h"
 #include "nekotos/lib/pmode1.h"
 
+// There are only 4 colors.  How to use them?
 #define BG 0
-#define ME 2
-#define THEM 3
-#define FG 1
+#define ME 2    // My ship
+#define THEM 3  // Their ships
+#define FG 1    // Borders, cows.
 
 // Special Declarations
 gSCREEN(Screen, 12);  // Screen for PMODE1
@@ -16,8 +17,10 @@ gSCREEN(Screen, 12);  // Screen for PMODE1
 #define XWRAP (96 << 8)
 #define YWRAP (96 << 8)
 
+#define NumberOfPlayers gScore.number_of_players
+#define Player gScore.player
+
 char logbuf[66] gZEROED;
-ArcfourContext arcfour_context gZEROED;
 
 struct ship {
   int x, y;        // x, y position: fixed binary point, 8b.8b ;  modulo 96, 96
@@ -52,22 +55,6 @@ enum PayloadType {
   PT_OVER,
   PT_ABORT,
 };
-
-gbyte NumberOfPlayers;
-gbyte Player;
-
-void RandomSeedString(const char* s) {
-  arcfour_init(&arcfour_context, (const gbyte*)s, strlen(s));
-}
-gbyte RandomByte() { return arcfour_byte(&arcfour_context); }
-
-gbyte RandomUpTo(gbyte limit) {
-  gbyte z;
-  do {
-    z = RandomByte();
-  } while (z >= limit);
-  return z;
-}
 
 void InitCows() {
   for (gbyte i = 0; i < NUM_COWS; i++) {
@@ -208,17 +195,11 @@ void setup() {
   PMode1ClearScreen(Screen, /*color=*/BG);
   gPMode1Screen(Screen, /*colorset=*/0);
 
-  NumberOfPlayers = gScore.number_of_players;
-  Player = gScore.player;
   my = &State.ship[Player];
 
-  gNetworkLog("setup nando");
-  Sprintf(logbuf, "IN GLIDER GAME P %d COUNT %d", Player, NumberOfPlayers);
-  gNetworkLog(logbuf);
-
-  // TODO: everyone needs the same seed, but it should
-  // be different in each shard.
-  RandomSeedString("TODO fixme later");
+  // TODO: everyone in the shard needs the same seed,
+  // but it should be different in each round of the game.
+  RandomSeedString("TODO fix me later");
   InitCows();
   memset(&State, 0, sizeof State);
 
