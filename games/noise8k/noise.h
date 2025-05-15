@@ -1,19 +1,7 @@
-#include "kernel/public.h"
-
-struct demo {
-    gbyte level;
-    int color, size;
-    char wut[16];
-};
-
-struct bogus {
-    gbyte b, o, g, u, s;
-};
-
-gSCREEN(G, 12);  // G for PMode1 Graphics (3K == 12 pages)
-gSCREEN(T, 2);   // T for Text (512 bytes == 2 pages)
-gREGION(Demo, struct demo);
-gREGION(Bogus, struct bogus);
+// noise.h
+#define HZ_2000 500  // period in microseconds for 2000 Hz
+#define HZ_4000 250  // period in microseconds for 4000 Hz
+#define HZ_8000 125  // period in microseconds for 8000 Hz
 
 // ColorSet 0 for PMode 1
 #define Green0  0
@@ -154,25 +142,28 @@ void WaitForASecond() {
     while (now == gMono.seconds) {}
 }
 
+volatile gbyte nmi_counter;
+volatile gbyte audio;
+void NmiHandler() {
+#if 0
+    const gword Cons = 0x400; // console screen
+    ++nmi_counter;
+    gPoke1(Cons+2, nmi_counter);
+#endif
+    audio += (gMono.decis << 3);
+    gPoke1(0xFF20, audio);
+}
+
 volatile gbyte TRUE = 1;
 
 #define  END   (3*1024)
 
-int LoopCounter;
 void loop() {
     for (gword w = 0; w < END; w+=2) {
-        gPoke2(0x0202, w);
         gPoke2(G+w, ~gPeek2(G+w));
-        if ((w&31)==2) WaitForATick();
+        // if ((w&31)==2) WaitForATick();
     }
-    if (!LoopCounter) {
-#if NET_TYPE_bonobo
-        // Unpublished API
-        extern void gBonoboStartNMI(void);
-        gBonoboStartNMI();
-#endif
-    }
-    ++LoopCounter;
+    gKern.nmi_handler = NmiHandler;
 }
 
 void setup() {
@@ -186,25 +177,26 @@ void setup() {
     gword c3 = 0xAAAA;
     for (gbyte* w = G+0*END/4; w < G+1*END/4; w+=2) {
         gPoke2(w, c1);
-        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+1*END/4; w < G+2*END/4; w+=2) {
         gPoke2(w, c2);
-        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+2*END/4; w < G+3*END/4; w+=2) {
         gPoke2(w, c3);
-        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+3*END/4; w < G+4*END/4; w+=2) {
         gPoke2(w, c0);
-        gPoke2(0x0202, w);
     }
 
     gbyte x = 2;
     for (const char* s = "THIS IS NOISE"; *s; s++) {
         DrawChar(*s, x, 30, Blue0);
         x += 9;
-        gPoke2(0x0202, x);
     }
+
+#if NET_TYPE_bonobo
+    // Unpublished API
+    extern void gBonoboStartRepeatingNMI(gword micros);
+    gBonoboStartRepeatingNMI(HZ);
+#endif
 }

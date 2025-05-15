@@ -66,7 +66,11 @@ void gFatalFIRQ() {
 // volatile gbool OnceNMI;
 void WrapNMI() {
   asm volatile("\n_HandleNMI:");
-  gPoke2(Cons + 2, 1 + gPeek2(Cons + 2));
+  {
+      // gPoke2(Cons + 2, 1 + gPeek2(Cons + 2));
+      gfunc fn = gKern.nmi_handler;
+      if (fn) fn();
+  }
   asm volatile("rti");
 }
 
@@ -78,6 +82,13 @@ void WrapNMI() {
 // Unless the entry is ChatTask, it starts
 // with in_game mode set to gTRUE.
 void StartTask(gword entry) {
+  gKern.nmi_handler = gNULL;
+#if NET_TYPE_bonobo
+  // Stop Repeating NMI by passing 0.
+  // Unpublished API
+  extern void gBonoboStartRepeatingNMI(gword micros);
+  gBonoboStartRepeatingNMI(0);
+#endif
   gDisableIrq();
 
   if (!entry) {

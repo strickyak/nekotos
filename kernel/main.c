@@ -21,7 +21,11 @@ struct pia_reset_sequence {
     {0xff20, 0xfe},  // bit 0 input; rest are outputs.
     {0xff22, 0xfa},  // bit 1 and bits 3-7 are outputs.
     {0xff21, 0x34},
+#if 0
     {0xff23, 0x34},
+#else
+    {0xff23, 0x3C},  // Enable audio from 4-pos switch to TV
+#endif
     {0xff22, 0x00},  // output all 0s on Pia1 PortB
     {0xff20, 0x02},
     {0xff01, 0x00},  // choose data direction
@@ -175,7 +179,7 @@ gword PinDownGlobalNames[] gSETUP_DATA = {
     (gword)&WrapNMI,
 
 #ifdef NET_TYPE_bonobo
-    (gword)&gBonoboStartNMI,
+    (gword)&gBonoboStartRepeatingNMI,
 #endif
 };
 

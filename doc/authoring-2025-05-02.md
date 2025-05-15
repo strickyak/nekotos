@@ -1,5 +1,11 @@
 # Authoring Realtime Multi-Coco Games for NekotOS
 
+Henry Strickland
+
+github.com/strickyak/nekotos
+
+strick AT yak DOT net
+
 ## NekotOS Overview
 
 Networked Realtime Multi-Coco Gaming OS.

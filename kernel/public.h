@@ -65,6 +65,7 @@ typedef unsigned char
     gbyte;  // Recommended for a 8-bit machine gbyte.  Unsigned!
 typedef unsigned int
     gword;  // Recommended for a 16-bit machine gword.  Unsigned!
+typedef void (*gfunc)(void);  // pointer to function
 
 // We hope this union is both an efficient and an expressive word
 // joiner/splitter.
@@ -285,6 +286,14 @@ void gModeScreen(gbyte* screen_addr, gbyte vdg_mode, gbyte sam_mode);
 // due to bugs in our version of GCC.
 
 struct kern {
+  volatile gfunc nmi_handler;
+  #if 0
+  volatile gfunc firq_handler;
+  volatile gfunc swi1_handler;
+  volatile gfunc swi2_handler;
+  volatile gfunc swi3_handler;
+  #endif
+
   // TODO: memory curtains are not ready yet.
   // If your game wants to make raw allocations of memory
   // at runtime, the memory betweens these two curtains

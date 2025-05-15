@@ -160,7 +160,6 @@ volatile gbyte TRUE = 1;
 
 void loop() {
     for (gword w = 0; w < END; w+=2) {
-        gPoke2(0x0202, w);
         gPoke2(G+w, ~gPeek2(G+w));
         if ((w&7)==2) WaitForATick();
     }
@@ -178,25 +177,20 @@ void setup() {
     gword c0 = 0xAAAA;
     for (gbyte* w = G+0*END/4; w < G+1*END/4; w+=2) {
         gPoke2(w, c1);
-        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+1*END/4; w < G+2*END/4; w+=2) {
         gPoke2(w, c2);
-        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+2*END/4; w < G+3*END/4; w+=2) {
         gPoke2(w, c3);
-        gPoke2(0x0202, w);
     }
     for (gbyte* w = G+3*END/4; w < G+4*END/4; w+=2) {
         gPoke2(w, c0);
-        gPoke2(0x0202, w);
     }
 
     gbyte x = 2;
     for (const char* s = "THIS IS BLUE"; *s; s++) {
         DrawChar(*s, x, 30, Blue0);
         x += 9;
-        gPoke2(0x0202, x);
     }
 }

@@ -89,10 +89,12 @@ void BonoboSend(const gbyte* addr, gword n) {
   gIrqRestore(cc_value);
 }
 
-void gBonoboStartNMI() {
+void gBonoboStartRepeatingNMI(gword micros) {
   gbyte cc_value = gIrqSaveAndDisable();
 
-  bSendControl(249);  // TimerStart (2000 Hz NMI)
+  bSendControl(102);  // 102 = sending 2 byte parameter.
+  bSendData((const gbyte*)&micros, 2);
+  bSendControl(248);  // 248 = Start Programmable Timer
   PutStr("+NMI ");
 
   gIrqRestore(cc_value);
