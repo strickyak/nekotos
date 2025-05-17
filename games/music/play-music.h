@@ -1,7 +1,14 @@
 #ifndef _PLAY_MUSIC_H_
 #define _PLAY_MUSIC_H_
 
+//#define INVADERS 1
+#undef INVADERS
+
 #include "lib/music.h"
+
+#include "lib/pmode1.h"
+
+#include "lib/clearscreen.h"
 
 // music.h
 #define HZ_2000 500  // period in microseconds for 2000 Hz
@@ -144,16 +151,24 @@ void NmiHandler() {
 #define  END   (3*1024)
 
 void loop() {
+#if INVADERS
+    InvaderLoop();
+#else
     for (gword w = 0; w < END; w+=2) {
         gPoke2(G+w, ~gPeek2(G+w));
     }
+#endif
 }
 
 void setup() {
     gPin(FONT_Wrapper);
+    PMode1ClearScreen(G, 0);
     gPMode1Screen(G, 0);
     gNetworkLog("hello music");
 
+#if INVADERS
+    InvaderSetup();
+#else
     gword c0 = 0x0000;
     gword c1 = 0x5555;
     gword c2 = 0xFFFF;
@@ -176,6 +191,7 @@ void setup() {
         DrawChar(*s, x, 30, Blue0);
         x += 9;
     }
+#endif
 
     MusicSetup();
 
