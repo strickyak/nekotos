@@ -132,16 +132,6 @@ void DrawChar(char ch, gbyte x, gbyte y, gbyte color) {
     }
 }
 
-void WaitForATick() {
-    int now = gMono.ticks;
-    while (now == gMono.ticks) {}
-}
-
-void WaitForASecond() {
-    int now = gMono.seconds;
-    while (now == gMono.seconds) {}
-}
-
 volatile gbyte nmi_counter;
 volatile gbyte audio;
 void NmiHandler() {
@@ -154,14 +144,11 @@ void NmiHandler() {
     gPoke1(0xFF20, audio);
 }
 
-volatile gbyte TRUE = 1;
-
 #define  END   (3*1024)
 
 void loop() {
     for (gword w = 0; w < END; w+=2) {
         gPoke2(G+w, ~gPeek2(G+w));
-        // if ((w&31)==2) WaitForATick();
     }
     gKern.nmi_handler = NmiHandler;
 }
