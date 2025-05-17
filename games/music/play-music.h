@@ -1,8 +1,8 @@
 #ifndef _PLAY_MUSIC_H_
 #define _PLAY_MUSIC_H_
 
-//#define INVADERS 1
-#undef INVADERS
+#define INVADERS 1
+//#undef INVADERS
 
 #include "lib/music.h"
 
@@ -196,6 +196,7 @@ void setup() {
     MusicSetup();
 
     gKern.nmi_handler = NmiHandler;
+
 #if NET_TYPE_bonobo
     // Unpublished API
     extern void gBonoboStartRepeatingNMI(gword micros);

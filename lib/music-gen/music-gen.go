@@ -1,6 +1,6 @@
 package main
 
-// go run music-gen/music-gen.go -gain 15 -rate 2000 -a 330 -beat 0.3 > music-gen/music-tables.h
+// go run music-gen/music-gen.go -gain 16 -rate 2000 -a 330 -beat 0.4 > music-gen/music-tables.h
 
 import (
     "flag"
@@ -33,11 +33,11 @@ const (
     a5 = 3*12 + 9
     b5 = 3*12 + 11
 
-    WHOLE = 8*1024
-    LONG = 4*1024
-    SHORT = 2*1024
+    WHOLE = 8*1024 // Whole Note
+    LONG = 4*1024  // Half Note
+    SHORT = 2*1024 // Eighth Note
     REST = 1*1024
-    L = 512
+    L = 512 // Legato
 )
 
 var BEAT = flag.Float64("beat", 0.5, "length (in seconds) of one beat i.e. a quarter note i.e. a crotchet")
@@ -48,14 +48,19 @@ var QUIET = flag.Float64("quiet", 0.8, "portion of loudness for quiet")
 var A4FREQ = flag.Float64("a", 440.0, "frequence of a4")
 
 var tones0 = []int {
-    REST, REST, REST, REST,
+    WHOLE+REST,
 
     g4, b4, d5, g5, d5, b4, LONG+g4,
-    REST, REST, REST, REST,
+    WHOLE+REST,
     g4, a4, b4, c5, d5, e5, 1+f5, g5,
-    REST, REST, REST, REST,
+    WHOLE+REST,
+    LONG+g3-12, LONG+a3-12, LONG+b3-12, LONG+c4-12, LONG+d4-12, LONG+e4-12, LONG+1+f4-12, LONG+g4-12,
+    LONG+g3, LONG+a3, LONG+b3, LONG+c4, LONG+d4, LONG+e4, LONG+1+f4, LONG+g4,
+    LONG+g4, LONG+a4, LONG+b4, LONG+c5, LONG+d5, LONG+e5, LONG+1+f5, LONG+g5,
+    LONG+g4+12, LONG+a4+12, LONG+b4+12, LONG+c5+12, LONG+d5+12, LONG+e5+12, LONG+1+f5+12, LONG+g5+12,
+    WHOLE+REST,
     g4, b4, d5, g5, d5, b4, LONG+g4,
-    REST, REST, REST, REST,
+    WHOLE+REST,
 
     // Ode to Joy
     b4, b4, c5, d5, + d5, c5, b4, a4, + g4, g4, a4, b4,
@@ -72,7 +77,7 @@ var tones0 = []int {
     b4, b4, c5, d5, + d5, c5, b4, a4, + g4, g4, a4, b4,
     a4, g4, LONG+g4,
 
-    REST, REST, REST, REST,
+    WHOLE+REST,
 
     // Ode to Joy
     b4, b4, c5, d5, + d5, c5, b4, a4, + g4, g4, a4, b4,
@@ -92,14 +97,19 @@ var tones0 = []int {
 }
 
 var tones1 = []int {
-    REST, REST, REST, REST,
+    WHOLE+REST,
 
     REST, REST, REST, REST, REST, REST, REST, REST,
-    REST, REST, REST, REST,
+    WHOLE+REST,
     REST, REST, REST, REST, REST, REST, REST, REST,
-    REST, REST, REST, REST,
+    WHOLE+REST,
+    LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST,
+    LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST,
+    LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST,
+    LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST, LONG+REST,
+    WHOLE+REST,
     REST, REST, REST, REST, REST, REST, REST, REST,
-    REST, REST, REST, REST,
+    WHOLE+REST,
 
     // Ode to Joy
     REST, REST, REST, REST, REST, REST, REST, REST,
@@ -114,7 +124,7 @@ var tones1 = []int {
     REST, REST, REST, REST, REST, REST, REST, REST,
     REST, REST, REST, REST, REST, REST, REST, REST,
 
-    REST, REST, REST, REST,
+    WHOLE+REST,
 
     // Ode to Joy
 

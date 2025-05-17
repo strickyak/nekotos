@@ -1,6 +1,6 @@
 #define N 16
 
-struct invader {
+volatile struct invader {
     gbyte x, y;
     gbyte r, s;
     gbyte color;
@@ -65,10 +65,10 @@ void CompileSprite(const char* s, gbyte* b) {
     for (gword y = 0; y < 8; y++) {
         for (gword x = 0; x < 12; x+=4) {
             gbyte bits = 0;
-            if (*s++ > '?') bits |= 0xC0;
-            if (*s++ > '?') bits |= 0x30;
-            if (*s++ > '?') bits |= 0x0C;
-            if (*s++ > '?') bits |= 0x03;
+            if (*s++ > '?') bits += 0xC0;
+            if (*s++ > '?') bits += 0x30;
+            if (*s++ > '?') bits += 0x0C;
+            if (*s++ > '?') bits += 0x03;
             *b++ = bits;
         }
     }
@@ -80,14 +80,11 @@ gbyte inv3[3*8] gZEROED;
 gbyte inv4[3*8] gZEROED;
 
 void DrawAt(gbyte* sprite, gbyte x, gbyte y, gbyte color) {
-#if 1
-    color = 0xAA;
-#endif
     gbyte* p = G + x + ((gword)y<<5);
     for (gbyte i = 0; i < 8; i++) {
-        p[0] = *sprite++ & color;
-        p[1] = *sprite++ & color;
-        p[2] = *sprite++ & color;
+        p[0] = *sprite++;// & color;
+        p[1] = *sprite++;// & color;
+        p[2] = *sprite++;// & color;
         p += 32;
     }
 }
@@ -105,8 +102,10 @@ void InvaderLoop() {
     for (gbyte i = 0; i < N; i++) {
         struct invader* q = &Inv[i];
         ClearAt(q->x, q->y);
-        q->x += q->r;
-        q->y += q->s;
+
+        q->x += 1;// q->r;
+        q->y += 1;// q->s;
+
         q->x = 31 & q->x;
         q->y = (q->y > 192) ? q->y + 96 : q->y;
         q->y = (q->y > 96) ? q->y - 96 : q->y;
